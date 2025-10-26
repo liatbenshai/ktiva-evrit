@@ -10,6 +10,7 @@ import {
   Ban
 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
+import { SynonymButton } from '@/components/SynonymButton';
 
 interface ArticleEditorProps {
   initialContent: string;
@@ -98,11 +99,6 @@ export default function ArticleEditor({
     }
   };
 
-  const handleRegenerate = async () => {
-    // TODO: Implement regeneration with synonyms
-    alert('תכונה בפיתוח: יצירה מחדש עם מילים נרדפות');
-  };
-
   const handleSave = () => {
     // TODO: Implement save to database with user edits for learning
     alert('המאמר נשמר בהצלחה!');
@@ -152,13 +148,13 @@ export default function ArticleEditor({
             <BarChart3 className="w-4 h-4" />
             {showStats ? 'הסתר' : 'הצג'} סטטיסטיקות
           </button>
-          <button
-            onClick={handleRegenerate}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-          >
-            <RefreshCw className="w-4 h-4" />
-            צור מחדש עם נרדפות
-          </button>
+          <SynonymButton
+            text={content}
+            context={`מאמר: ${title}`}
+            category="articles"
+            userId="default-user"
+            onVersionSelect={(version) => setContent(version)}
+          />
           <button
             onClick={handleSave}
             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"

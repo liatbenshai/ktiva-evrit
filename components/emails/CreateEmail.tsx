@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Send, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
+import { SynonymButton } from '@/components/SynonymButton';
 
 export default function CreateEmail() {
   const [context, setContext] = useState('');
@@ -129,11 +130,22 @@ export default function CreateEmail() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               🤖 שיפור אוטומטי
             </h3>
-            <ImprovementButtons
-              content={result}
-              documentType="email"
-              onImprove={(improved) => setResult(improved)}
-            />
+            <div className="space-y-4">
+              <ImprovementButtons
+                content={result}
+                documentType="email"
+                onImprove={(improved) => setResult(improved)}
+              />
+              <div className="flex justify-center">
+                <SynonymButton
+                  text={result}
+                  context={`אימייל ${tone} ל${recipient || 'נמען'}`}
+                  category="emails"
+                  userId="default-user"
+                  onVersionSelect={(version) => setResult(version)}
+                />
+              </div>
+            </div>
             <p className="mt-3 text-sm text-gray-500">
               המערכת לומדת מהשיפורים שלך ומשתפרת עם הזמן
             </p>

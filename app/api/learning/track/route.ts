@@ -1,35 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// בינתיים נשמור במשתנה גלובלי (בעתיד נעביר ל-DB)
-let userEdits: Array<{
-  documentType: string;
-  originalText: string;
-  editedText: string;
-  editType: string;
-  timestamp: Date;
-}> = [];
+import { learningSystem } from '@/lib/learning-system';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { documentType, originalText, editedText, editType } = body;
+    const { 
+      documentType, 
+      originalText, 
+      editedText, 
+      editType,
+      userId = 'default-user',
+      context = '',
+      confidence = 1.0
+    } = body;
 
-    // שמירת העריכה
-    userEdits.push({
-      documentType,
+    // Record the correction in the advanced learning system
+    learningSystem.recordCorrection({
       originalText,
-      editedText,
-      editType: editType || 'manual',
-      timestamp: new Date(),
+      correctedText: editedText,
+      correctionType: editType || 'manual',
+      context,
+      category: documentType as any,
+      userId,
+      confidence
     });
 
-    // ניתוח והחזרת תובנות
-    const insights = analyzeUserEdits();
+    // Get insights from the learning system
+    const insights = learningSystem.analyzeTextForImprovements(
+      editedText, 
+      userId, 
+      context, 
+      documentType
+    );
+
+    const userStats = learningSystem.getUserStats(userId);
+    const writingSuggestions = learningSystem.getWritingSuggestions(userId, documentType);
 
     return NextResponse.json({
       success: true,
       insights,
-      totalEdits: userEdits.length,
+      userStats,
+      writingSuggestions,
+      message: 'תיקון נרשם בהצלחה במערכת הלמידה המתקדמת'
     });
   } catch (error) {
     console.error('Error saving edit:', error);
@@ -41,71 +53,31 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  // החזרת כל הלמידה שנצברה
-  const insights = analyzeUserEdits();
-  
-  return NextResponse.json({
-    totalEdits: userEdits.length,
-    insights,
-    recentEdits: userEdits.slice(-10), // 10 אחרונות
-  });
-}
+  try {
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('userId') || 'default-user';
+    const category = searchParams.get('category') || '';
 
-function analyzeUserEdits() {
-  if (userEdits.length === 0) {
-    return {
-      forbiddenWords: [],
-      preferredReplacements: {},
-      patterns: [],
-    };
+    // Get user statistics
+    const userStats = learningSystem.getUserStats(userId);
+    
+    // Get writing suggestions
+    const writingSuggestions = learningSystem.getWritingSuggestions(userId, category);
+    
+    // Get recent corrections (if we had a database)
+    const recentCorrections = []; // TODO: Implement database storage
+
+    return NextResponse.json({
+      userStats,
+      writingSuggestions,
+      recentCorrections,
+      message: 'נתוני הלמידה נטענו בהצלחה'
+    });
+  } catch (error) {
+    console.error('Error fetching learning data:', error);
+    return NextResponse.json(
+      { error: 'שגיאה בטעינת נתוני הלמידה' },
+      { status: 500 }
+    );
   }
-
-  // ניתוח פשוט של דפוסים
-  const wordChanges: { [key: string]: { [key: string]: number } } = {};
-  
-  userEdits.forEach(edit => {
-    const originalWords = edit.originalText.split(/\s+/);
-    const editedWords = edit.editedText.split(/\s+/);
-    
-    for (let i = 0; i < Math.min(originalWords.length, editedWords.length); i++) {
-      if (originalWords[i] !== editedWords[i]) {
-        const from = originalWords[i].toLowerCase();
-        const to = editedWords[i].toLowerCase();
-        
-        if (!wordChanges[from]) {
-          wordChanges[from] = {};
-        }
-        wordChanges[from][to] = (wordChanges[from][to] || 0) + 1;
-      }
-    }
-  });
-
-  // מילים אסורות (שהוחלפו 3+ פעמים)
-  const forbiddenWords: string[] = [];
-  const preferredReplacements: { [key: string]: string } = {};
-  
-  Object.entries(wordChanges).forEach(([from, tos]) => {
-    const totalChanges = Object.values(tos).reduce((a, b) => a + b, 0);
-    
-    if (totalChanges >= 3) {
-      forbiddenWords.push(from);
-      
-      // מצא את התחליף הנפוץ ביותר
-      const mostCommon = Object.entries(tos).reduce((a, b) => 
-        b[1] > a[1] ? b : a
-      );
-      preferredReplacements[from] = mostCommon[0];
-    }
-  });
-
-  return {
-    forbiddenWords,
-    preferredReplacements,
-    patterns: [
-      {
-        description: `זוהו ${forbiddenWords.length} מילים שהמשתמש מעדיף להימנע מהן`,
-        confidence: forbiddenWords.length > 0 ? 0.8 : 0,
-      },
-    ],
-  };
 }
