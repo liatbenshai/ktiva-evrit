@@ -2,11 +2,22 @@
 
 import * as React from "react"
 
-const Dialog = ({ children }: { children: React.ReactNode }) => {
+interface DialogProps {
+  children: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+const Dialog = ({ children, open, onOpenChange }: DialogProps) => {
   return <div>{children}</div>
 }
 
-const DialogTrigger = ({ children }: { children: React.ReactNode }) => {
+interface DialogTriggerProps {
+  children: React.ReactNode;
+  asChild?: boolean;
+}
+
+const DialogTrigger = ({ children, asChild }: DialogTriggerProps) => {
   return <div>{children}</div>
 }
 
