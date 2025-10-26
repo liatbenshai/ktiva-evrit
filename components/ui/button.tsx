@@ -1,13 +1,19 @@
-# צרי את התיקייה
-mkdir -p components/ui
+import * as React from "react"
 
-# צרי את הקבצים
-touch components/ui/button.tsx
-touch components/ui/card.tsx
-touch components/ui/dialog.tsx
-touch components/ui/badge.tsx
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
 
-# ערכי את הקבצים והעלי לגיטהאב
-git add .
-git commit -m "Add missing UI components"
-git push
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, ...props }, ref) => {
+    return (
+      <button
+        className={className}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+export { Button }
