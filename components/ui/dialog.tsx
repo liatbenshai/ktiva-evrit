@@ -21,20 +21,36 @@ const DialogTrigger = ({ children, asChild }: DialogTriggerProps) => {
   return <div>{children}</div>
 }
 
-const DialogContent = ({ children }: { children: React.ReactNode }) => {
-  return <div>{children}</div>
+interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
 }
 
-const DialogHeader = ({ children }: { children: React.ReactNode }) => {
-  return <div>{children}</div>
+const DialogContent = ({ children, className, ...props }: DialogContentProps) => {
+  return <div className={className} {...props}>{children}</div>
 }
 
-const DialogTitle = ({ children }: { children: React.ReactNode }) => {
-  return <h2>{children}</h2>
+interface DialogHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
 }
 
-const DialogDescription = ({ children }: { children: React.ReactNode }) => {
-  return <p>{children}</p>
+const DialogHeader = ({ children, className, ...props }: DialogHeaderProps) => {
+  return <div className={className} {...props}>{children}</div>
+}
+
+interface DialogTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  children: React.ReactNode;
+}
+
+const DialogTitle = ({ children, className, ...props }: DialogTitleProps) => {
+  return <h2 className={className} {...props}>{children}</h2>
+}
+
+interface DialogDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {
+  children: React.ReactNode;
+}
+
+const DialogDescription = ({ children, className, ...props }: DialogDescriptionProps) => {
+  return <p className={className} {...props}>{children}</p>
 }
 
 export { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription }
