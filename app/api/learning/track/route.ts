@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
     const writingSuggestions = learningSystem.getWritingSuggestions(userId, category);
     
     // Get recent corrections (if we had a database)
-    const recentCorrections = []; // TODO: Implement database storage
+    const recentCorrections: any[] = []; // TODO: Implement database storage
 
     return NextResponse.json({
       userStats,
