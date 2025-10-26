@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String?   // For simple auth
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // User-specific data
+  learningData  LearningData[]
+  generatedContent GeneratedContent[]
+}
+
+model LearningData {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Learning analytics
+  totalArticles     Int @default(0)
+  totalEmails       Int @default(0)
+  totalPosts        Int @default(0)
+  totalStories      Int @default(0)
+  totalScripts      Int @default(0)
+  totalProtocols    Int @default(0)
+  totalSummaries    Int @default(0)
+  totalQuotes       Int @default(0)
+  
+  // Writing patterns
+  preferredTone     String?
+  commonTopics      String?  // JSON string of topics
+  writingLevel      String?  // beginner, intermediate, advanced
+  
+  // AI feedback
+  lastFeedback      String?
+  improvementAreas  String?  // JSON string of areas
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model GeneratedContent {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type        String   // article, email, post, story, etc.
+  title       String?
+  content     String   @db.Text
+  prompt      String   @db.Text
+  wordCount   Int?
+  
+  // Metadata
+  tags        String?  // JSON string of tags
+  isPublic    Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
