@@ -17,7 +17,6 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.67.0",
     "@prisma/client": "^6.18.0",
-    "@tailwindcss/postcss": "^4.1.16",
     "autoprefixer": "^10.4.21",
     "lucide-react": "^0.546.0",
     "mammoth": "^1.11.0",
@@ -25,8 +24,7 @@
     "postcss": "^8.5.6",
     "prisma": "^6.18.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "tailwindcss": "^4.1.16"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/node": "^20",
