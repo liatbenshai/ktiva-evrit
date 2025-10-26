@@ -22,4 +22,8 @@ const DialogTitle = ({ children }: { children: React.ReactNode }) => {
   return <h2>{children}</h2>
 }
 
-export { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle }
+const DialogDescription = ({ children }: { children: React.ReactNode }) => {
+  return <p>{children}</p>
+}
+
+export { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription }
