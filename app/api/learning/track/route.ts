@@ -1,50 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { learningSystem } from '@/lib/learning-system';
 
+type RequestBody = {
+  documentType?: string;
+  originalText?: string;
+  editedText?: string;
+  editType?: string;
+  userId?: string;
+  context?: string;
+  confidence?: number;
+};
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { 
-      documentType, 
-      originalText, 
-      editedText, 
-      editType,
+    const body = (await req.json()) as RequestBody;
+    const {
+      documentType = 'general',
+      originalText,
+      editedText,
+      editType = 'manual',
       userId = 'default-user',
       context = '',
-      confidence = 1.0
+      confidence = 1.0,
     } = body;
 
-    // Record the correction in the advanced learning system
-    learningSystem.recordCorrection({
-      originalText,
-      correctedText: editedText,
-      correctionType: editType || 'manual',
-      context,
-      category: documentType as any,
-      userId,
-      confidence
-    });
+    if (!originalText || !editedText) {
+      return NextResponse.json(
+        { error: 'originalText and editedText are required' },
+        { status: 400 }
+      );
+    }
 
-    // Get insights from the learning system
-    const insights = learningSystem.analyzeTextForImprovements(
-      editedText, 
-      userId, 
-      context, 
-      documentType
-    );
+    // Record the correction (await if async). If recording fails, log but don't block.
+    if (typeof learningSystem.recordCorrection === 'function') {
+      try {
+        await Promise.resolve(
+          learningSystem.recordCorrection({
+            originalText,
+            correctedText: editedText,
+            correctionType: editType,
+            context,
+            category: documentType as any,
+            userId,
+            confidence,
+          })
+        );
+      } catch (recErr) {
+        console.error('learningSystem.recordCorrection failed:', recErr);
+      }
+    }
 
-    const userStats = learningSystem.getUserStats(userId);
-    const writingSuggestions = learningSystem.getWritingSuggestions(userId, documentType);
+    // Get insights and stats (support sync or async implementations)
+    const insights =
+      typeof learningSystem.analyzeTextForImprovements === 'function'
+        ? await Promise.resolve(
+            learningSystem.analyzeTextForImprovements(
+              editedText,
+              userId,
+              context,
+              documentType
+            )
+          )
+        : null;
+
+    const userStats =
+      typeof learningSystem.getUserStats === 'function'
+        ? await Promise.resolve(learningSystem.getUserStats(userId))
+        : null;
+
+    const writingSuggestions =
+      typeof learningSystem.getWritingSuggestions === 'function'
+        ? await Promise.resolve(
+            learningSystem.getWritingSuggestions(userId, documentType)
+          )
+        : null;
 
     return NextResponse.json({
       success: true,
       insights,
       userStats,
       writingSuggestions,
-      message: 'תיקון נרשם בהצלחה במערכת הלמידה המתקדמת'
+      message: 'תיקון נרשם בהצלחה במערכת הלמידה המתקדמת',
     });
   } catch (error) {
-    console.error('Error saving edit:', error);
+    console.error('Error in POST /api/learning/track:', error);
     return NextResponse.json(
       { error: 'שגיאה בשמירת העריכה' },
       { status: 500 }
@@ -54,24 +93,27 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId') || 'default-user';
-    const category = searchParams.get('category') || '';
+    const url = (req as any).nextUrl instanceof URL ? (req as any).nextUrl : new URL(req.url);
+    const userId = url.searchParams.get('userId') || 'default-user';
+    const category = url.searchParams.get('category') || '';
 
-    // Get user statistics
-    const userStats = learningSystem.getUserStats(userId);
-    
-    // Get writing suggestions
-    const writingSuggestions = learningSystem.getWritingSuggestions(userId, category);
-    
-    // Get recent corrections (if we had a database)
-    const recentCorrections = []; // TODO: Implement database storage
+    const userStats =
+      typeof learningSystem.getUserStats === 'function'
+        ? await Promise.resolve(learningSystem.getUserStats(userId))
+        : null;
+
+    const writingSuggestions =
+      typeof learningSystem.getWritingSuggestions === 'function'
+        ? await Promise.resolve(learningSystem.getWritingSuggestions(userId, category))
+        : null;
+
+    const recentCorrections: unknown[] = []; // TODO: persist corrections to DB and return real data
 
     return NextResponse.json({
       userStats,
       writingSuggestions,
       recentCorrections,
-      message: 'נתוני הלמידה נטענו בהצלחה'
+      message: 'נתוני הלמידה נטענו בהצלחה',
     });
   } catch (error) {
     console.error('Error fetching learning data:', error);
