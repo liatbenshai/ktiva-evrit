@@ -6,7 +6,7 @@
 export interface SynonymGroup {
   primary: string
   alternatives: string[]
-  category: 'formal' | 'informal' | 'academic' | 'business' | 'creative' | 'technical'
+  category: 'formal' | 'informal' | 'academic' | 'business' | 'creative' | 'technical' | 'general'
   context: string[]
 }
 
