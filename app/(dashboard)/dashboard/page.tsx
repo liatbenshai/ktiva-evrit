@@ -93,31 +93,17 @@ const modules = [
 const learningFeatures = [
   {
     icon: Brain,
-    title: 'מערכת למידה מתקדמת',
-    description: 'המערכת לומדת מהתיקונים שלך ומשתפרת עם הזמן',
-    href: '/dashboard/learn',
+    title: 'המערכת יוצרת טקסט',
+    description: 'המערכת יוצרת עבורך טקסט בעברית - טקסט שצריך תיקון',
+    href: '/dashboard/learn/generate',
     color: 'from-purple-500 to-pink-600',
   },
   {
     icon: TrendingUp,
-    title: 'סטטיסטיקות למידה',
-    description: 'צפה בהתקדמות שלך ובשיפורים שקיבלה המערכת',
-    href: '/dashboard/learn/stats',
+    title: 'אתה מתקן',
+    description: 'תקן את הטקסט שהמערכת יצרה - כל תיקון הוא למידה',
+    href: '/dashboard/learn/correct',
     color: 'from-blue-500 to-cyan-600',
-  },
-  {
-    icon: Lightbulb,
-    title: 'הצעות שיפור',
-    description: 'קבל הצעות לשיפור הכתיבה שלך בהתבסס על הלמידה',
-    href: '/dashboard/learn/suggestions',
-    color: 'from-yellow-500 to-orange-600',
-  },
-  {
-    icon: Zap,
-    title: 'תרגול אינטראקטיבי',
-    description: 'תרגל ועדכן את הכתיבה עם המשוב של המערכת',
-    href: '/dashboard/learn/practice',
-    color: 'from-green-500 to-emerald-600',
   },
 ];
 
@@ -226,7 +212,7 @@ export default function DashboardPage() {
               🧠 מערכת למידה מתקדמת
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
               {learningFeatures.map((feature, index) => {
                 const Icon = feature.icon;
                 return (
@@ -252,38 +238,18 @@ export default function DashboardPage() {
                 );
               })}
             </div>
-          </div>
-        )}
 
-        {/* Info Banner */}
-        {showLearningMode && (
-          <div className="mt-12 bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100 rounded-3xl shadow-xl border-2 border-white/50 p-8">
-            <div className="text-center">
-              <div className="text-6xl mb-4">🤖</div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-3">
-                איך מערכת הלמידה עובדת?
-              </h3>
-              <p className="text-gray-700 text-lg mb-6 max-w-3xl mx-auto leading-relaxed">
-                המערכת יוצרת עבורך טקסטים בעברית. כשתתקן אותם, היא תשמור את התיקונים ותלמד מהם.
-                ככל שתתקן יותר, כך המערכת תשתפר ותבין את הציפיות שלך לעברית תקנית ומושלמת.
-              </p>
-              <div className="flex flex-wrap gap-4 justify-center mt-6">
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-3 shadow-md">
-                  <div className="font-bold text-purple-600 mb-1">שלב 1</div>
-                  <div className="text-sm text-gray-700">המערכת יוצרת טקסט</div>
-                </div>
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-3 shadow-md">
-                  <div className="font-bold text-blue-600 mb-1">שלב 2</div>
-                  <div className="text-sm text-gray-700">אתה מתקן</div>
-                </div>
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-3 shadow-md">
-                  <div className="font-bold text-green-600 mb-1">שלב 3</div>
-                  <div className="text-sm text-gray-700">המערכת לומדת</div>
-                </div>
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-3 shadow-md">
-                  <div className="font-bold text-pink-600 mb-1">שלב 4</div>
-                  <div className="text-sm text-gray-700">משתפרת עם הזמן</div>
-                </div>
+            {/* Info Banner */}
+            <div className="bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100 rounded-3xl shadow-xl border-2 border-white/50 p-8">
+              <div className="text-center">
+                <div className="text-6xl mb-4">🤖</div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                  איך זה עובד?
+                </h3>
+                <p className="text-gray-700 text-lg mb-6 max-w-3xl mx-auto leading-relaxed">
+                  המערכת יוצרת עבורך טקסטים בעברית. כשתתקן אותם, היא תשמור את התיקונים ותלמד מהם.
+                  ככל שתתקן יותר, כך המערכת תשתפר ותבין מה זה עברית תקנית ומושלמת.
+                </p>
               </div>
             </div>
           </div>
