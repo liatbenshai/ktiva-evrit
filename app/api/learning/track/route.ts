@@ -14,13 +14,21 @@ export async function POST(req: NextRequest) {
       confidence = 1.0
     } = body;
 
+    // Validation
+    if (!documentType || !originalText || !editedText) {
+      return NextResponse.json(
+        { error: 'חסרים שדות נדרשים: documentType, originalText, editedText' },
+        { status: 400 }
+      );
+    }
+
     // Record the correction in the advanced learning system
     learningSystem.recordCorrection({
       originalText,
       correctedText: editedText,
       correctionType: editType || 'manual',
       context,
-      category: documentType as any,
+      category: documentType,
       userId,
       confidence
     });
@@ -65,7 +73,7 @@ export async function GET(req: NextRequest) {
     const writingSuggestions = learningSystem.getWritingSuggestions(userId, category);
     
     // Get recent corrections (if we had a database)
-    const recentCorrections = []; // TODO: Implement database storage
+    const recentCorrections: any[] = []; // TODO: Implement database storage
 
     return NextResponse.json({
       userStats,
