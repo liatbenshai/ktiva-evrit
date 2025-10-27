@@ -13,8 +13,7 @@ import {
   BookMarked,
   Brain,
   TrendingUp,
-  Lightbulb,
-  Zap
+  Languages
 } from 'lucide-react';
 
 const modules = [
@@ -87,6 +86,13 @@ const modules = [
     icon: BookMarked,
     href: '/dashboard/synonyms',
     color: 'bg-teal-600',
+  },
+  {
+    title: 'למידת פתגמים',
+    description: 'למד את המערכת פתגמים ומטבעות לשון',
+    icon: Languages,
+    href: '/dashboard/idioms',
+    color: 'bg-purple-600',
   },
 ];
 
