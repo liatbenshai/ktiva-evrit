@@ -96,25 +96,7 @@ const modules = [
   },
 ];
 
-const learningFeatures = [
-  {
-    icon: Brain,
-    title: 'המערכת יוצרת טקסט',
-    description: 'המערכת יוצרת עבורך טקסט בעברית - טקסט שצריך תיקון',
-    href: '/dashboard/learn/generate',
-    color: 'from-purple-500 to-pink-600',
-  },
-  {
-    icon: TrendingUp,
-    title: 'אתה מתקן',
-    description: 'תקן את הטקסט שהמערכת יצרה - כל תיקון הוא למידה',
-    href: '/dashboard/learn/correct',
-    color: 'from-blue-500 to-cyan-600',
-  },
-];
-
 export default function DashboardPage() {
-  const [showLearningMode, setShowLearningMode] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50" dir="rtl">
@@ -132,16 +114,6 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button
-                onClick={() => setShowLearningMode(!showLearningMode)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  showLearningMode 
-                    ? 'bg-purple-600 text-white' 
-                    : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                }`}
-              >
-                {showLearningMode ? 'מצב למידה פעיל' : 'הפעל מצב למידה'}
-              </button>
               <a
                 href="/"
                 className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
@@ -211,55 +183,69 @@ export default function DashboardPage() {
           })}
         </div>
 
-        {/* Learning Features Section */}
-        {showLearningMode && (
-          <div className="mt-16">
-            <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-              🧠 מערכת למידה מתקדמת
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              {learningFeatures.map((feature, index) => {
-                const Icon = feature.icon;
-                return (
-                  <Link
-                    key={feature.href}
-                    href={feature.href}
-                    className="group block transform transition-all duration-300 hover:scale-105"
-                  >
-                    <div className={`relative bg-gradient-to-br ${feature.color} rounded-2xl shadow-lg p-8 hover:shadow-2xl transition-all duration-300 border-2 border-white/50 h-full`}>
-                      <div className="relative">
-                        <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl w-fit mb-4 shadow-md group-hover:scale-110 transition-transform duration-300">
-                          <Icon className="w-8 h-8 text-gray-800" />
-                        </div>
-                        <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-md">
-                          {feature.title}
-                        </h3>
-                        <p className="text-white/90 text-sm leading-relaxed">
-                          {feature.description}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
+        {/* Learning Section */}
+        <div className="mt-16">
+          <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+            🧠 מערכת למידה
+          </h2>
+          
+          <div className="bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100 rounded-3xl shadow-xl border-2 border-white/50 p-12 mb-8">
+            <div className="text-center mb-8">
+              <div className="text-6xl mb-4">🤖</div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                למד את המערכת עברית תקנית
+              </h3>
+              <p className="text-gray-700 text-lg max-w-3xl mx-auto leading-relaxed">
+                המערכת יוצרת עבורך טקסטים בעברית. כשתתקן אותם, היא תשמור את התיקונים ותלמד מהם.
+                ככל שתתקן יותר, כך המערכת תשתפר ותבין מה זה עברית תקנית ומושלמת.
+              </p>
             </div>
 
-            {/* Info Banner */}
-            <div className="bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100 rounded-3xl shadow-xl border-2 border-white/50 p-8">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🤖</div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-3">
-                  איך זה עובד?
-                </h3>
-                <p className="text-gray-700 text-lg mb-6 max-w-3xl mx-auto leading-relaxed">
-                  המערכת יוצרת עבורך טקסטים בעברית. כשתתקן אותם, היא תשמור את התיקונים ותלמד מהם.
-                  ככל שתתקן יותר, כך המערכת תשתפר ותבין מה זה עברית תקנית ומושלמת.
-                </p>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+              <Link href="/dashboard/synonyms" className="group block transform transition-all duration-300 hover:scale-105">
+                <div className="relative bg-gradient-to-br from-teal-500 to-green-700 rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 border-2 border-white/50 h-full">
+                  <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl w-fit mb-4 shadow-md group-hover:scale-110 transition-transform duration-300">
+                    <BookMarked className="w-6 h-6 text-gray-800" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2 drop-shadow-md">
+                    מילים נרדפות
+                  </h3>
+                  <p className="text-white/90 text-sm">
+                    ניהול מילים נרדפות למילון
+                  </p>
+                </div>
+              </Link>
+
+              <Link href="/dashboard/idioms" className="group block transform transition-all duration-300 hover:scale-105">
+                <div className="relative bg-gradient-to-br from-purple-500 to-pink-700 rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 border-2 border-white/50 h-full">
+                  <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl w-fit mb-4 shadow-md group-hover:scale-110 transition-transform duration-300">
+                    <Languages className="w-6 h-6 text-gray-800" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2 drop-shadow-md">
+                    למידת פתגמים
+                  </h3>
+                  <p className="text-white/90 text-sm">
+                    למד את המערכת פתגמים בעברית
+                  </p>
+                </div>
+              </Link>
+
+              <Link href="/dashboard/learn" className="group block transform transition-all duration-300 hover:scale-105">
+                <div className="relative bg-gradient-to-br from-blue-500 to-cyan-700 rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 border-2 border-white/50 h-full">
+                  <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl w-fit mb-4 shadow-md group-hover:scale-110 transition-transform duration-300">
+                    <Brain className="w-6 h-6 text-gray-800" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2 drop-shadow-md">
+                    למידת טקסט
+                  </h3>
+                  <p className="text-white/90 text-sm">
+                    למד את המערכת תיקון טקסטים
+                  </p>
+                </div>
+              </Link>
             </div>
           </div>
-        )}
+        </div>
       </main>
 
       {/* Footer decoration */}
