@@ -12,6 +12,10 @@ interface Idiom {
   learned: boolean
 }
 
+interface ImportFile {
+  idioms: Idiom[]
+}
+
 export default function IdiomsPage() {
   const [currentIdiom, setCurrentIdiom] = useState<Idiom | null>(null)
   const [correctedText, setCorrectedText] = useState('')
@@ -168,19 +172,32 @@ export default function IdiomsPage() {
         const content = e.target?.result as string
         const imported = JSON.parse(content)
         
+        let idiomsToImport: Idiom[] = []
+        
+        // Check if it's an array directly or an object with idioms property
         if (Array.isArray(imported)) {
-          // Merge with existing idioms
-          const merged = [...userIdioms, ...imported.map((item: any) => ({
-            ...item,
-            id: Date.now().toString() + Math.random()
-          }))]
-          setUserIdioms(merged)
-          alert('המידע יובא בהצלחה!')
+          idiomsToImport = imported
+        } else if (imported.idioms && Array.isArray(imported.idioms)) {
+          idiomsToImport = imported.idioms
         } else {
-          alert('קובץ לא תקין')
+          alert('קובץ לא תקין - צריך להיות מערך או אובייקט עם תכונת idioms')
+          return
         }
+
+        // Merge with existing idioms, adding proper IDs
+        const merged = [...userIdioms, ...idiomsToImport.map((item: any) => ({
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          english: item.english || '',
+          hebrew: item.hebrew || '',
+          category: item.category || 'ביטוי',
+          learned: false
+        }))]
+        
+        setUserIdioms(merged)
+        alert(`יובאו ${idiomsToImport.length} ביטויים בהצלחה!`)
       } catch (error) {
-        alert('שגיאה בייבוא הקובץ')
+        console.error('Import error:', error)
+        alert('שגיאה בייבוא הקובץ: ' + (error instanceof Error ? error.message : 'Unknown error'))
       }
     }
     reader.readAsText(file)
@@ -205,6 +222,9 @@ export default function IdiomsPage() {
               </h1>
               <p className="text-gray-600 mt-1">
                 למד את המערכת לתרגום נכון של פתגמים באנגלית לעברית תקנית
+              </p>
+              <p className="text-sm text-blue-600 mt-1">
+                💡 יבא קובץ JSON עם ביטויים - כל ביטוי יכלול: english, hebrew, category
               </p>
             </div>
             <div className="flex gap-2 flex-wrap">
