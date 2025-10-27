@@ -14,6 +14,7 @@ interface Idiom {
 
 export default function IdiomsPage() {
   const [currentIdiom, setCurrentIdiom] = useState<Idiom | null>(null)
+  const [correctedText, setCorrectedText] = useState('')
   const [learnedIds, setLearnedIds] = useState<Set<string>>(new Set())
   const [history, setHistory] = useState<Idiom[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
@@ -64,28 +65,30 @@ export default function IdiomsPage() {
   const handleShowIdiom = () => {
     const idiom = getRandomIdiom()
     setCurrentIdiom(idiom)
+    setCorrectedText('')
   }
 
   const handleLearned = () => {
-    if (currentIdiom) {
+    if (currentIdiom && correctedText.trim()) {
+      // Save the corrected translation
+      const correctedIdiom = {
+        ...currentIdiom,
+        hebrew: correctedText.trim(),
+        learned: true
+      }
+      
       setLearnedIds(new Set([...learnedIds, currentIdiom.id]))
-      setHistory([...history, { ...currentIdiom, learned: true }])
+      setHistory([...history, correctedIdiom])
       setCurrentIdiom(null)
+      setCorrectedText('')
     }
   }
 
   const handleNotLearned = () => {
     if (currentIdiom) {
-      // Open edit mode with current idiom
-      setShowAddForm(true)
-      setNewIdiom({
-        english: currentIdiom.english,
-        hebrew: currentIdiom.hebrew,
-        category: currentIdiom.category
-      })
-      setIsEditing(true)
       setHistory([...history, { ...currentIdiom, learned: false }])
       setCurrentIdiom(null)
+      setCorrectedText('')
     }
   }
 
@@ -318,20 +321,28 @@ export default function IdiomsPage() {
           <div className="space-y-6">
             {/* Idiom Card */}
             <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 p-8">
-              <div className="text-center">
-                <div className="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-6">
+              <div className="text-center mb-6">
+                <div className="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-4">
                   {currentIdiom.category}
                 </div>
                 
-                <h3 className="text-4xl font-bold text-gray-900 mb-8">
+                <h3 className="text-4xl font-bold text-gray-900 mb-8" dir="ltr">
                   {currentIdiom.english}
                 </h3>
                 
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-8 min-h-[100px] flex items-center justify-center">
-                  <p className="text-3xl font-bold text-blue-600">
-                    {currentIdiom.hebrew}
-                  </p>
-                </div>
+                <p className="text-gray-600 text-lg mb-6">
+                  תרגם את הביטוי לעברית תקנית:
+                </p>
+                
+                <input
+                  type="text"
+                  value={correctedText}
+                  onChange={(e) => setCorrectedText(e.target.value)}
+                  placeholder="הזן תרגום נכון..."
+                  className="w-full bg-blue-50 border-2 border-blue-200 rounded-xl p-6 text-2xl font-bold text-blue-700 text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
+                  dir="rtl"
+                  autoFocus
+                />
               </div>
             </div>
 
