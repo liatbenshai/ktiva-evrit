@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Home, Plus, Search, Edit2, Trash2, Save, X, BookOpen } from 'lucide-react'
+import { Home, Plus, Search, Edit2, Trash2, Save, X, BookOpen, Download, Upload } from 'lucide-react'
 import Link from 'next/link'
 
 export default function SynonymsPage() {
@@ -117,6 +117,49 @@ export default function SynonymsPage() {
     })
   }
 
+  const handleExport = () => {
+    const dataStr = JSON.stringify(synonyms, null, 2)
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+    
+    const exportFileDefaultName = `synonyms-${new Date().toISOString().split('T')[0]}.json`
+    
+    const linkElement = document.createElement('a')
+    linkElement.setAttribute('href', dataUri)
+    linkElement.setAttribute('download', exportFileDefaultName)
+    linkElement.click()
+  }
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string
+        const imported = JSON.parse(content)
+        
+        if (Array.isArray(imported)) {
+          // Merge with existing synonyms
+          const merged = [...synonyms, ...imported.map((item: any) => ({
+            ...item,
+            id: Date.now().toString() + Math.random()
+          }))]
+          setSynonyms(merged)
+          alert('המידע יובא בהצלחה!')
+        } else {
+          alert('קובץ לא תקין')
+        }
+      } catch (error) {
+        alert('שגיאה בייבוא הקובץ')
+      }
+    }
+    reader.readAsText(file)
+    
+    // Reset the input
+    event.target.value = ''
+  }
+
   const filteredSynonyms = synonyms.filter(s => 
     s.primary.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.alternatives.some((alt: string) => alt.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -148,9 +191,9 @@ export default function SynonymsPage() {
             </Link>
           </div>
 
-          {/* Search and Add */}
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
+          {/* Search and Actions */}
+          <div className="flex gap-4 flex-wrap">
+            <div className="flex-1 relative min-w-[200px]">
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
@@ -160,13 +203,32 @@ export default function SynonymsPage() {
                 className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            <button
-              onClick={() => setIsAdding(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
-            >
-              <Plus className="w-5 h-5" />
-              הוסף מילה נרדפת
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleExport}
+                className="flex items-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-medium"
+              >
+                <Download className="w-5 h-5" />
+                ייצא
+              </button>
+              <label className="flex items-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-medium cursor-pointer">
+                <Upload className="w-5 h-5" />
+                ייבוא
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImport}
+                  className="hidden"
+                />
+              </label>
+              <button
+                onClick={() => setIsAdding(true)}
+                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
+              >
+                <Plus className="w-5 h-5" />
+                הוסף
+              </button>
+            </div>
           </div>
         </div>
       </header>

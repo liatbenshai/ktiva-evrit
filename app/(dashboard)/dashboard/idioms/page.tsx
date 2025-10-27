@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Home, BookOpen, CheckCircle, XCircle, RefreshCw, Plus, Edit3, Trash2 } from 'lucide-react'
+import { Home, BookOpen, CheckCircle, XCircle, RefreshCw, Plus, Edit3, Trash2, Download, Upload } from 'lucide-react'
 import Link from 'next/link'
 
 interface Idiom {
@@ -146,6 +146,49 @@ export default function IdiomsPage() {
     }
   }
 
+  const handleExport = () => {
+    const dataStr = JSON.stringify(userIdioms, null, 2)
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+    
+    const exportFileDefaultName = `idioms-${new Date().toISOString().split('T')[0]}.json`
+    
+    const linkElement = document.createElement('a')
+    linkElement.setAttribute('href', dataUri)
+    linkElement.setAttribute('download', exportFileDefaultName)
+    linkElement.click()
+  }
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string
+        const imported = JSON.parse(content)
+        
+        if (Array.isArray(imported)) {
+          // Merge with existing idioms
+          const merged = [...userIdioms, ...imported.map((item: any) => ({
+            ...item,
+            id: Date.now().toString() + Math.random()
+          }))]
+          setUserIdioms(merged)
+          alert('המידע יובא בהצלחה!')
+        } else {
+          alert('קובץ לא תקין')
+        }
+      } catch (error) {
+        alert('שגיאה בייבוא הקובץ')
+      }
+    }
+    reader.readAsText(file)
+    
+    // Reset the input
+    event.target.value = ''
+  }
+
   const getProgress = () => {
     return Math.round((learnedIds.size / allIdioms.length) * 100)
   }
@@ -164,7 +207,25 @@ export default function IdiomsPage() {
                 למד את המערכת לתרגום נכון של פתגמים באנגלית לעברית תקנית
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={handleExport}
+                disabled={userIdioms.length === 0}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                <Download className="w-5 h-5" />
+                ייצא
+              </button>
+              <label className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all cursor-pointer">
+                <Upload className="w-5 h-5" />
+                ייבוא
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImport}
+                  className="hidden"
+                />
+              </label>
               <button
                 onClick={() => setShowAddForm(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all"
