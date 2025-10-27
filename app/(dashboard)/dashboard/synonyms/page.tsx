@@ -27,9 +27,7 @@ export default function SynonymsPage() {
 
   // Save synonyms to localStorage whenever they change
   useEffect(() => {
-    if (synonyms.length > 0) {
-      localStorage.setItem('user-synonyms', JSON.stringify(synonyms))
-    }
+    localStorage.setItem('user-synonyms', JSON.stringify(synonyms))
   }, [synonyms])
 
   const categories = [
