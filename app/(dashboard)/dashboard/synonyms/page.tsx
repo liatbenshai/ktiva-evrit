@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Home, Plus, Search, Edit2, Trash2, Save, X, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 
@@ -16,6 +16,21 @@ export default function SynonymsPage() {
     category: 'general' as 'formal' | 'informal' | 'academic' | 'business' | 'creative' | 'technical' | 'general',
     context: ''
   })
+
+  // Load synonyms from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('user-synonyms')
+    if (saved) {
+      setSynonyms(JSON.parse(saved))
+    }
+  }, [])
+
+  // Save synonyms to localStorage whenever they change
+  useEffect(() => {
+    if (synonyms.length > 0) {
+      localStorage.setItem('user-synonyms', JSON.stringify(synonyms))
+    }
+  }, [synonyms])
 
   const categories = [
     { value: 'general', label: 'כללי' },
