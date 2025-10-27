@@ -9,7 +9,8 @@ import {
   BookOpen, 
   FileCheck, 
   ScrollText,
-  User
+  User,
+  BookMarked
 } from 'lucide-react';
 
 const modules = [
@@ -75,6 +76,13 @@ const modules = [
     icon: ScrollText,
     href: '/dashboard/protocols',
     color: 'bg-indigo-500',
+  },
+  {
+    title: 'ניהול מילים נרדפות',
+    description: 'הוסף וערוך מילים נרדפות למילון',
+    icon: BookMarked,
+    href: '/dashboard/synonyms',
+    color: 'bg-teal-600',
   },
 ];
 
