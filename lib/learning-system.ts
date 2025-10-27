@@ -201,34 +201,34 @@ export class HebrewLearningSystem {
   /**
    * Extract learning patterns from correction
    */
-  private extractPatterns(correction: TextCorrection): void {
-    const words = correction.originalText.split(' ')
-    const correctedWords = correction.correctedText.split(' ')
+  private extractPatterns(correctionData: TextCorrection): void {
+    const words = correctionData.originalText.split(' ')
+    const correctedWords = correctionData.correctedText.split(' ')
 
     for (let i = 0; i < words.length; i++) {
       if (words[i] !== correctedWords[i]) {
         const pattern = words[i]
-        const correction = correctedWords[i]
+        const correctWord = correctedWords[i]
 
         // Find existing pattern or create new one
         let existingPattern = this.patterns.find(p => 
-          p.pattern === pattern && p.category === correction.category
+          p.pattern === pattern && p.category === correctionData.category
         )
         
         if (existingPattern) {
           existingPattern.frequency++
-          existingPattern.accuracy = this.calculateAccuracy(existingPattern, correction)
-          if (!existingPattern.context.includes(correction.context)) {
-            existingPattern.context.push(correction.context)
+          existingPattern.accuracy = this.calculateAccuracy(existingPattern, correctWord)
+          if (!existingPattern.context.includes(correctionData.context)) {
+            existingPattern.context.push(correctionData.context)
           }
         } else {
           this.patterns.push({
             pattern,
-            correction,
+            correction: correctWord,
             frequency: 1,
             accuracy: 1.0,
-            context: [correction.context],
-            category: correction.category
+            context: [correctionData.context],
+            category: correctionData.category
           })
         }
       }
