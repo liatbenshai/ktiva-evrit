@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { 
   FileText, 
   Mail, 
@@ -10,7 +10,11 @@ import {
   FileCheck, 
   ScrollText,
   User,
-  BookMarked
+  BookMarked,
+  Brain,
+  TrendingUp,
+  Lightbulb,
+  Zap
 } from 'lucide-react';
 
 const modules = [
@@ -86,8 +90,39 @@ const modules = [
   },
 ];
 
+const learningFeatures = [
+  {
+    icon: Brain,
+    title: 'מערכת למידה מתקדמת',
+    description: 'המערכת לומדת מהתיקונים שלך ומשתפרת עם הזמן',
+    href: '/dashboard/learn',
+    color: 'from-purple-500 to-pink-600',
+  },
+  {
+    icon: TrendingUp,
+    title: 'סטטיסטיקות למידה',
+    description: 'צפה בהתקדמות שלך ובשיפורים שקיבלה המערכת',
+    href: '/dashboard/learn/stats',
+    color: 'from-blue-500 to-cyan-600',
+  },
+  {
+    icon: Lightbulb,
+    title: 'הצעות שיפור',
+    description: 'קבל הצעות לשיפור הכתיבה שלך בהתבסס על הלמידה',
+    href: '/dashboard/learn/suggestions',
+    color: 'from-yellow-500 to-orange-600',
+  },
+  {
+    icon: Zap,
+    title: 'תרגול אינטראקטיבי',
+    description: 'תרגל ועדכן את הכתיבה עם המשוב של המערכת',
+    href: '/dashboard/learn/practice',
+    color: 'from-green-500 to-emerald-600',
+  },
+];
+
 export default function DashboardPage() {
-  // Authentication disabled - no user checks needed
+  const [showLearningMode, setShowLearningMode] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50" dir="rtl">
@@ -104,12 +139,24 @@ export default function DashboardPage() {
                 <p className="font-medium text-gray-900">משתמש</p>
               </div>
             </div>
-            <a
-              href="/"
-              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              חזרה לעמוד הראשי
-            </a>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowLearningMode(!showLearningMode)}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  showLearningMode 
+                    ? 'bg-purple-600 text-white' 
+                    : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                }`}
+              >
+                {showLearningMode ? 'מצב למידה פעיל' : 'הפעל מצב למידה'}
+              </button>
+              <a
+                href="/"
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                חזרה לעמוד הראשי
+              </a>
+            </div>
           </div>
           <div className="text-center">
             <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
@@ -172,38 +219,75 @@ export default function DashboardPage() {
           })}
         </div>
 
-        {/* Recent Documents Section */}
-        <div className="mt-16">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-            📚 המסמכים האחרונים שלך
-          </h2>
-          <div className="relative bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 rounded-3xl shadow-xl border-2 border-white/50 p-12 text-center overflow-hidden">
-            {/* Decorative background circles */}
-            <div className="absolute top-0 left-0 w-32 h-32 bg-purple-300/20 rounded-full -ml-16 -mt-16 blur-3xl"></div>
-            <div className="absolute bottom-0 right-0 w-40 h-40 bg-pink-300/20 rounded-full -mr-20 -mb-20 blur-3xl"></div>
+        {/* Learning Features Section */}
+        {showLearningMode && (
+          <div className="mt-16">
+            <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+              🧠 מערכת למידה מתקדמת
+            </h2>
             
-            <div className="relative">
-              {/* Animated icon */}
-              <div className="text-8xl mb-6 animate-bounce">
-                📝
-              </div>
-              
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {learningFeatures.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <Link
+                    key={feature.href}
+                    href={feature.href}
+                    className="group block transform transition-all duration-300 hover:scale-105"
+                  >
+                    <div className={`relative bg-gradient-to-br ${feature.color} rounded-2xl shadow-lg p-8 hover:shadow-2xl transition-all duration-300 border-2 border-white/50 h-full`}>
+                      <div className="relative">
+                        <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl w-fit mb-4 shadow-md group-hover:scale-110 transition-transform duration-300">
+                          <Icon className="w-8 h-8 text-gray-800" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-md">
+                          {feature.title}
+                        </h3>
+                        <p className="text-white/90 text-sm leading-relaxed">
+                          {feature.description}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Info Banner */}
+        {showLearningMode && (
+          <div className="mt-12 bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100 rounded-3xl shadow-xl border-2 border-white/50 p-8">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🤖</div>
               <h3 className="text-2xl font-bold text-gray-800 mb-3">
-                עדיין לא יצרת מסמכים
+                איך מערכת הלמידה עובדת?
               </h3>
-              <p className="text-gray-600 text-lg mb-6 max-w-md mx-auto">
-                המסמכים שתיצרי יופיעו כאן, כך שתוכלי לגשת אליהם בקלות
+              <p className="text-gray-700 text-lg mb-6 max-w-3xl mx-auto leading-relaxed">
+                המערכת יוצרת עבורך טקסטים בעברית. כשתתקן אותם, היא תשמור את התיקונים ותלמד מהם.
+                ככל שתתקן יותר, כך המערכת תשתפר ותבין את הציפיות שלך לעברית תקנית ומושלמת.
               </p>
-              
-              {/* Call to action */}
-              <div className="inline-block bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg">
-                <p className="text-gray-700 font-medium">
-                  💡 בחרי כלי למעלה כדי להתחיל ליצור
-                </p>
+              <div className="flex flex-wrap gap-4 justify-center mt-6">
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-3 shadow-md">
+                  <div className="font-bold text-purple-600 mb-1">שלב 1</div>
+                  <div className="text-sm text-gray-700">המערכת יוצרת טקסט</div>
+                </div>
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-3 shadow-md">
+                  <div className="font-bold text-blue-600 mb-1">שלב 2</div>
+                  <div className="text-sm text-gray-700">אתה מתקן</div>
+                </div>
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-3 shadow-md">
+                  <div className="font-bold text-green-600 mb-1">שלב 3</div>
+                  <div className="text-sm text-gray-700">המערכת לומדת</div>
+                </div>
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-3 shadow-md">
+                  <div className="font-bold text-pink-600 mb-1">שלב 4</div>
+                  <div className="text-sm text-gray-700">משתפרת עם הזמן</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </main>
 
       {/* Footer decoration */}
@@ -219,6 +303,7 @@ function getGradientClass(baseColor: string) {
     'bg-cyan-500': 'from-cyan-400 to-teal-600',
     'bg-yellow-500': 'from-yellow-400 to-orange-500',
     'bg-teal-500': 'from-teal-400 to-green-600',
+    'bg-teal-600': 'from-teal-500 to-green-700',
     'bg-green-500': 'from-green-400 to-emerald-600',
     'bg-purple-500': 'from-purple-400 to-purple-600',
     'bg-orange-500': 'from-orange-400 to-red-500',
