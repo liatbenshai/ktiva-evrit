@@ -184,17 +184,18 @@ export default function IdiomsPage() {
           return
         }
 
-        // Merge with existing idioms, adding proper IDs
-        const merged = [...userIdioms, ...idiomsToImport.map((item: any) => ({
+        // Import idioms directly to the learning database (not as user-added)
+        const newIdiomsWithIDs = idiomsToImport.map((item: any) => ({
           id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
           english: item.english || '',
           hebrew: item.hebrew || '',
           category: item.category || 'ביטוי',
           learned: false
-        }))]
+        }))
         
-        setUserIdioms(merged)
-        alert(`יובאו ${idiomsToImport.length} ביטויים בהצלחה!`)
+        // Add to user idioms - these will be available for learning
+        setUserIdioms([...userIdioms, ...newIdiomsWithIDs])
+        alert(`יובאו ${idiomsToImport.length} ביטויים בהצלחה! הם זמינים כעת ללמידה.`)
       } catch (error) {
         console.error('Import error:', error)
         alert('שגיאה בייבוא הקובץ: ' + (error instanceof Error ? error.message : 'Unknown error'))
@@ -223,8 +224,11 @@ export default function IdiomsPage() {
               <p className="text-gray-600 mt-1">
                 למד את המערכת לתרגום נכון של פתגמים באנגלית לעברית תקנית
               </p>
-              <p className="text-sm text-blue-600 mt-1">
-                💡 יבא קובץ JSON עם ביטויים - כל ביטוי יכלול: english, hebrew, category
+              <p className="text-sm text-gray-600 mt-1">
+                📥 יבוא קובץ JSON עם ביטויים ותרגומיהם | ✅ ייבואם יזמין אותם ללמידה
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                💡 פורמט: [{"english": "...", "hebrew": "...", "category": "..."}]
               </p>
             </div>
             <div className="flex gap-2 flex-wrap">
