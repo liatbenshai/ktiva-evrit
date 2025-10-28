@@ -111,10 +111,11 @@ ${text}
 
     console.log('🤖 Calling Claude API...');
 
-    // Call Claude API
+    // Call Claude API with JSON mode
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4000,
+      temperature: 1,
       messages: [
         {
           role: 'user',
@@ -138,36 +139,63 @@ ${text}
       // Clean the response text
       let cleanedText = responseText.trim();
       
-      // Remove markdown code blocks (```json ... ``` or ``` ... ```)
-      if (cleanedText.startsWith('```')) {
-        // Find the first newline after ```
-        const firstNewline = cleanedText.indexOf('\n');
-        const lastBackticks = cleanedText.lastIndexOf('```');
-        
-        if (firstNewline !== -1 && lastBackticks > firstNewline) {
-          cleanedText = cleanedText.substring(firstNewline + 1, lastBackticks).trim();
-        } else {
-          // Fallback: just remove ``` from start and end
-          cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/^```\n?/, '').replace(/\n?```$/, '').trim();
+      console.log('🔍 Raw response (first 300 chars):', cleanedText.substring(0, 300));
+      
+      // Remove markdown code blocks in various formats
+      // Case 1: ```json\n{...}\n```
+      if (cleanedText.includes('```json')) {
+        const start = cleanedText.indexOf('```json') + 7; // length of '```json'
+        const end = cleanedText.lastIndexOf('```');
+        if (end > start) {
+          cleanedText = cleanedText.substring(start, end).trim();
+        }
+      }
+      // Case 2: ```\n{...}\n```
+      else if (cleanedText.startsWith('```')) {
+        const start = cleanedText.indexOf('\n') + 1;
+        const end = cleanedText.lastIndexOf('```');
+        if (end > start) {
+          cleanedText = cleanedText.substring(start, end).trim();
         }
       }
       
-      console.log('🧹 Cleaned text (first 200 chars):', cleanedText.substring(0, 200));
+      // Remove any remaining backticks at start/end
+      cleanedText = cleanedText.replace(/^`+/, '').replace(/`+$/, '').trim();
       
+      console.log('🧹 Cleaned text (first 300 chars):', cleanedText.substring(0, 300));
+      
+      // Try to parse
       result = JSON.parse(cleanedText);
       
       console.log('✅ Successfully parsed JSON response');
+      console.log('📊 Generated versions:', result.versions?.length || 0);
     } catch (parseError) {
       console.error('❌ Failed to parse Claude response:', parseError);
-      console.error('Response was:', responseText.substring(0, 1000));
+      console.error('❌ Cleaned text was:', cleanedText.substring(0, 1000));
       
-      return NextResponse.json(
-        { 
-          error: 'Failed to parse AI response',
-          details: parseError instanceof Error ? parseError.message : 'Unknown parsing error'
-        },
-        { status: 500 }
-      );
+      // Try one more time - extract anything between first { and last }
+      try {
+        const firstBrace = responseText.indexOf('{');
+        const lastBrace = responseText.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace > firstBrace) {
+          const extracted = responseText.substring(firstBrace, lastBrace + 1);
+          console.log('🔄 Trying to parse extracted JSON...');
+          result = JSON.parse(extracted);
+          console.log('✅ Successfully parsed extracted JSON');
+        } else {
+          throw parseError;
+        }
+      } catch (secondError) {
+        console.error('❌ Second parse attempt also failed');
+        return NextResponse.json(
+          { 
+            error: 'Failed to parse AI response',
+            details: parseError instanceof Error ? parseError.message : 'Unknown parsing error',
+            sample: responseText.substring(0, 500)
+          },
+          { status: 500 }
+        );
+      }
     }
 
     // Validate response structure
