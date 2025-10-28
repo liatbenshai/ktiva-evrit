@@ -33,7 +33,7 @@ export function SynonymButton({
       setIsGenerating(true)
       setError(null)
       
-      const response = await fetch('/api/synonyms', {
+      const response = await fetch('/api/synonyms/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,13 +48,15 @@ export function SynonymButton({
       })
 
       if (!response.ok) {
-        throw new Error('שגיאה ביצירת גרסאות עם מילים נרדפות')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'שגיאה ביצירת גרסאות עם מילים נרדפות')
       }
 
       const data = await response.json()
       setGeneratedVersions(data.versions)
       setQualityAnalysis(data.qualityAnalysis)
     } catch (err) {
+      console.error('Error generating synonyms:', err)
       setError(err instanceof Error ? err.message : 'שגיאה לא צפויה')
     } finally {
       setIsGenerating(false)
@@ -106,7 +108,7 @@ export function SynonymButton({
                     </div>
                   </div>
                 </div>
-                {qualityAnalysis.suggestions.length > 0 && (
+                {qualityAnalysis.suggestions && qualityAnalysis.suggestions.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="font-semibold">הצעות לשיפור:</h4>
                     {qualityAnalysis.suggestions.map((suggestion: any, index: number) => (
@@ -207,7 +209,7 @@ export function SynonymButton({
                     <CardContent>
                       <div className="space-y-3">
                         <div className="bg-gray-50 p-4 rounded max-h-32 overflow-y-auto">
-                          <p>{version.content}</p>
+                          <p className="whitespace-pre-wrap">{version.content}</p>
                         </div>
                         
                         {version.improvements && version.improvements.length > 0 && (
@@ -216,11 +218,22 @@ export function SynonymButton({
                               <Lightbulb className="h-4 w-4" />
                               שיפורים בגרסה זו:
                             </h4>
-                            {version.improvements.map((improvement: any, idx: number) => (
-                              <div key={idx} className="text-xs text-gray-600">
-                                • {improvement.reason}
-                              </div>
-                            ))}
+                            <div className="space-y-1">
+                              {version.improvements.map((improvement: any, idx: number) => (
+                                <div key={idx} className="flex items-start gap-2 text-xs">
+                                  <Badge variant="outline" className="shrink-0">
+                                    {improvement.original}
+                                  </Badge>
+                                  <span className="text-gray-400">→</span>
+                                  <Badge variant="secondary" className="shrink-0">
+                                    {improvement.replacement}
+                                  </Badge>
+                                  <span className="text-gray-600">
+                                    {improvement.reason}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                         
@@ -235,7 +248,10 @@ export function SynonymButton({
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => navigator.clipboard.writeText(version.content)}
+                            onClick={() => {
+                              navigator.clipboard.writeText(version.content)
+                              // Optional: show toast notification
+                            }}
                           >
                             העתק
                           </Button>
