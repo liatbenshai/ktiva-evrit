@@ -1,417 +1,374 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Home, Plus, Search, Edit2, Trash2, Save, X, BookOpen, Download, Upload } from 'lucide-react'
-import Link from 'next/link'
+import { useState, useEffect } from 'react';
+import { Plus, Edit2, Trash2, Save, X, BookOpen, Sparkles, Upload, Download } from 'lucide-react';
+
+interface Synonym {
+  id: string;
+  preferred: string;
+  alternatives: string[];
+  createdAt: string;
+}
 
 export default function SynonymsPage() {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [isAdding, setIsAdding] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  
-  const [synonyms, setSynonyms] = useState<any[]>([])
-  const [newSynonym, setNewSynonym] = useState({
-    primary: '',
-    alternatives: '',
-    category: 'general' as 'formal' | 'informal' | 'academic' | 'business' | 'creative' | 'technical' | 'general',
-    context: ''
-  })
+  const [synonyms, setSynonyms] = useState<Synonym[]>([]);
+  const [newPreferred, setNewPreferred] = useState('');
+  const [newAlternatives, setNewAlternatives] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editPreferred, setEditPreferred] = useState('');
+  const [editAlternatives, setEditAlternatives] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Load synonyms from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('user-synonyms')
-    if (saved) {
-      setSynonyms(JSON.parse(saved))
+    fetchSynonyms();
+  }, []);
+
+  const fetchSynonyms = async () => {
+    try {
+      const response = await fetch('/api/synonyms');
+      if (!response.ok) throw new Error('Failed to fetch');
+      const data = await response.json();
+      setSynonyms(data);
+    } catch (error) {
+      console.error('Error fetching synonyms:', error);
     }
-  }, [])
+  };
 
-  // Save synonyms to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('user-synonyms', JSON.stringify(synonyms))
-  }, [synonyms])
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPreferred.trim() || !newAlternatives.trim()) return;
 
-  const categories = [
-    { value: 'general', label: 'כללי' },
-    { value: 'formal', label: 'פורמלי' },
-    { value: 'business', label: 'עסקי' },
-    { value: 'academic', label: 'אקדמי' },
-    { value: 'creative', label: 'יצירתי' },
-    { value: 'technical', label: 'טכני' },
-    { value: 'informal', label: 'לא פורמלי' }
-  ]
+    setLoading(true);
+    try {
+      const alternativesArray = newAlternatives
+        .split(',')
+        .map(alt => alt.trim())
+        .filter(alt => alt.length > 0);
 
-  const handleAddSynonym = () => {
-    if (!newSynonym.primary || !newSynonym.alternatives) {
-      alert('נא למלא מילה ראשית ומילים נרדפות')
-      return
+      const response = await fetch('/api/synonyms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          preferred: newPreferred,
+          alternatives: alternativesArray
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to create');
+      
+      await fetchSynonyms();
+      setNewPreferred('');
+      setNewAlternatives('');
+    } catch (error) {
+      console.error('Error creating synonym:', error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const alternatives = newSynonym.alternatives.split(',').map(a => a.trim()).filter(a => a)
+  const handleDelete = async (id: string) => {
+    if (!confirm('האם את בטוחה שברצונך למחוק את קבוצת המילים הנרדפות הזו?')) return;
+
+    try {
+      const response = await fetch(`/api/synonyms/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete');
+      
+      await fetchSynonyms();
+    } catch (error) {
+      console.error('Error deleting synonym:', error);
+    }
+  };
+
+  const startEdit = (synonym: Synonym) => {
+    setEditingId(synonym.id);
+    setEditPreferred(synonym.preferred);
+    setEditAlternatives(synonym.alternatives.join(', '));
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditPreferred('');
+    setEditAlternatives('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editPreferred.trim() || !editAlternatives.trim()) return;
     
-    setSynonyms([...synonyms, {
-      id: Date.now().toString(),
-      ...newSynonym,
-      alternatives,
-      context: newSynonym.context.split(',').map(c => c.trim()).filter(c => c)
-    }])
+    try {
+      const alternativesArray = editAlternatives
+        .split(',')
+        .map(alt => alt.trim())
+        .filter(alt => alt.length > 0);
 
-    setNewSynonym({
-      primary: '',
-      alternatives: '',
-      category: 'general',
-      context: ''
-    })
-    setIsAdding(false)
-  }
+      const response = await fetch(`/api/synonyms/${editingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          preferred: editPreferred,
+          alternatives: alternativesArray
+        }),
+      });
 
-  const handleDeleteSynonym = (id: string) => {
-    if (confirm('האם אתה בטוח שברצונך למחוק?')) {
-      setSynonyms(synonyms.filter(s => s.id !== id))
+      if (!response.ok) throw new Error('Failed to update');
+      
+      await fetchSynonyms();
+      setEditingId(null);
+      setEditPreferred('');
+      setEditAlternatives('');
+    } catch (error) {
+      console.error('Error updating synonym:', error);
     }
-  }
+  };
 
-  const handleEditSynonym = (synonym: any) => {
-    setEditingId(synonym.id)
-    setNewSynonym({
-      primary: synonym.primary,
-      alternatives: synonym.alternatives.join(', '),
-      category: synonym.category,
-      context: synonym.context.join(', ')
-    })
-  }
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  const handleSaveEdit = () => {
-    if (!newSynonym.primary || !newSynonym.alternatives) {
-      alert('נא למלא מילה ראשית ומילים נרדפות')
-      return
+    setLoading(true);
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      
+      // הנחה: הקובץ הוא מערך של אובייקטים עם preferred ו-alternatives
+      if (!Array.isArray(data)) {
+        throw new Error('הקובץ חייב להכיל מערך של מילים נרדפות');
+      }
+
+      for (const item of data) {
+        if (item.preferred && Array.isArray(item.alternatives)) {
+          await fetch('/api/synonyms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              preferred: item.preferred,
+              alternatives: item.alternatives
+            }),
+          });
+        }
+      }
+      
+      await fetchSynonyms();
+      alert(`${data.length} קבוצות מילים נרדפות נטענו בהצלחה!`);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('שגיאה בטעינת הקובץ. וודאי שהפורמט נכון: [{"preferred": "...", "alternatives": ["...", "..."]}]');
+    } finally {
+      setLoading(false);
+      // Reset file input
+      event.target.value = '';
     }
-
-    const alternatives = newSynonym.alternatives.split(',').map(a => a.trim()).filter(a => a)
-    
-    setSynonyms(synonyms.map(s => 
-      s.id === editingId ? {
-        id: s.id,
-        primary: newSynonym.primary,
-        alternatives,
-        category: newSynonym.category,
-        context: newSynonym.context.split(',').map(c => c.trim()).filter(c => c)
-      } : s
-    ))
-
-    setEditingId(null)
-    setNewSynonym({
-      primary: '',
-      alternatives: '',
-      category: 'general',
-      context: ''
-    })
-  }
-
-  const handleCancelEdit = () => {
-    setEditingId(null)
-    setNewSynonym({
-      primary: '',
-      alternatives: '',
-      category: 'general',
-      context: ''
-    })
-  }
+  };
 
   const handleExport = () => {
-    const dataStr = JSON.stringify(synonyms, null, 2)
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
-    
-    const exportFileDefaultName = `synonyms-${new Date().toISOString().split('T')[0]}.json`
-    
-    const linkElement = document.createElement('a')
-    linkElement.setAttribute('href', dataUri)
-    linkElement.setAttribute('download', exportFileDefaultName)
-    linkElement.click()
-  }
-
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      try {
-        const content = e.target?.result as string
-        const imported = JSON.parse(content)
-        
-        if (Array.isArray(imported)) {
-          // Merge with existing synonyms
-          const merged = [...synonyms, ...imported.map((item: any) => ({
-            ...item,
-            id: Date.now().toString() + Math.random()
-          }))]
-          setSynonyms(merged)
-          alert('המידע יובא בהצלחה!')
-        } else {
-          alert('קובץ לא תקין')
-        }
-      } catch (error) {
-        alert('שגיאה בייבוא הקובץ')
-      }
-    }
-    reader.readAsText(file)
-    
-    // Reset the input
-    event.target.value = ''
-  }
-
-  const filteredSynonyms = synonyms.filter(s => 
-    s.primary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.alternatives.some((alt: string) => alt.toLowerCase().includes(searchTerm.toLowerCase()))
-  )
+    const exportData = synonyms.map(({ id, createdAt, ...rest }) => rest);
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `synonyms-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50" dir="rtl">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm shadow-lg border-b border-blue-100">
+      <header className="bg-white/80 backdrop-blur-sm shadow-lg border-b border-purple-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <BookOpen className="w-10 h-10 text-blue-600" />
-              <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                  ניהול מילים נרדפות
-                </h1>
-                <p className="text-gray-600 mt-1">
-                  הוסף, ערוך ומחק מילים נרדפות למילון
-                </p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg">
+              <BookOpen className="w-8 h-8 text-white" />
             </div>
-            <Link
-              href="/dashboard"
-              className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
-            >
-              <Home className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              חזרה לדשבורד
-            </Link>
-          </div>
-
-          {/* Search and Actions */}
-          <div className="flex gap-4 flex-wrap">
-            <div className="flex-1 relative min-w-[200px]">
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="חפש מילים נרדפות..."
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleExport}
-                className="flex items-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-medium"
-              >
-                <Download className="w-5 h-5" />
-                ייצא
-              </button>
-              <label className="flex items-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-medium cursor-pointer">
-                <Upload className="w-5 h-5" />
-                ייבוא
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleImport}
-                  className="hidden"
-                />
-              </label>
-              <button
-                onClick={() => setIsAdding(true)}
-                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
-              >
-                <Plus className="w-5 h-5" />
-                הוסף
-              </button>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                מילים נרדפות
+              </h1>
+              <p className="text-gray-600 mt-1">מאגר מילים נרדפות בעברית - צורה מועדפת וחלופות</p>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Add/Edit Form */}
-        {(isAdding || editingId) && (
-          <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 p-8 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {editingId ? 'ערוך מילה נרדפת' : 'הוסף מילה נרדפת חדשה'}
-              </h2>
-              <button
-                onClick={() => {
-                  if (editingId) handleCancelEdit()
-                  else setIsAdding(false)
-                }}
-                className="p-2 hover:bg-gray-100 rounded-full"
+        {/* Add New Synonym Form */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-purple-100 p-8 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-pink-500" />
+              <h2 className="text-2xl font-bold text-gray-800">הוסיפי קבוצת מילים נרדפות</h2>
+            </div>
+            
+            {/* Import/Export Buttons */}
+            <div className="flex gap-2">
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleFileUpload}
+                className="hidden"
+                id="file-upload"
+              />
+              <label
+                htmlFor="file-upload"
+                className="cursor-pointer bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2"
               >
-                <X className="w-6 h-6" />
+                <Upload className="w-5 h-5" />
+                ייבוא
+              </label>
+              
+              <button
+                onClick={handleExport}
+                disabled={synonyms.length === 0}
+                className="bg-gradient-to-r from-green-500 to-emerald-500 text-white py-2 px-4 rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download className="w-5 h-5" />
+                ייצוא
               </button>
             </div>
-
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  מילה ראשית <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={newSynonym.primary}
-                  onChange={(e) => setNewSynonym({ ...newSynonym, primary: e.target.value })}
-                  placeholder="לדוגמה: חשוב"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  dir="rtl"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  מילים נרדפות (הפרד בפסיקים) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={newSynonym.alternatives}
-                  onChange={(e) => setNewSynonym({ ...newSynonym, alternatives: e.target.value })}
-                  placeholder="לדוגמה: משמעותי, עיקרי, מרכזי"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  dir="rtl"
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                  הזן מילים נרדפות מופרדות בפסיקים
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  קטגוריה
-                </label>
-                <select
-                  value={newSynonym.category}
-                  onChange={(e) => setNewSynonym({ ...newSynonym, category: e.target.value as any })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {categories.map(cat => (
-                    <option key={cat.value} value={cat.value}>{cat.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  הקשרים (הפרד בפסיקים)
-                </label>
-                <input
-                  type="text"
-                  value={newSynonym.context}
-                  onChange={(e) => setNewSynonym({ ...newSynonym, context: e.target.value })}
-                  placeholder="לדוגמה: תיאורים, משמעות"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  dir="rtl"
-                />
-              </div>
-
-              <div className="flex gap-4">
-                <button
-                  onClick={editingId ? handleSaveEdit : handleAddSynonym}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  <Save className="w-5 h-5" />
-                  {editingId ? 'שמור שינויים' : 'הוסף'}
-                </button>
-                <button
-                  onClick={() => {
-                    if (editingId) handleCancelEdit()
-                    else setIsAdding(false)
-                  }}
-                  className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  ביטול
-                </button>
-              </div>
-            </div>
           </div>
-        )}
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                צורה מועדפת (נכונה)
+              </label>
+              <input
+                type="text"
+                value={newPreferred}
+                onChange={(e) => setNewPreferred(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
+                placeholder="לקחת בחשבון"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                צורות חלופיות (מופרדות בפסיקים)
+              </label>
+              <input
+                type="text"
+                value={newAlternatives}
+                onChange={(e) => setNewAlternatives(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
+                placeholder="להביא בחשבון, לשים לב"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">הפרידי בין המילים הנרדפות בפסיק</p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-6 rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              {loading ? 'מוסיפה...' : 'הוסיפי קבוצה'}
+            </button>
+          </form>
+        </div>
 
         {/* Synonyms List */}
-        <div className="space-y-4">
-          {filteredSynonyms.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-              <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                אין מילים נרדפות
-              </h3>
-              <p className="text-gray-600 mb-6">
-                {searchTerm ? 'לא נמצאו תוצאות לחיפוש שלך' : 'התחל להוסיף מילים נרדפות למילון'}
-              </p>
-              {!searchTerm && (
-                <button
-                  onClick={() => setIsAdding(true)}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Plus className="w-5 h-5" />
-                  הוסף מילה נרדפת ראשונה
-                </button>
-              )}
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-purple-100 p-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">רשימת מילים נרדפות ({synonyms.length})</h2>
+          
+          {synonyms.length === 0 ? (
+            <div className="text-center py-12">
+              <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">אין עדיין מילים נרדפות במאגר</p>
+              <p className="text-gray-400 mt-2">הוסיפי את הקבוצה הראשונה או ייבאי קובץ JSON</p>
             </div>
           ) : (
-            filteredSynonyms.map((synonym) => (
-              <div key={synonym.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <h3 className="text-2xl font-bold text-blue-600">
-                        {synonym.primary}
-                      </h3>
-                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                        {categories.find(c => c.value === synonym.category)?.label}
-                      </span>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {synonym.alternatives.map((alt: string, idx: number) => (
-                        <span key={idx} className="px-3 py-1 bg-gray-100 text-gray-800 rounded-lg text-sm">
-                          {alt}
-                        </span>
-                      ))}
-                    </div>
-
-                    {synonym.context && synonym.context.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {synonym.context.map((ctx: string, idx: number) => (
-                          <span key={idx} className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs">
-                            {ctx}
-                          </span>
-                        ))}
+            <div className="space-y-4">
+              {synonyms.map((synonym) => (
+                <div
+                  key={synonym.id}
+                  className="group bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200"
+                >
+                  {editingId === synonym.id ? (
+                    <div className="space-y-4">
+                      <input
+                        type="text"
+                        value={editPreferred}
+                        onChange={(e) => setEditPreferred(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                        placeholder="צורה מועדפת"
+                      />
+                      <input
+                        type="text"
+                        value={editAlternatives}
+                        onChange={(e) => setEditAlternatives(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                        placeholder="חלופות (מופרדות בפסיקים)"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={handleSaveEdit}
+                          className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+                        >
+                          <Save className="w-4 h-4" />
+                          שמירה
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2"
+                        >
+                          <X className="w-4 h-4" />
+                          ביטול
+                        </button>
                       </div>
-                    )}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEditSynonym(synonym)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="ערוך"
-                    >
-                      <Edit2 className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSynonym(synonym.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="מחק"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="mb-3">
+                          <span className="text-sm font-medium text-green-600 bg-green-100 px-3 py-1 rounded-full">✓ מועדף</span>
+                          <p className="text-xl font-bold text-purple-600 mt-2">{synonym.preferred}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">חלופות</span>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {synonym.alternatives.map((alt, index) => (
+                              <span 
+                                key={index}
+                                className="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-sm"
+                              >
+                                {alt}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-400 mt-3">
+                          נוצר: {new Date(synonym.createdAt).toLocaleDateString('he-IL')}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => startEdit(synonym)}
+                          className="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                          title="ערוך"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(synonym.id)}
+                          className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                          title="מחק"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </main>
     </div>
-  )
+  );
 }
