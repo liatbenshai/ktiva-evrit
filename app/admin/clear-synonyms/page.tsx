@@ -74,8 +74,8 @@ export default function ClearSynonymsPage() {
             </div>
           )}
 
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <a
+          <div className="mt-8 pt-6 border-gray-200">
+            
               href="/dashboard/synonyms"
               className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
             >
