@@ -114,7 +114,7 @@ ${text}
     // Call Claude API with JSON mode
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 4000,
+      max_tokens: 8000, // Increased from 4000 to handle longer content
       temperature: 1,
       messages: [
         {
