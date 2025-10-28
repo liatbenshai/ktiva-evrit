@@ -4,9 +4,10 @@ import { prisma } from '@/lib/prisma';
 // GET - Get single idiom
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const idiom = await prisma.idiom.findUnique({
       where: { id: params.id }
     });
@@ -31,9 +32,10 @@ export async function GET(
 // PATCH - Update idiom
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const body = await request.json();
     const { english, hebrew, category, learned } = body;
     
@@ -61,9 +63,10 @@ export async function PATCH(
 // DELETE - Delete idiom
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     await prisma.idiom.delete({
       where: { id: params.id }
     });
