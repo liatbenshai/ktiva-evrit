@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Save, X, BookOpen, Sparkles, Upload, Download } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, BookOpen, Sparkles, Upload, Download, Check } from 'lucide-react';
 
 interface Idiom {
   id: string;
   english: string;
   hebrew: string;
+  category?: string;
+  learned?: boolean;
   createdAt: string;
 }
 
@@ -45,7 +47,9 @@ export default function IdiomsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           english: newEnglish,
-          hebrew: newHebrew
+          hebrew: newHebrew,
+          category: 'ביטוי',
+          learned: false
         }),
       });
 
@@ -113,6 +117,24 @@ export default function IdiomsPage() {
     }
   };
 
+  const toggleLearned = async (idiom: Idiom) => {
+    try {
+      const response = await fetch(`/api/idioms/${idiom.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          learned: !idiom.learned
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update');
+      
+      await fetchIdioms();
+    } catch (error) {
+      console.error('Error updating learned status:', error);
+    }
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -122,38 +144,40 @@ export default function IdiomsPage() {
       const text = await file.text();
       const data = JSON.parse(text);
       
-      // הנחה: הקובץ הוא מערך של אובייקטים עם english ו-hebrew
       if (!Array.isArray(data)) {
         throw new Error('הקובץ חייב להכיל מערך של ביטויים');
       }
 
+      let successCount = 0;
       for (const item of data) {
         if (item.english && item.hebrew) {
-          await fetch('/api/idioms', {
+          const response = await fetch('/api/idioms', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               english: item.english,
-              hebrew: item.hebrew
+              hebrew: item.hebrew,
+              category: item.category || 'ביטוי',
+              learned: item.learned || false
             }),
           });
+          if (response.ok) successCount++;
         }
       }
       
       await fetchIdioms();
-      alert(`${data.length} ביטויים נטענו בהצלחה!`);
+      alert(`${successCount} ביטויים נטענו בהצלחה!`);
     } catch (error) {
       console.error('Error uploading file:', error);
-      alert('שגיאה בטעינת הקובץ. וודאי שהפורמט נכון: [{"english": "...", "hebrew": "..."}]');
+      alert('שגיאה בטעינת הקובץ. וודאי שהפורמט נכון');
     } finally {
       setLoading(false);
-      // Reset file input
       event.target.value = '';
     }
   };
 
   const handleExport = () => {
-    const exportData = idioms.map(({ id, createdAt, ...rest }) => rest);
+    const exportData = idioms.map(({ createdAt, ...rest }) => rest);
     const dataStr = JSON.stringify(exportData, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
@@ -166,7 +190,6 @@ export default function IdiomsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50" dir="rtl">
-      {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm shadow-lg border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-3">
@@ -184,7 +207,6 @@ export default function IdiomsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Add New Idiom Form */}
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-blue-100 p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -192,7 +214,6 @@ export default function IdiomsPage() {
               <h2 className="text-2xl font-bold text-gray-800">הוסיפי תרגום חדש</h2>
             </div>
             
-            {/* Import/Export Buttons */}
             <div className="flex gap-2">
               <input
                 type="file"
@@ -200,10 +221,11 @@ export default function IdiomsPage() {
                 onChange={handleFileUpload}
                 className="hidden"
                 id="file-upload"
+                disabled={loading}
               />
               <label
                 htmlFor="file-upload"
-                className="cursor-pointer bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2"
+                className={`cursor-pointer bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Upload className="w-5 h-5" />
                 ייבוא
@@ -261,9 +283,13 @@ export default function IdiomsPage() {
           </form>
         </div>
 
-        {/* Idioms List */}
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-blue-100 p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">רשימת תרגומים ({idioms.length})</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">רשימת תרגומים ({idioms.length})</h2>
+            <div className="text-sm text-gray-600">
+              נלמדו: {idioms.filter(i => i.learned).length} | לא נלמדו: {idioms.filter(i => !i.learned).length}
+            </div>
+          </div>
           
           {idioms.length === 0 ? (
             <div className="text-center py-12">
@@ -276,7 +302,11 @@ export default function IdiomsPage() {
               {idioms.map((idiom) => (
                 <div
                   key={idiom.id}
-                  className="group bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200"
+                  className={`group border rounded-xl p-6 hover:shadow-lg transition-all duration-200 ${
+                    idiom.learned 
+                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
+                      : 'bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200'
+                  }`}
                 >
                   {editingId === idiom.id ? (
                     <div className="space-y-4">
@@ -323,9 +353,21 @@ export default function IdiomsPage() {
                           <span className="text-sm font-medium text-blue-600 bg-blue-100 px-3 py-1 rounded-full">HE</span>
                           <p className="text-lg font-bold text-blue-600">{idiom.hebrew}</p>
                         </div>
-                        <p className="text-sm text-gray-400 mt-2">
-                          נוצר: {new Date(idiom.createdAt).toLocaleDateString('he-IL')}
-                        </p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <button
+                            onClick={() => toggleLearned(idiom)}
+                            className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
+                              idiom.learned
+                                ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                          >
+                            {idiom.learned ? '✓ נלמד' : 'סמן כנלמד'}
+                          </button>
+                          <span className="text-xs text-gray-400">
+                            {new Date(idiom.createdAt).toLocaleDateString('he-IL')}
+                          </span>
+                        </div>
                       </div>
                       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
