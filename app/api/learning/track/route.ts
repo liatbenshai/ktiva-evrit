@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
           learningSystem.recordCorrection({
             originalText,
             correctedText: editedText,
-            correctionType: editType,
+            correctionType: (editType as 'context' | 'style' | 'synonym' | 'grammar' | 'terminology') || 'manual',
             context,
             category: documentType as any,
             userId,
@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
         ? await Promise.resolve(learningSystem.getWritingSuggestions(userId, category))
         : null;
 
-    const recentCorrections: unknown[] = [];
+    const recentCorrections: unknown[] = []; // TODO: persist corrections to DB and return real data
 
     return NextResponse.json({
       userStats,
