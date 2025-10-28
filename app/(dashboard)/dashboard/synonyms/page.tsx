@@ -5,17 +5,19 @@ import { Plus, Edit2, Trash2, Save, X, BookOpen, Sparkles, Upload, Download } fr
 
 interface Synonym {
   id: string;
-  preferred: string;
+  primary: string;
   alternatives: string[];
+  category?: string;
+  context?: string[];
   createdAt: string;
 }
 
 export default function SynonymsPage() {
   const [synonyms, setSynonyms] = useState<Synonym[]>([]);
-  const [newPreferred, setNewPreferred] = useState('');
+  const [newPrimary, setNewPrimary] = useState('');
   const [newAlternatives, setNewAlternatives] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editPreferred, setEditPreferred] = useState('');
+  const [editPrimary, setEditPrimary] = useState('');
   const [editAlternatives, setEditAlternatives] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -36,7 +38,7 @@ export default function SynonymsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPreferred.trim() || !newAlternatives.trim()) return;
+    if (!newPrimary.trim() || !newAlternatives.trim()) return;
 
     setLoading(true);
     try {
@@ -49,15 +51,17 @@ export default function SynonymsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          preferred: newPreferred,
-          alternatives: alternativesArray
+          primary: newPrimary,
+          alternatives: alternativesArray,
+          category: 'general',
+          context: []
         }),
       });
 
       if (!response.ok) throw new Error('Failed to create');
       
       await fetchSynonyms();
-      setNewPreferred('');
+      setNewPrimary('');
       setNewAlternatives('');
     } catch (error) {
       console.error('Error creating synonym:', error);
@@ -84,18 +88,18 @@ export default function SynonymsPage() {
 
   const startEdit = (synonym: Synonym) => {
     setEditingId(synonym.id);
-    setEditPreferred(synonym.preferred);
+    setEditPrimary(synonym.primary);
     setEditAlternatives(synonym.alternatives.join(', '));
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setEditPreferred('');
+    setEditPrimary('');
     setEditAlternatives('');
   };
 
   const handleSaveEdit = async () => {
-    if (!editingId || !editPreferred.trim() || !editAlternatives.trim()) return;
+    if (!editingId || !editPrimary.trim() || !editAlternatives.trim()) return;
     
     try {
       const alternativesArray = editAlternatives
@@ -107,7 +111,7 @@ export default function SynonymsPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          preferred: editPreferred,
+          primary: editPrimary,
           alternatives: alternativesArray
         }),
       });
@@ -116,7 +120,7 @@ export default function SynonymsPage() {
       
       await fetchSynonyms();
       setEditingId(null);
-      setEditPreferred('');
+      setEditPrimary('');
       setEditAlternatives('');
     } catch (error) {
       console.error('Error updating synonym:', error);
@@ -130,40 +134,48 @@ export default function SynonymsPage() {
     setLoading(true);
     try {
       const text = await file.text();
-      const data = JSON.parse(text);
+      let data = JSON.parse(text);
       
-      // הנחה: הקובץ הוא מערך של אובייקטים עם preferred ו-alternatives
+      // אם יש שני מערכים (כמו בקובץ שלך), תקן את זה
       if (!Array.isArray(data)) {
         throw new Error('הקובץ חייב להכיל מערך של מילים נרדפות');
       }
 
+      // אם המערך הראשון הוא מערך בתוך מערך, שטח אותו
+      if (data.length > 0 && Array.isArray(data[0])) {
+        data = data.flat();
+      }
+
+      let successCount = 0;
       for (const item of data) {
-        if (item.preferred && Array.isArray(item.alternatives)) {
-          await fetch('/api/synonyms', {
+        if (item.primary && Array.isArray(item.alternatives)) {
+          const response = await fetch('/api/synonyms', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              preferred: item.preferred,
-              alternatives: item.alternatives
+              primary: item.primary,
+              alternatives: item.alternatives,
+              category: item.category || 'general',
+              context: item.context || []
             }),
           });
+          if (response.ok) successCount++;
         }
       }
       
       await fetchSynonyms();
-      alert(`${data.length} קבוצות מילים נרדפות נטענו בהצלחה!`);
+      alert(`${successCount} קבוצות מילים נרדפות נטענו בהצלחה!`);
     } catch (error) {
       console.error('Error uploading file:', error);
-      alert('שגיאה בטעינת הקובץ. וודאי שהפורמט נכון: [{"preferred": "...", "alternatives": ["...", "..."]}]');
+      alert('שגיאה בטעינת הקובץ. וודאי שהפורמט נכון');
     } finally {
       setLoading(false);
-      // Reset file input
       event.target.value = '';
     }
   };
 
   const handleExport = () => {
-    const exportData = synonyms.map(({ id, createdAt, ...rest }) => rest);
+    const exportData = synonyms.map(({ createdAt, ...rest }) => rest);
     const dataStr = JSON.stringify(exportData, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
@@ -176,7 +188,6 @@ export default function SynonymsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50" dir="rtl">
-      {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm shadow-lg border-b border-purple-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-3">
@@ -194,7 +205,6 @@ export default function SynonymsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Add New Synonym Form */}
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-purple-100 p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -202,7 +212,6 @@ export default function SynonymsPage() {
               <h2 className="text-2xl font-bold text-gray-800">הוסיפי קבוצת מילים נרדפות</h2>
             </div>
             
-            {/* Import/Export Buttons */}
             <div className="flex gap-2">
               <input
                 type="file"
@@ -210,10 +219,11 @@ export default function SynonymsPage() {
                 onChange={handleFileUpload}
                 className="hidden"
                 id="file-upload"
+                disabled={loading}
               />
               <label
                 htmlFor="file-upload"
-                className="cursor-pointer bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2"
+                className={`cursor-pointer bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Upload className="w-5 h-5" />
                 ייבוא
@@ -237,8 +247,8 @@ export default function SynonymsPage() {
               </label>
               <input
                 type="text"
-                value={newPreferred}
-                onChange={(e) => setNewPreferred(e.target.value)}
+                value={newPrimary}
+                onChange={(e) => setNewPrimary(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
                 placeholder="לקחת בחשבון"
                 required
@@ -271,7 +281,6 @@ export default function SynonymsPage() {
           </form>
         </div>
 
-        {/* Synonyms List */}
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-purple-100 p-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">רשימת מילים נרדפות ({synonyms.length})</h2>
           
@@ -292,8 +301,8 @@ export default function SynonymsPage() {
                     <div className="space-y-4">
                       <input
                         type="text"
-                        value={editPreferred}
-                        onChange={(e) => setEditPreferred(e.target.value)}
+                        value={editPrimary}
+                        onChange={(e) => setEditPrimary(e.target.value)}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                         placeholder="צורה מועדפת"
                       />
@@ -326,7 +335,7 @@ export default function SynonymsPage() {
                       <div className="flex-1">
                         <div className="mb-3">
                           <span className="text-sm font-medium text-green-600 bg-green-100 px-3 py-1 rounded-full">✓ מועדף</span>
-                          <p className="text-xl font-bold text-purple-600 mt-2">{synonym.preferred}</p>
+                          <p className="text-xl font-bold text-purple-600 mt-2">{synonym.primary}</p>
                         </div>
                         <div>
                           <span className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">חלופות</span>
@@ -341,8 +350,13 @@ export default function SynonymsPage() {
                             ))}
                           </div>
                         </div>
+                        {synonym.context && synonym.context.length > 0 && (
+                          <div className="mt-2">
+                            <span className="text-xs text-gray-500">הקשר: {synonym.context.join(', ')}</span>
+                          </div>
+                        )}
                         <p className="text-sm text-gray-400 mt-3">
-                          נוצר: {new Date(synonym.createdAt).toLocaleDateString('he-IL')}
+                          {new Date(synonym.createdAt).toLocaleDateString('he-IL')}
                         </p>
                       </div>
                       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
