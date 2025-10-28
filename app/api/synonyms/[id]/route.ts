@@ -4,9 +4,10 @@ import { prisma } from '@/lib/prisma';
 // GET - Get single synonym
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const synonym = await prisma.synonym.findUnique({
       where: { id: params.id }
     });
@@ -35,17 +36,18 @@ export async function GET(
 // PATCH - Update synonym
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const body = await request.json();
-    const { primary, alternatives, category, context } = body;
+    const { primary, alternatives, category, context: contextData } = body;
     
     const updateData: any = {};
     if (primary !== undefined) updateData.primary = primary;
     if (alternatives !== undefined) updateData.alternatives = JSON.stringify(alternatives);
     if (category !== undefined) updateData.category = category;
-    if (context !== undefined) updateData.context = JSON.stringify(context);
+    if (contextData !== undefined) updateData.context = JSON.stringify(contextData);
     
     const synonym = await prisma.synonym.update({
       where: { id: params.id },
@@ -69,9 +71,10 @@ export async function PATCH(
 // DELETE - Delete synonym
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     await prisma.synonym.delete({
       where: { id: params.id }
     });
