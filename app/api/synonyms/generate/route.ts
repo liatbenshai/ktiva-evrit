@@ -61,7 +61,7 @@ ${text}
 5. שמור על המשמעות והסגנון המקורי
 6. הסבר בדיוק מה הוחלף ולמה
 
-**חשוב מאוד:** החזר רקרק את אובייקט ה-JSON בלבד, ללא markdown, ללא backticks, ללא טקסט הסבר. 
+**חשוב מאוד:** החזר רק את אובייקט ה-JSON בלבד, ללא markdown, ללא backticks, ללא טקסט הסבר. 
 התשובה שלך צריכה להתחיל ב-{ ולהסתיים ב-}
 
 פורמט JSON מדויק:
@@ -106,7 +106,7 @@ ${text}
 
 זכור: 
 - אל תשתמש במילים מהמילון אם הן לא מתאימות להקשר
-- אל תעטוף את ה-JSON ב-```json או בכל דבר אחר
+- אל תעטוף את ה-JSON בסימני קוד או בכל דבר אחר
 - החזר רק JSON תקין וטהור`;
 
     console.log('🤖 Calling Claude API...');
