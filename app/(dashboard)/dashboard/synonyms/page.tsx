@@ -65,6 +65,7 @@ export default function SynonymsPage() {
       setNewAlternatives('');
     } catch (error) {
       console.error('Error creating synonym:', error);
+      alert('שגיאה ביצירת מילים נרדפות');
     } finally {
       setLoading(false);
     }
@@ -83,6 +84,7 @@ export default function SynonymsPage() {
       await fetchSynonyms();
     } catch (error) {
       console.error('Error deleting synonym:', error);
+      alert('שגיאה במחיקת מילים נרדפות');
     }
   };
 
@@ -124,6 +126,7 @@ export default function SynonymsPage() {
       setEditAlternatives('');
     } catch (error) {
       console.error('Error updating synonym:', error);
+      alert('שגיאה בעדכון מילים נרדפות');
     }
   };
 
@@ -134,40 +137,88 @@ export default function SynonymsPage() {
     setLoading(true);
     try {
       const text = await file.text();
-      let data = JSON.parse(text);
+      const data = JSON.parse(text);
       
-      // אם יש שני מערכים (כמו בקובץ שלך), תקן את זה
       if (!Array.isArray(data)) {
         throw new Error('הקובץ חייב להכיל מערך של מילים נרדפות');
       }
 
-      // אם המערך הראשון הוא מערך בתוך מערך, שטח אותו
-      if (data.length > 0 && Array.isArray(data[0])) {
-        data = data.flat();
-      }
-
       let successCount = 0;
+      let errorCount = 0;
+
       for (const item of data) {
-        if (item.primary && Array.isArray(item.alternatives)) {
-          const response = await fetch('/api/synonyms', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              primary: item.primary,
-              alternatives: item.alternatives,
-              category: item.category || 'general',
-              context: item.context || []
-            }),
-          });
-          if (response.ok) successCount++;
+        try {
+          // Normalize alternatives - handle both string and array
+          let alternativesArray: string[];
+          
+          if (typeof item.alternatives === 'string') {
+            // If it's a string, try to parse it as JSON
+            try {
+              alternativesArray = JSON.parse(item.alternatives);
+            } catch {
+              // If parsing fails, split by comma
+              alternativesArray = item.alternatives.split(',').map((s: string) => s.trim());
+            }
+          } else if (Array.isArray(item.alternatives)) {
+            alternativesArray = item.alternatives;
+          } else {
+            console.warn('Invalid alternatives format:', item);
+            errorCount++;
+            continue;
+          }
+
+          // Normalize context - handle both string and array
+          let contextArray: string[] = [];
+          
+          if (item.context) {
+            if (typeof item.context === 'string') {
+              try {
+                contextArray = JSON.parse(item.context);
+              } catch {
+                contextArray = [item.context];
+              }
+            } else if (Array.isArray(item.context)) {
+              contextArray = item.context;
+            }
+          }
+
+          if (item.primary && alternativesArray.length > 0) {
+            const response = await fetch('/api/synonyms', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                primary: item.primary,
+                alternatives: alternativesArray,
+                category: item.category || 'general',
+                context: contextArray
+              }),
+            });
+            
+            if (response.ok) {
+              successCount++;
+            } else {
+              errorCount++;
+              console.error('Failed to create synonym:', await response.text());
+            }
+          } else {
+            errorCount++;
+          }
+        } catch (itemError) {
+          console.error('Error processing item:', itemError);
+          errorCount++;
         }
       }
       
       await fetchSynonyms();
-      alert(`${successCount} קבוצות מילים נרדפות נטענו בהצלחה!`);
+      
+      if (errorCount > 0) {
+        alert(`הושלם עם שגיאות:\n✓ ${successCount} נוצרו בהצלחה\n✗ ${errorCount} נכשלו`);
+      } else {
+        alert(`${successCount} קבוצות מילים נרדפות נטענו בהצלחה!`);
+      }
     } catch (error) {
       console.error('Error uploading file:', error);
-      alert('שגיאה בטעינת הקובץ. וודאי שהפורמט נכון');
+      alert('שגיאה בטעינת הקובץ: ' + (error instanceof Error ? error.message : 'שגיאה לא ידועה'));
     } finally {
       setLoading(false);
       event.target.value = '';
