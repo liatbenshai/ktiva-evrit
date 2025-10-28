@@ -17,7 +17,7 @@ model User {
   password      String?   // For simple auth
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-
+  
   // User-specific data
   learningData  LearningData[]
   generatedContent GeneratedContent[]
@@ -68,4 +68,31 @@ model GeneratedContent {
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// Idioms - English to Hebrew translations
+model Idiom {
+  id          String   @id @default(cuid())
+  english     String
+  hebrew      String
+  category    String   @default("ביטוי")
+  learned     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([english])
+  @@index([learned])
+}
+
+// Synonyms - Hebrew word alternatives
+model Synonym {
+  id          String   @id @default(cuid())
+  primary     String   // The preferred/correct form
+  alternatives String  // JSON array of alternative words
+  category    String   @default("general")
+  context     String?  // JSON array of contexts
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([primary])
 }
