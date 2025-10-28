@@ -61,7 +61,10 @@ ${text}
 5. שמור על המשמעות והסגנון המקורי
 6. הסבר בדיוק מה הוחלף ולמה
 
-החזר את התשובה בפורמט JSON הבא בלבד, ללא טקסט נוסף:
+**חשוב מאוד:** החזר רקרק את אובייקט ה-JSON בלבד, ללא markdown, ללא backticks, ללא טקסט הסבר. 
+התשובה שלך צריכה להתחיל ב-{ ולהסתיים ב-}
+
+פורמט JSON מדויק:
 {
   "versions": [
     {
@@ -101,7 +104,10 @@ ${text}
   }
 }
 
-חשוב: אל תשתמש במילים מהמילון אם הן לא מתאימות להקשר!`;
+זכור: 
+- אל תשתמש במילים מהמילון אם הן לא מתאימות להקשר
+- אל תעטוף את ה-JSON ב-```json או בכל דבר אחר
+- החזר רק JSON תקין וטהור`;
 
     console.log('🤖 Calling Claude API...');
 
