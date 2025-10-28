@@ -129,22 +129,36 @@ ${text}
     // Parse JSON response
     let result;
     try {
-      // Try to extract JSON from markdown code block if present
-      const jsonMatch = responseText.match(/```json\n?([\s\S]*?)\n?```/) || 
-                        responseText.match(/```\n?([\s\S]*?)\n?```/);
+      // Clean the response text
+      let cleanedText = responseText.trim();
       
-      const jsonText = jsonMatch ? jsonMatch[1] : responseText;
-      result = JSON.parse(jsonText.trim());
+      // Remove markdown code blocks (```json ... ``` or ``` ... ```)
+      if (cleanedText.startsWith('```')) {
+        // Find the first newline after ```
+        const firstNewline = cleanedText.indexOf('\n');
+        const lastBackticks = cleanedText.lastIndexOf('```');
+        
+        if (firstNewline !== -1 && lastBackticks > firstNewline) {
+          cleanedText = cleanedText.substring(firstNewline + 1, lastBackticks).trim();
+        } else {
+          // Fallback: just remove ``` from start and end
+          cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/^```\n?/, '').replace(/\n?```$/, '').trim();
+        }
+      }
+      
+      console.log('🧹 Cleaned text (first 200 chars):', cleanedText.substring(0, 200));
+      
+      result = JSON.parse(cleanedText);
       
       console.log('✅ Successfully parsed JSON response');
     } catch (parseError) {
       console.error('❌ Failed to parse Claude response:', parseError);
-      console.error('Response was:', responseText);
+      console.error('Response was:', responseText.substring(0, 1000));
       
       return NextResponse.json(
         { 
           error: 'Failed to parse AI response',
-          details: responseText.substring(0, 500)
+          details: parseError instanceof Error ? parseError.message : 'Unknown parsing error'
         },
         { status: 500 }
       );
