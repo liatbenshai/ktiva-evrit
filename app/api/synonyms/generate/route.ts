@@ -135,10 +135,9 @@ ${text}
 
     // Parse JSON response
     let result;
+    let cleanedText = responseText.trim(); // Define here so it's available in catch block
+    
     try {
-      // Clean the response text
-      let cleanedText = responseText.trim();
-      
       console.log('🔍 Raw response (first 300 chars):', cleanedText.substring(0, 300));
       
       // Remove markdown code blocks in various formats
