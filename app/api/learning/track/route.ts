@@ -30,6 +30,24 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    // Validation
+    if (!documentType || !originalText || !editedText) {
+      return NextResponse.json(
+        { error: 'חסרים שדות נדרשים: documentType, originalText, editedText' },
+        { status: 400 }
+      );
+    }
+
+    // Record the correction in the advanced learning system
+    learningSystem.recordCorrection({
+      originalText,
+      correctedText: editedText,
+      correctionType: editType || 'manual',
+      context,
+      category: documentType,
+      userId,
+      confidence
+    });
 
     // Record the correction (await if async). If recording fails, log but don't block.
     if (typeof learningSystem.recordCorrection === 'function') {
@@ -108,6 +126,14 @@ export async function GET(req: NextRequest) {
         : null;
 
     const recentCorrections: unknown[] = []; // TODO: persist corrections to DB and return real data
+    // Get user statistics
+    const userStats = learningSystem.getUserStats(userId);
+    
+    // Get writing suggestions
+    const writingSuggestions = learningSystem.getWritingSuggestions(userId, category);
+    
+    // Get recent corrections (if we had a database)
+    const recentCorrections: any[] = []; // TODO: Implement database storage
 
     return NextResponse.json({
       userStats,

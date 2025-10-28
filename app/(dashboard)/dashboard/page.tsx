@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { 
   FileText, 
   Mail, 
@@ -9,7 +9,11 @@ import {
   BookOpen, 
   FileCheck, 
   ScrollText,
-  User
+  User,
+  BookMarked,
+  Brain,
+  TrendingUp,
+  Languages
 } from 'lucide-react';
 
 const modules = [
@@ -76,10 +80,23 @@ const modules = [
     href: '/dashboard/protocols',
     color: 'bg-indigo-500',
   },
+  {
+    title: 'ניהול מילים נרדפות',
+    description: 'הוסף וערוך מילים נרדפות למילון',
+    icon: BookMarked,
+    href: '/dashboard/synonyms',
+    color: 'bg-teal-600',
+  },
+  {
+    title: 'למידת פתגמים',
+    description: 'למד את המערכת פתגמים ומטבעות לשון',
+    icon: Languages,
+    href: '/dashboard/idioms',
+    color: 'bg-purple-600',
+  },
 ];
 
 export default function DashboardPage() {
-  // Authentication disabled - no user checks needed
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50" dir="rtl">
@@ -96,12 +113,14 @@ export default function DashboardPage() {
                 <p className="font-medium text-gray-900">משתמש</p>
               </div>
             </div>
-            <a
-              href="/"
-              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              חזרה לעמוד הראשי
-            </a>
+            <div className="flex gap-2">
+              <a
+                href="/"
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                חזרה לעמוד הראשי
+              </a>
+            </div>
           </div>
           <div className="text-center">
             <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
@@ -164,35 +183,66 @@ export default function DashboardPage() {
           })}
         </div>
 
-        {/* Recent Documents Section */}
+        {/* Learning Section */}
         <div className="mt-16">
           <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-            📚 המסמכים האחרונים שלך
+            🧠 מערכת למידה
           </h2>
-          <div className="relative bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 rounded-3xl shadow-xl border-2 border-white/50 p-12 text-center overflow-hidden">
-            {/* Decorative background circles */}
-            <div className="absolute top-0 left-0 w-32 h-32 bg-purple-300/20 rounded-full -ml-16 -mt-16 blur-3xl"></div>
-            <div className="absolute bottom-0 right-0 w-40 h-40 bg-pink-300/20 rounded-full -mr-20 -mb-20 blur-3xl"></div>
-            
-            <div className="relative">
-              {/* Animated icon */}
-              <div className="text-8xl mb-6 animate-bounce">
-                📝
-              </div>
-              
+          
+          <div className="bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100 rounded-3xl shadow-xl border-2 border-white/50 p-12 mb-8">
+            <div className="text-center mb-8">
+              <div className="text-6xl mb-4">🤖</div>
               <h3 className="text-2xl font-bold text-gray-800 mb-3">
-                עדיין לא יצרת מסמכים
+                למד את המערכת עברית תקנית
               </h3>
-              <p className="text-gray-600 text-lg mb-6 max-w-md mx-auto">
-                המסמכים שתיצרי יופיעו כאן, כך שתוכלי לגשת אליהם בקלות
+              <p className="text-gray-700 text-lg max-w-3xl mx-auto leading-relaxed">
+                המערכת יוצרת עבורך טקסטים בעברית. כשתתקן אותם, היא תשמור את התיקונים ותלמד מהם.
+                ככל שתתקן יותר, כך המערכת תשתפר ותבין מה זה עברית תקנית ומושלמת.
               </p>
-              
-              {/* Call to action */}
-              <div className="inline-block bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg">
-                <p className="text-gray-700 font-medium">
-                  💡 בחרי כלי למעלה כדי להתחיל ליצור
-                </p>
-              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+              <Link href="/dashboard/synonyms" className="group block transform transition-all duration-300 hover:scale-105">
+                <div className="relative bg-gradient-to-br from-teal-500 to-green-700 rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 border-2 border-white/50 h-full">
+                  <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl w-fit mb-4 shadow-md group-hover:scale-110 transition-transform duration-300">
+                    <BookMarked className="w-6 h-6 text-gray-800" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2 drop-shadow-md">
+                    מילים נרדפות
+                  </h3>
+                  <p className="text-white/90 text-sm">
+                    ניהול מילים נרדפות למילון
+                  </p>
+                </div>
+              </Link>
+
+              <Link href="/dashboard/idioms" className="group block transform transition-all duration-300 hover:scale-105">
+                <div className="relative bg-gradient-to-br from-purple-500 to-pink-700 rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 border-2 border-white/50 h-full">
+                  <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl w-fit mb-4 shadow-md group-hover:scale-110 transition-transform duration-300">
+                    <Languages className="w-6 h-6 text-gray-800" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2 drop-shadow-md">
+                    למידת פתגמים
+                  </h3>
+                  <p className="text-white/90 text-sm">
+                    למד את המערכת פתגמים בעברית
+                  </p>
+                </div>
+              </Link>
+
+              <Link href="/dashboard/learn" className="group block transform transition-all duration-300 hover:scale-105">
+                <div className="relative bg-gradient-to-br from-blue-500 to-cyan-700 rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 border-2 border-white/50 h-full">
+                  <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl w-fit mb-4 shadow-md group-hover:scale-110 transition-transform duration-300">
+                    <Brain className="w-6 h-6 text-gray-800" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2 drop-shadow-md">
+                    למידת טקסט
+                  </h3>
+                  <p className="text-white/90 text-sm">
+                    למד את המערכת תיקון טקסטים
+                  </p>
+                </div>
+              </Link>
             </div>
           </div>
         </div>
@@ -211,6 +261,7 @@ function getGradientClass(baseColor: string) {
     'bg-cyan-500': 'from-cyan-400 to-teal-600',
     'bg-yellow-500': 'from-yellow-400 to-orange-500',
     'bg-teal-500': 'from-teal-400 to-green-600',
+    'bg-teal-600': 'from-teal-500 to-green-700',
     'bg-green-500': 'from-green-400 to-emerald-600',
     'bg-purple-500': 'from-purple-400 to-purple-600',
     'bg-orange-500': 'from-orange-400 to-red-500',

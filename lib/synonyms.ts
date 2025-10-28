@@ -6,7 +6,7 @@
 export interface SynonymGroup {
   primary: string
   alternatives: string[]
-  category: 'formal' | 'informal' | 'academic' | 'business' | 'creative' | 'technical'
+  category: 'formal' | 'informal' | 'academic' | 'business' | 'creative' | 'technical' | 'general'
   context: string[]
 }
 
@@ -153,6 +153,128 @@ export const HEBREW_SYNONYMS: SynonymGroup[] = [
     alternatives: ['גרוע', 'לא טוב', 'בעייתי', 'לא מתאים'],
     category: 'informal',
     context: ['הערכות', 'ביקורות', 'משוב']
+  },
+
+  // More common words
+  {
+    primary: 'כי',
+    alternatives: ['משום ש', 'בגין', 'בשל', 'עקב כך'],
+    category: 'general',
+    context: ['הסברים', 'סיבות', 'נימוקים']
+  },
+  {
+    primary: 'גם',
+    alternatives: ['בנוסף', 'כמו כן', 'באותו אופן', 'יתר על כן'],
+    category: 'general',
+    context: ['הוספות', 'הרחבות']
+  },
+  {
+    primary: 'אבל',
+    alternatives: ['אולם', 'ברם', 'עם זאת', 'לעומת זאת'],
+    category: 'general',
+    context: ['ניגודים', 'הסתייגויות']
+  },
+  {
+    primary: 'זה',
+    alternatives: ['ההוא', 'הנ"ל', 'האמור לעיל', 'הנזכר'],
+    category: 'general',
+    context: ['התייחסויות', 'הפניות']
+  },
+  {
+    primary: 'יש',
+    alternatives: ['קיימים', 'נמצא', 'ישנם', 'קיים'],
+    category: 'general',
+    context: ['קיום', 'נוכחות']
+  },
+  {
+    primary: 'תמיד',
+    alternatives: ['בכל עת', 'בלא הפסקה', 'לעולם', 'בכל מקרה'],
+    category: 'general',
+    context: ['זמן', 'תדירות']
+  },
+  {
+    primary: 'לעזור',
+    alternatives: ['לתרום', 'לסייע', 'להועיל', 'לתמוך'],
+    category: 'general',
+    context: ['פעולות', 'שירות']
+  },
+  {
+    primary: 'ליצור',
+    alternatives: ['לבנות', 'לפתח', 'להקים', 'להקים'],
+    category: 'general',
+    context: ['יצירה', 'פיתוח']
+  },
+  {
+    primary: 'להשתמש',
+    alternatives: ['לנצל', 'להפעיל', 'להשתמש ב', 'לעשות שימוש'],
+    category: 'general',
+    context: ['פעולות', 'שימוש']
+  },
+  {
+    primary: 'חדש',
+    alternatives: ['מעודכן', 'מודרני', 'טרי', 'בלתי נדוש'],
+    category: 'general',
+    context: ['תיאורים', 'סטטוס']
+  },
+  {
+    primary: 'טוב יותר',
+    alternatives: ['משופר', 'נעלה', 'מצטיין יותר', 'איכותי יותר'],
+    category: 'general',
+    context: ['השוואות', 'שיפורים']
+  },
+  {
+    primary: 'קצת',
+    alternatives: ['במידה', 'בשלב מסוים', 'חלקא', 'קלות'],
+    category: 'general',
+    context: ['כמויות', 'מידות']
+  },
+  {
+    primary: 'גדול מאוד',
+    alternatives: ['ענקי', 'עצום', 'רחב ממדים', 'כביר'],
+    category: 'general',
+    context: ['תיאורים', 'גודל']
+  },
+  {
+    primary: 'חשוב',
+    alternatives: ['משמעותי', 'עיקרי', 'מרכזי', 'בעל חשיבות'],
+    category: 'general',
+    context: ['תיאורים', 'משמעות']
+  },
+  {
+    primary: 'בעיה',
+    alternatives: ['קושי', 'מצוקה', 'אתגר', 'מכשול'],
+    category: 'general',
+    context: ['תיאורים', 'אתגרים']
+  },
+  {
+    primary: 'פתרון',
+    alternatives: ['תרופה', 'מענה', 'היענות', 'תגובה'],
+    category: 'general',
+    context: ['תיאורים', 'מענה']
+  },
+  {
+    primary: 'להתחיל',
+    alternatives: ['לפתוח', 'לבצע', 'להתחיל ב', 'לצאת לדרך'],
+    category: 'general',
+    context: ['פעולות', 'התחלות']
+  },
+  {
+    primary: 'לסיים',
+    alternatives: ['להשלים', 'לסיים את', 'לחתום', 'להביא לסיום'],
+    category: 'general',
+    context: ['פעולות', 'סיומים']
+  },
+  {
+    primary: 'מהר',
+    alternatives: ['במהירות', 'מיידית', 'מיד', 'תכף'],
+    category: 'general',
+    context: ['זמן', 'מהירות']
+  },
+  {
+    primary: 'לאט',
+    alternatives: ['בהדרגה', 'באיטיות', 'בסבלנות', 'בצעד אט'],
+    category: 'general',
+    context: ['זמן', 'מהירות']
   }
 ]
 
@@ -242,15 +364,32 @@ export function generateSynonymVersions(
   context: string = '',
   category?: string
 ): string[] {
-  const versions: string[] = []
+  const versions: Set<string> = new Set()
   
-  for (let i = 0; i < count; i++) {
-    const replacementRate = 0.2 + (i * 0.1) // Varying replacement rates
+  // Try to generate unique versions
+  let attempts = 0
+  const maxAttempts = count * 10 // Try up to 10 times per version
+  
+  while (versions.size < count && attempts < maxAttempts) {
+    attempts++
+    const replacementRate = 0.3 + (Math.random() * 0.3) // Varying replacement rates between 0.3-0.6
     const version = replaceWithSynonyms(text, replacementRate, context, category)
-    versions.push(version)
+    
+    // Only add if different from original and not already in versions
+    if (version !== text && !versions.has(version)) {
+      versions.add(version)
+    }
   }
   
-  return versions
+  // If we couldn't generate enough unique versions, add some even if duplicates
+  const results = Array.from(versions)
+  while (results.length < count) {
+    const replacementRate = 0.3 + (Math.random() * 0.3)
+    const version = replaceWithSynonyms(text, replacementRate, context, category)
+    results.push(version)
+  }
+  
+  return results.slice(0, count)
 }
 
 /**

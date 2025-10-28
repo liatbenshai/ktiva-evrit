@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { RefreshCw, Loader2, Lightbulb, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 
 interface SynonymButtonProps {
@@ -33,7 +33,7 @@ export function SynonymButton({
       setIsGenerating(true)
       setError(null)
       
-      const response = await fetch('/api/synonyms', {
+      const response = await fetch('/api/synonyms/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,13 +48,15 @@ export function SynonymButton({
       })
 
       if (!response.ok) {
-        throw new Error('שגיאה ביצירת גרסאות עם מילים נרדפות')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'שגיאה ביצירת גרסאות עם מילים נרדפות')
       }
 
       const data = await response.json()
       setGeneratedVersions(data.versions)
       setQualityAnalysis(data.qualityAnalysis)
     } catch (err) {
+      console.error('Error generating synonyms:', err)
       setError(err instanceof Error ? err.message : 'שגיאה לא צפויה')
     } finally {
       setIsGenerating(false)
@@ -80,9 +82,6 @@ export function SynonymButton({
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>יצירת גרסאות עם מילים נרדפות</DialogTitle>
-          <DialogDescription>
-            המערכת תיצור גרסאות שונות של הטקסט עם מילים נרדפות כדי לתת לך אפשרויות נוספות לכתיבה עברית תקנית.
-          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -109,7 +108,7 @@ export function SynonymButton({
                     </div>
                   </div>
                 </div>
-                {qualityAnalysis.suggestions.length > 0 && (
+                {qualityAnalysis.suggestions && qualityAnalysis.suggestions.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="font-semibold">הצעות לשיפור:</h4>
                     {qualityAnalysis.suggestions.map((suggestion: any, index: number) => (
@@ -117,7 +116,7 @@ export function SynonymButton({
                         <Badge variant="outline">{suggestion.word}</Badge>
                         <span>→</span>
                         <Badge variant="secondary">{suggestion.suggestion}</Badge>
-                        <span className="text-muted-foreground">{suggestion.reason}</span>
+                        <span className="text-gray-600">{suggestion.reason}</span>
                       </div>
                     ))}
                   </div>
@@ -130,9 +129,9 @@ export function SynonymButton({
             <Card>
               <CardContent className="py-8">
                 <div className="text-center">
-                  <RefreshCw className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <RefreshCw className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">יצירת גרסאות עם מילים נרדפות</h3>
-                  <p className="text-muted-foreground mb-4">
+                  <p className="text-gray-600 mb-4">
                     המערכת תיצור 3 גרסאות שונות של הטקסט עם מילים נרדפות
                   </p>
                   <Button onClick={handleGenerateSynonyms} disabled={isGenerating}>
@@ -157,9 +156,9 @@ export function SynonymButton({
             <Card>
               <CardContent className="py-8">
                 <div className="text-center">
-                  <Loader2 className="h-12 w-12 text-primary mx-auto mb-4 animate-spin" />
+                  <Loader2 className="h-12 w-12 text-blue-600 mx-auto mb-4 animate-spin" />
                   <h3 className="text-lg font-semibold mb-2">יוצר גרסאות...</h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-gray-600">
                     המערכת מעבדת את הטקסט ויוצרת גרסאות עם מילים נרדפות
                   </p>
                 </div>
@@ -168,9 +167,9 @@ export function SynonymButton({
           )}
 
           {error && (
-            <Card className="border-destructive">
+            <Card className="border-red-200">
               <CardContent className="py-4">
-                <div className="text-center text-destructive">
+                <div className="text-center text-red-600">
                   <h3 className="font-semibold mb-2">שגיאה</h3>
                   <p>{error}</p>
                   <Button 
@@ -196,7 +195,7 @@ export function SynonymButton({
                 </Badge>
               </div>
               
-              <div className="grid gap-4">
+              <div className="space-y-4">
                 {generatedVersions.map((version, index) => (
                   <Card key={version.id} className="hover:shadow-md transition-shadow">
                     <CardHeader>
@@ -209,8 +208,8 @@ export function SynonymButton({
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        <div className="prose prose-sm max-w-none max-h-32 overflow-y-auto">
-                          <p>{version.content}</p>
+                        <div className="bg-gray-50 p-4 rounded max-h-32 overflow-y-auto">
+                          <p className="whitespace-pre-wrap">{version.content}</p>
                         </div>
                         
                         {version.improvements && version.improvements.length > 0 && (
@@ -219,11 +218,22 @@ export function SynonymButton({
                               <Lightbulb className="h-4 w-4" />
                               שיפורים בגרסה זו:
                             </h4>
-                            {version.improvements.map((improvement: any, idx: number) => (
-                              <div key={idx} className="text-xs text-muted-foreground">
-                                • {improvement.reason}
-                              </div>
-                            ))}
+                            <div className="space-y-1">
+                              {version.improvements.map((improvement: any, idx: number) => (
+                                <div key={idx} className="flex items-start gap-2 text-xs">
+                                  <Badge variant="outline" className="shrink-0">
+                                    {improvement.original}
+                                  </Badge>
+                                  <span className="text-gray-400">→</span>
+                                  <Badge variant="secondary" className="shrink-0">
+                                    {improvement.replacement}
+                                  </Badge>
+                                  <span className="text-gray-600">
+                                    {improvement.reason}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                         
@@ -238,7 +248,10 @@ export function SynonymButton({
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => navigator.clipboard.writeText(version.content)}
+                            onClick={() => {
+                              navigator.clipboard.writeText(version.content)
+                              // Optional: show toast notification
+                            }}
                           >
                             העתק
                           </Button>
