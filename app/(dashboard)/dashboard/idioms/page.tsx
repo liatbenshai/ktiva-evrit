@@ -1,528 +1,237 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Home, BookOpen, CheckCircle, XCircle, RefreshCw, Plus, Edit3, Trash2, Download, Upload } from 'lucide-react'
-import Link from 'next/link'
+import { useState, useEffect } from 'react';
+import { Plus, Edit2, Trash2, Save, X, BookOpen, Sparkles } from 'lucide-react';
 
 interface Idiom {
-  id: string
-  english: string
-  hebrew: string
-  category: string
-  learned: boolean
-}
-
-interface ImportFile {
-  idioms: Idiom[]
+  id: string;
+  hebrew: string;
+  createdAt: string;
 }
 
 export default function IdiomsPage() {
-  const [currentIdiom, setCurrentIdiom] = useState<Idiom | null>(null)
-  const [correctedText, setCorrectedText] = useState('')
-  const [learnedIds, setLearnedIds] = useState<Set<string>>(new Set())
-  const [history, setHistory] = useState<Idiom[]>([])
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [newIdiom, setNewIdiom] = useState({ english: '', hebrew: '', category: 'ביטוי' })
-  const [userIdioms, setUserIdioms] = useState<Idiom[]>([])
-  const [isEditing, setIsEditing] = useState(false)
+  const [idioms, setIdioms] = useState<Idiom[]>([]);
+  const [newHebrew, setNewHebrew] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Sample idioms database
-  const idiomsDatabase: Idiom[] = [
-    { id: '1', english: 'To take into account', hebrew: 'להביא בחשבון', category: 'ביטוי', learned: false },
-    { id: '2', english: 'In the meantime', hebrew: 'בינתיים', category: 'זמן', learned: false },
-    { id: '3', english: 'On the other hand', hebrew: 'מצד שני', category: 'ניגוד', learned: false },
-    { id: '4', english: 'In other words', hebrew: 'במילים אחרות', category: 'הסבר', learned: false },
-    { id: '5', english: 'As a matter of fact', hebrew: 'למעשה', category: 'עובדות', learned: false },
-    { id: '6', english: 'All in all', hebrew: 'בסך הכל', category: 'סיכום', learned: false },
-    { id: '7', english: 'As long as', hebrew: 'כל עוד', category: 'תנאי', learned: false },
-    { id: '8', english: 'In order to', hebrew: 'על מנת', category: 'מטרה', learned: false },
-    { id: '9', english: 'In addition', hebrew: 'בנוסף', category: 'הוספה', learned: false },
-    { id: '10', english: 'On purpose', hebrew: 'במכוון', category: 'כוונה', learned: false },
-  ]
-
-  // Load user idioms from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('user-idioms')
-    if (saved) {
-      setUserIdioms(JSON.parse(saved))
+    fetchIdioms();
+  }, []);
+
+  const fetchIdioms = async () => {
+    try {
+      const response = await fetch('/api/idioms');
+      if (!response.ok) throw new Error('Failed to fetch');
+      const data = await response.json();
+      setIdioms(data);
+    } catch (error) {
+      console.error('Error fetching idioms:', error);
     }
-  }, [])
+  };
 
-  // Save user idioms to localStorage
-  useEffect(() => {
-    if (userIdioms.length > 0) {
-      localStorage.setItem('user-idioms', JSON.stringify(userIdioms))
-    }
-  }, [userIdioms])
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newHebrew.trim()) return;
 
-  const allIdioms = [...idiomsDatabase, ...userIdioms]
+    setLoading(true);
+    try {
+      const response = await fetch('/api/idioms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          hebrew: newHebrew
+        }),
+      });
 
-  const getRandomIdiom = () => {
-    const unlearnedIdioms = allIdioms.filter(idiom => !learnedIds.has(idiom.id))
-    if (unlearnedIdioms.length === 0) {
-      setLearnedIds(new Set())
-      return allIdioms[Math.floor(Math.random() * allIdioms.length)]
-    }
-    return unlearnedIdioms[Math.floor(Math.random() * unlearnedIdioms.length)]
-  }
-
-  const handleShowIdiom = () => {
-    const idiom = getRandomIdiom()
-    setCurrentIdiom(idiom)
-    setCorrectedText('')
-  }
-
-  const handleLearned = () => {
-    if (currentIdiom && correctedText.trim()) {
-      // Save the corrected translation
-      const correctedIdiom = {
-        ...currentIdiom,
-        hebrew: correctedText.trim(),
-        learned: true
-      }
+      if (!response.ok) throw new Error('Failed to create');
       
-      setLearnedIds(new Set([...learnedIds, currentIdiom.id]))
-      setHistory([...history, correctedIdiom])
-      setCurrentIdiom(null)
-      setCorrectedText('')
+      await fetchIdioms();
+      setNewHebrew('');
+    } catch (error) {
+      console.error('Error creating idiom:', error);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  const handleNotLearned = () => {
-    if (currentIdiom) {
-      setHistory([...history, { ...currentIdiom, learned: false }])
-      setCurrentIdiom(null)
-      setCorrectedText('')
+  const handleDelete = async (id: string) => {
+    if (!confirm('האם את בטוחה שברצונך למחוק את הביטוי הזה?')) return;
+
+    try {
+      const response = await fetch(`/api/idioms/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete');
+      
+      await fetchIdioms();
+    } catch (error) {
+      console.error('Error deleting idiom:', error);
     }
-  }
+  };
 
-  const handleAddIdiom = () => {
-    if (!newIdiom.english || !newIdiom.hebrew) {
-      alert('נא למלא ביטוי באנגלית ובעברית')
-      return
-    }
+  const startEdit = (idiom: Idiom) => {
+    setEditingId(idiom.id);
+    setEditText(idiom.hebrew);
+  };
 
-    const idiom: Idiom = {
-      id: Date.now().toString(),
-      english: newIdiom.english,
-      hebrew: newIdiom.hebrew,
-      category: newIdiom.category,
-      learned: false
-    }
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditText('');
+  };
 
-    setUserIdioms([...userIdioms, idiom])
-    setShowAddForm(false)
-    setNewIdiom({ english: '', hebrew: '', category: 'ביטוי' })
-    setIsEditing(false)
-  }
-
-  const handleEditIdiom = (idiom: Idiom) => {
-    setCurrentIdiom(idiom)
-    setShowAddForm(true)
-    setNewIdiom({
-      english: idiom.english,
-      hebrew: idiom.hebrew,
-      category: idiom.category
-    })
-    setIsEditing(true)
-  }
-
-  const handleSaveEdit = () => {
-    if (!currentIdiom) return
-
-    const updated = userIdioms.map(idiom =>
-      idiom.id === currentIdiom.id
-        ? { ...idiom, ...newIdiom }
-        : idiom
-    )
-    setUserIdioms(updated)
-    setShowAddForm(false)
-    setCurrentIdiom(null)
-    setIsEditing(false)
-    setNewIdiom({ english: '', hebrew: '', category: 'ביטוי' })
-  }
-
-  const handleDeleteIdiom = (id: string) => {
-    if (confirm('האם אתה בטוח שברצונך למחוק?')) {
-      setUserIdioms(userIdioms.filter(i => i.id !== id))
-      // Also remove from learned
-      setLearnedIds(new Set(Array.from(learnedIds).filter(i => i !== id)))
-    }
-  }
-
-  const handleExport = () => {
-    const dataStr = JSON.stringify(userIdioms, null, 2)
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+  const handleSaveEdit = async () => {
+    if (!editingId || !editText.trim()) return;
     
-    const exportFileDefaultName = `idioms-${new Date().toISOString().split('T')[0]}.json`
-    
-    const linkElement = document.createElement('a')
-    linkElement.setAttribute('href', dataUri)
-    linkElement.setAttribute('download', exportFileDefaultName)
-    linkElement.click()
-  }
+    try {
+      const response = await fetch(`/api/idioms/${editingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          hebrew: editText
+        }),
+      });
 
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      try {
-        const content = e.target?.result as string
-        const imported = JSON.parse(content)
-        
-        let idiomsToImport: Idiom[] = []
-        
-        // Check if it's an array directly or an object with idioms property
-        if (Array.isArray(imported)) {
-          idiomsToImport = imported
-        } else if (imported.idioms && Array.isArray(imported.idioms)) {
-          idiomsToImport = imported.idioms
-        } else {
-          alert('קובץ לא תקין - צריך להיות מערך או אובייקט עם תכונת idioms')
-          return
-        }
-
-        // Import idioms directly to the learning database (not as user-added)
-        const newIdiomsWithIDs = idiomsToImport.map((item: any) => ({
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-          english: item.english || '',
-          hebrew: item.hebrew || '',
-          category: item.category || 'ביטוי',
-          learned: false
-        }))
-        
-        // Add to user idioms - these will be available for learning
-        setUserIdioms([...userIdioms, ...newIdiomsWithIDs])
-        alert(`יובאו ${idiomsToImport.length} ביטויים בהצלחה! הם זמינים כעת ללמידה.`)
-      } catch (error) {
-        console.error('Import error:', error)
-        alert('שגיאה בייבוא הקובץ: ' + (error instanceof Error ? error.message : 'Unknown error'))
-      }
+      if (!response.ok) throw new Error('Failed to update');
+      
+      await fetchIdioms();
+      setEditingId(null);
+      setEditText('');
+    } catch (error) {
+      console.error('Error updating idiom:', error);
     }
-    reader.readAsText(file)
-    
-    // Reset the input
-    event.target.value = ''
-  }
-
-  const getProgress = () => {
-    return Math.round((learnedIds.size / allIdioms.length) * 100)
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50" dir="rtl">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm shadow-lg border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                🎓 למידת פתגמים ומטבעות לשון
-              </h1>
-              <p className="text-gray-600 mt-1">
-                למד את המערכת לתרגום נכון של פתגמים באנגלית לעברית תקנית
-              </p>
-              <p className="text-sm text-gray-600 mt-1">
-                📥 יבוא קובץ JSON עם ביטויים ותרגומיהם | ✅ ייבואם יזמין אותם ללמידה
-              </p>
-              <p className="text-xs text-blue-600 mt-1">
-                💡 פורמט: [{"english": "...", "hebrew": "...", "category": "..."}]
-              </p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl shadow-lg">
+              <BookOpen className="w-8 h-8 text-white" />
             </div>
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={handleExport}
-                disabled={userIdioms.length === 0}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                <Download className="w-5 h-5" />
-                ייצא
-              </button>
-              <label className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all cursor-pointer">
-                <Upload className="w-5 h-5" />
-                ייבוא
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleImport}
-                  className="hidden"
-                />
-              </label>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all"
-              >
-                <Plus className="w-5 h-5" />
-                הוסף ביטוי
-              </button>
-              <Link
-                href="/dashboard"
-                className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
-              >
-                <Home className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                חזרה לדשבורד
-              </Link>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                ניהול ביטויים
+              </h1>
+              <p className="text-gray-600 mt-1">מאגר ביטויים בעברית</p>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Add/Edit Form */}
-      {showAddForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {isEditing ? 'ערוך תרגום' : 'הוסף ביטוי חדש'}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowAddForm(false)
-                  setIsEditing(false)
-                  setNewIdiom({ english: '', hebrew: '', category: 'ביטוי' })
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ביטוי באנגלית *
-                </label>
-                <input
-                  type="text"
-                  value={newIdiom.english}
-                  onChange={(e) => setNewIdiom({ ...newIdiom, english: e.target.value })}
-                  placeholder="To take into account"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  dir="ltr"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  תרגום בעברית תקנית *
-                </label>
-                <input
-                  type="text"
-                  value={newIdiom.hebrew}
-                  onChange={(e) => setNewIdiom({ ...newIdiom, hebrew: e.target.value })}
-                  placeholder="להביא בחשבון"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  dir="rtl"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  קטגוריה
-                </label>
-                <select
-                  value={newIdiom.category}
-                  onChange={(e) => setNewIdiom({ ...newIdiom, category: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option>ביטוי</option>
-                  <option>זמן</option>
-                  <option>ניגוד</option>
-                  <option>הסבר</option>
-                  <option>עובדות</option>
-                  <option>סיכום</option>
-                  <option>תנאי</option>
-                  <option>מטרה</option>
-                  <option>הוספה</option>
-                  <option>כוונה</option>
-                </select>
-              </div>
-
-              <div className="flex gap-4">
-                <button
-                  onClick={isEditing ? handleSaveEdit : handleAddIdiom}
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  {isEditing ? 'שמור שינויים' : 'הוסף'}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowAddForm(false)
-                    setIsEditing(false)
-                    setNewIdiom({ english: '', hebrew: '', category: 'ביטוי' })
-                  }}
-                  className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  ביטול
-                </button>
-              </div>
-            </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Add New Idiom Form */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-blue-100 p-8 mb-8">
+          <div className="flex items-center gap-2 mb-6">
+            <Sparkles className="w-6 h-6 text-cyan-500" />
+            <h2 className="text-2xl font-bold text-gray-800">הוסיפי ביטוי חדש</h2>
           </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Progress */}
-        <div className="mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">התקדמות הלמידה</h2>
-              <span className="text-2xl font-bold text-blue-600">{getProgress()}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-4">
-              <div 
-                className="bg-gradient-to-r from-blue-500 to-cyan-600 h-4 rounded-full transition-all duration-500"
-                style={{ width: `${getProgress()}%` }}
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                ביטוי בעברית
+              </label>
+              <input
+                type="text"
+                value={newHebrew}
+                onChange={(e) => setNewHebrew(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                placeholder="הזיני ביטוי בעברית..."
+                required
               />
             </div>
-            <p className="text-gray-600 mt-2">
-              למדת {learnedIds.size} מתוך {allIdioms.length} פתגמים
-            </p>
-          </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3 px-6 rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              {loading ? 'מוסיפה...' : 'הוסיפי ביטוי'}
+            </button>
+          </form>
         </div>
 
-        {/* Current Idiom Card */}
-        {!currentIdiom ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-            <div className="text-8xl mb-6">📖</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              מוכן להתחיל ללמד?
-            </h3>
-            <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto">
-              המערכת תציג לך ביטוי באנגלית, ואתה יכול ללמד את התרגום הנכון.
-            </p>
-            <button
-              onClick={handleShowIdiom}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium text-lg"
-            >
-              <BookOpen className="w-6 h-6" />
-              התחל ללמד
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Idiom Card */}
-            <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 p-8">
-              <div className="text-center mb-6">
-                <div className="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-4">
-                  {currentIdiom.category}
-                </div>
-                
-                <h3 className="text-4xl font-bold text-gray-900 mb-8" dir="ltr">
-                  {currentIdiom.english}
-                </h3>
-                
-                <p className="text-gray-600 text-lg mb-6">
-                  תרגם את הביטוי לעברית תקנית:
-                </p>
-                
-                <input
-                  type="text"
-                  value={correctedText}
-                  onChange={(e) => setCorrectedText(e.target.value)}
-                  placeholder="הזן תרגום נכון..."
-                  className="w-full bg-blue-50 border-2 border-blue-200 rounded-xl p-6 text-2xl font-bold text-blue-700 text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
-                  dir="rtl"
-                  autoFocus
-                />
-              </div>
+        {/* Idioms List */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-blue-100 p-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">רשימת ביטויים</h2>
+          
+          {idioms.length === 0 ? (
+            <div className="text-center py-12">
+              <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">אין עדיין ביטויים במאגר</p>
+              <p className="text-gray-400 mt-2">הוסיפי את הביטוי הראשון שלך למעלה</p>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-4">
-              <button
-                onClick={handleNotLearned}
-                className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition-all font-medium text-lg"
-              >
-                <XCircle className="w-6 h-6" />
-                לא נכון - תקן את התרגום
-              </button>
-              <button
-                onClick={handleLearned}
-                className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-green-100 text-green-700 rounded-xl hover:bg-green-200 transition-all font-medium text-lg"
-              >
-                <CheckCircle className="w-6 h-6" />
-                נכון! למדתי
-              </button>
-              <button
-                onClick={handleShowIdiom}
-                className="flex items-center justify-center gap-2 px-6 py-4 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium"
-              >
-                <RefreshCw className="w-5 h-5" />
-                דלג
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* User Idіoms List */}
-        {userIdioms.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">הביטויים שלך</h2>
-            <div className="space-y-3">
-              {userIdioms.map((idiom) => (
-                <div key={idiom.id} className="bg-white rounded-lg shadow-sm border p-4 flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900" dir="ltr">{idiom.english}</p>
-                    <p className="text-gray-600" dir="rtl">{idiom.hebrew}</p>
-                    <span className="inline-block mt-2 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                      {idiom.category}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEditIdiom(idiom)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="ערוך"
-                    >
-                      <Edit3 className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteIdiom(idiom.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="מחק"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* History */}
-        {history.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">היסטוריית למידה</h2>
-            <div className="space-y-3">
-              {history.slice(-10).reverse().map((idiom) => (
-                <div 
-                  key={idiom.id} 
-                  className={`bg-white rounded-lg shadow-sm border p-4 flex items-center justify-between ${
-                    idiom.learned ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
-                  }`}
+          ) : (
+            <div className="space-y-4">
+              {idioms.map((idiom) => (
+                <div
+                  key={idiom.id}
+                  className="group bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200"
                 >
-                  <div className="flex items-center gap-4">
-                    {idiom.learned ? (
-                      <CheckCircle className="w-6 h-6 text-green-600" />
-                    ) : (
-                      <XCircle className="w-6 h-6 text-red-600" />
-                    )}
-                    <div>
-                      <p className="font-semibold text-gray-900" dir="ltr">{idiom.english}</p>
-                      <p className="text-gray-600" dir="rtl">{idiom.hebrew}</p>
+                  {editingId === idiom.id ? (
+                    <div className="space-y-4">
+                      <input
+                        type="text"
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                        placeholder="עברית"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={handleSaveEdit}
+                          className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+                        >
+                          <Save className="w-4 h-4" />
+                          שמירה
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2"
+                        >
+                          <X className="w-4 h-4" />
+                          ביטול
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-lg font-medium text-gray-800">{idiom.hebrew}</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          נוצר: {new Date(idiom.createdAt).toLocaleDateString('he-IL')}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => startEdit(idiom)}
+                          className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                          title="ערוך"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(idiom.id)}
+                          className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                          title="מחק"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </main>
     </div>
-  )
+  );
 }
