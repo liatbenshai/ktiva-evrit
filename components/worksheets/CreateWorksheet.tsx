@@ -357,18 +357,16 @@ export default function CreateWorksheet() {
               
               /* הפרדה טובה יותר בין שורות */
               .content {
-                line-height: 2.2;
+                line-height: 2;
               }
               
-              .content br {
+              .content div[style*="margin-bottom"] {
                 display: block;
-                margin: 8px 0;
-                content: "";
               }
               
               /* הפרדה בין תרגילים/שאלות */
-              .content > * {
-                margin-bottom: 20px;
+              .content > div {
+                margin-bottom: 15px;
               }
               
               .question-number, .exercise-number {
@@ -451,7 +449,7 @@ export default function CreateWorksheet() {
             </div>
             
             <div class="content">
-              ${escapedContent}
+            ${escapedContent}
             </div>
             
           </body>
