@@ -526,7 +526,8 @@ export default function CreateWorksheet() {
           <div className="prose max-w-none">
             <div
               className="bg-gray-50 p-6 rounded-lg border border-gray-200 whitespace-pre-wrap text-base leading-relaxed"
-              dir="rtl"
+              dir={isResultHebrew ? 'rtl' : 'ltr'}
+              lang={detectedLanguage}
             >
               {cleanMarkdown(result).split('\n').map((line, index) => (
                 <div key={index} className={index > 0 ? 'mt-2' : ''}>
