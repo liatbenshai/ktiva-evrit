@@ -72,7 +72,22 @@ export default function CreateWorksheet() {
     if (printWindow) {
       // ניקוי markdown ואז escape ל-HTML
       const cleanedResult = cleanMarkdown(result);
-      const escapedResult = cleanedResult
+      
+      // חילוץ כותרת (שורה ראשונה או שורה שמתחילה במילים מסוימות)
+      const lines = cleanedResult.split('\n').filter(line => line.trim());
+      let title = 'דף עבודה';
+      let content = cleanedResult;
+      
+      // ננסה למצוא כותרת
+      if (lines.length > 0) {
+        const firstLine = lines[0].trim();
+        if (firstLine.length < 60 && !firstLine.includes('?') && !firstLine.includes(':')) {
+          title = firstLine;
+          content = lines.slice(1).join('\n');
+        }
+      }
+      
+      const escapedContent = content
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -80,63 +95,177 @@ export default function CreateWorksheet() {
         .replace(/'/g, '&#039;')
         .replace(/\n/g, '<br>');
       
+      const escapedTitle = title
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+      
       printWindow.document.write(`
         <!DOCTYPE html>
         <html dir="rtl">
           <head>
             <meta charset="UTF-8">
-            <title>דף עבודה</title>
+            <title>${escapedTitle}</title>
             <style>
               @media print {
                 @page {
-                  margin: 2cm;
+                  margin: 1.5cm;
                 }
               }
+              
+              * {
+                box-sizing: border-box;
+              }
+              
               body {
-                font-family: 'Arial', 'Helvetica', sans-serif;
+                font-family: 'Segoe UI', 'Arial', 'Helvetica', sans-serif;
                 font-size: 16px;
                 line-height: 1.8;
-                padding: 40px;
-                max-width: 800px;
+                padding: 30px;
+                max-width: 850px;
                 margin: 0 auto;
-                color: #000;
+                color: #2c3e50;
+                background: #fff;
               }
-              h1 {
+              
+              .header {
                 text-align: center;
-                margin-bottom: 30px;
-                font-size: 28px;
+                margin-bottom: 40px;
+                padding-bottom: 20px;
+                border-bottom: 4px solid #ffd700;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 30px;
+                border-radius: 15px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+              }
+              
+              .header h1 {
+                margin: 0;
+                font-size: 32px;
                 font-weight: bold;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+                letter-spacing: 1px;
               }
-              .student-name {
-                margin-bottom: 30px;
-                padding: 10px;
-                border-bottom: 2px solid #333;
-                font-size: 16px;
+              
+              .student-info {
+                margin: 30px 0;
+                padding: 15px 20px;
+                background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+                border-radius: 10px;
+                border-right: 5px solid #e17055;
+                font-size: 18px;
+                font-weight: bold;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
               }
-              .question {
+              
+              .content {
+                margin-top: 30px;
+              }
+              
+              .question, .exercise {
                 margin: 25px 0;
-                padding: 15px;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                background-color: #f9f9f9;
+                padding: 20px;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border-right: 4px solid #667eea;
+                border-radius: 10px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                position: relative;
               }
+              
+              .question-number, .exercise-number {
+                display: inline-block;
+                width: 35px;
+                height: 35px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 50%;
+                text-align: center;
+                line-height: 35px;
+                font-weight: bold;
+                font-size: 18px;
+                margin-left: 10px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+              }
+              
               .answer-space {
                 margin-top: 15px;
-                min-height: 50px;
-                border-bottom: 1px dashed #999;
-                padding: 10px;
+                min-height: 60px;
+                border-bottom: 2px dashed #95a5a6;
+                padding: 15px;
+                background: white;
+                border-radius: 5px;
+                margin-right: 10px;
+              }
+              
+              .answer-space::before {
+                content: "תשובה:";
+                color: #7f8c8d;
+                font-size: 14px;
+                margin-bottom: 5px;
+                display: block;
+              }
+              
+              .footer {
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 2px dashed #bdc3c7;
+                text-align: center;
+                color: #7f8c8d;
+                font-size: 14px;
+              }
+              
+              @media print {
+                .header {
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                  color: white !important;
+                }
+                .student-info {
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                  background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%) !important;
+                }
+                .question, .exercise {
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+                }
+                .question-number, .exercise-number {
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                  color: white !important;
+                }
               }
             </style>
           </head>
           <body>
-            ${escapedResult}
+            <div class="header">
+              <h1>${escapedTitle}</h1>
+            </div>
+            
+            <div class="student-info">
+              שם התלמיד: ___________________________  &nbsp;&nbsp;&nbsp;  תאריך: _______________
+            </div>
+            
+            <div class="content">
+              ${escapedContent}
+            </div>
+            
+            <div class="footer">
+              בהצלחה! 🌟
+            </div>
           </body>
         </html>
       `);
       printWindow.document.close();
       setTimeout(() => {
         printWindow.print();
-      }, 250);
+      }, 500);
     }
   };
 
