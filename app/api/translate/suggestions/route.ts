@@ -49,20 +49,25 @@ export async function POST(req: NextRequest) {
     } = {};
 
     try {
-      const writingSuggestions =
-        typeof learningSystem.getWritingSuggestions === 'function'
-          ? await Promise.resolve(
-              learningSystem.getWritingSuggestions(userId, 'translation')
-            )
-          : null;
+      if (typeof learningSystem.getWritingSuggestions === 'function') {
+        try {
+          const writingSuggestions = await Promise.resolve(
+            learningSystem.getWritingSuggestions(userId, 'translation')
+          );
 
-      if (writingSuggestions) {
-        userPreferences.forbiddenWords = writingSuggestions.commonMistakes
-          .filter((m) => m.frequency >= 2)
-          .map((m) => m.mistake);
+          if (writingSuggestions && writingSuggestions.commonMistakes) {
+            userPreferences.forbiddenWords = writingSuggestions.commonMistakes
+              .filter((m: any) => m && m.frequency >= 2)
+              .map((m: any) => m.mistake);
+          }
+        } catch (learnError) {
+          console.warn('Error loading learning system suggestions:', learnError);
+          // נמשיך בלי העדפות אם יש בעיה
+        }
       }
     } catch (error) {
-      console.error('Error loading user preferences:', error);
+      console.warn('Error loading user preferences:', error);
+      // נמשיך בלי העדפות
     }
 
     // בניית prompt להצעות חלופיות
@@ -72,8 +77,8 @@ export async function POST(req: NextRequest) {
     const idiomsSection = idioms && idioms.length > 0 ? `
 **מילון תרגומים מועדפים:**
 ${idioms.map(idiom => {
-  return `- "${idiom.english}" → "${idiom.hebrew}"`;
-}).join('\n')}` : '';
+  return `- "${idiom.english || ''}" → "${idiom.hebrew || ''}"`;
+}).filter(line => line && !line.includes('""')).join('\n')}` : '';
 
     const prompt = `אתה מתרגם מקצועי. אני מבקש הצעות חלופיות לניסוח של טקסט ספציפי בתרגום.
 
