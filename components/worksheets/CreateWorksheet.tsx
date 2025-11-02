@@ -237,7 +237,7 @@ export default function CreateWorksheet() {
               
               @media print {
                 @page {
-                  margin: 8mm 3mm;
+                  margin: 10mm 5mm;
                   size: A4;
                 }
                 
@@ -252,20 +252,21 @@ export default function CreateWorksheet() {
                 }
                 
                 .print-header {
-                  display: block;
+                  display: block !important;
                   position: relative;
-                  margin: 0 0 15px 0;
-                  padding: 15px 10px;
+                  margin: 0 0 18px 0 !important;
+                  padding: 18px 20px !important;
                   page-break-after: avoid;
                   page-break-inside: avoid;
                 }
                 
                 .student-info-box {
+                  display: flex !important;
                   page-break-after: avoid;
                   page-break-inside: avoid;
+                  margin: 0 0 20px 0 !important;
+                  padding: 15px 20px !important;
                 }
-                
-                /* הכותרת היא חלק מה-content, אז היא תופיע רק בעמוד הראשון אוטומטית */
                 
                 .print-footer {
                   display: none;
@@ -276,7 +277,6 @@ export default function CreateWorksheet() {
                   margin-top: 0;
                 }
                 
-                /* וידוא שהתוכן לא מתחיל בחלק התחתון של העמוד */
                 .content > div:first-child {
                   page-break-before: avoid;
                 }
@@ -285,54 +285,55 @@ export default function CreateWorksheet() {
               .print-header {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
-                padding: 15px 10px;
+                padding: 18px 20px;
                 text-align: center;
-                border-radius: 8px;
-                box-shadow: 0 3px 5px rgba(0,0,0,0.15);
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                margin: 0 0 15px 0;
+                margin: 0 0 20px 0;
               }
               
               .print-header h1 {
                 margin: 0;
-                font-size: 24px;
+                font-size: 22px;
                 font-weight: bold;
-                text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+                text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
                 letter-spacing: 0.5px;
                 flex: 1;
               }
               
               .print-header .student-name-header {
-                font-size: 16px;
-                ${isHebrew ? 'margin-left: 20px;' : 'margin-right: 20px;'}
-                padding: 10px 18px;
-                background: rgba(255,255,255,0.25);
-                border: 2px solid rgba(255,255,255,0.3);
-                border-radius: 8px;
+                font-size: 15px;
+                ${isHebrew ? 'margin-left: 25px;' : 'margin-right: 25px;'}
+                padding: 8px 16px;
+                background: rgba(255,255,255,0.3);
+                border: 2px solid rgba(255,255,255,0.4);
+                border-radius: 6px;
                 white-space: nowrap;
                 backdrop-filter: blur(10px);
+                font-weight: 500;
               }
               
               .student-info-box {
-                background: #f8f9fa;
-                border: 1px solid #dee2e6;
-                border-radius: 8px;
-                padding: 12px 15px;
-                margin: 0 0 20px 0;
+                background: #ffffff;
+                border: 1px solid #ced4da;
+                border-radius: 6px;
+                padding: 15px 20px;
+                margin: 0 0 25px 0;
                 display: flex;
                 ${isHebrew ? 'flex-direction: row-reverse;' : 'flex-direction: row;'}
-                justify-content: space-between;
+                justify-content: flex-start;
                 align-items: center;
-                flex-wrap: wrap;
-                gap: 10px;
+                gap: 30px;
               }
               
               .student-field {
-                font-size: 14px;
-                color: #495057;
+                font-size: 15px;
+                color: #212529;
                 white-space: nowrap;
+                font-weight: 500;
               }
               
               body[dir="ltr"] .question, 
@@ -409,6 +410,15 @@ export default function CreateWorksheet() {
                   print-color-adjust: exact;
                   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
                   color: white !important;
+                  display: block !important;
+                }
+                
+                .student-info-box {
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                  background: #ffffff !important;
+                  border: 1px solid #ced4da !important;
+                  display: flex !important;
                 }
               }
             </style>
