@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       // חיפוש שינויים משמעותיים (יותר מ-2 מילים שונות)
       if (
         words.length !== originalWords.length ||
-        words.some((w, i) => w !== originalWords[i])
+        words.some((w: string, i: number) => w !== originalWords[i])
       ) {
         // אם התיקון שונה משמעותית, זה יכול להיות idiom חדש
         // אך נשמור רק אם המשתמש מבקש במפורש
