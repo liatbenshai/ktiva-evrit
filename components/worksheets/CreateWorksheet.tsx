@@ -401,20 +401,31 @@ export default function CreateWorksheet() {
               
               
               @media print {
-                .print-header {
+                * {
                   -webkit-print-color-adjust: exact;
                   print-color-adjust: exact;
+                }
+                
+                .print-header {
                   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
                   color: white !important;
                   display: block !important;
+                  position: relative !important;
+                }
+                
+                .print-header h1 {
+                  color: white !important;
                 }
                 
                 .student-info-box {
-                  -webkit-print-color-adjust: exact;
-                  print-color-adjust: exact;
                   background: #ffffff !important;
                   border: 1px solid #ced4da !important;
                   display: flex !important;
+                  position: relative !important;
+                }
+                
+                body {
+                  background: white !important;
                 }
               }
             </style>
