@@ -248,10 +248,7 @@ export default function CreateWorksheet() {
                   display: block;
                   position: relative;
                   margin-bottom: 20px;
-                }
-                
-                @page:not(:first) .print-header {
-                  display: none;
+                  page-break-after: avoid;
                 }
                 
                 .print-footer {
@@ -374,12 +371,12 @@ export default function CreateWorksheet() {
             </style>
           </head>
           <body>
-            <div class="print-header">
+            <div class="print-header" style="display: block;">
               <h1>${escapedTitle}</h1>
               <div class="student-name">${isHebrew ? 'שם: __________________' : 'Name: __________________'}</div>
             </div>
             
-            <div class="content">
+            <div class="content" style="page-break-before: avoid;">
             ${escapedContent}
             </div>
             
