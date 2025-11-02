@@ -195,7 +195,8 @@ export default function CreateWorksheet() {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
       
-      printWindow.document.write(`
+      // יצירת HTML בצורה בטוחה
+      const htmlContent = `
         <!DOCTYPE html>
         <html dir="${dir}" lang="${language}">
           <head>
