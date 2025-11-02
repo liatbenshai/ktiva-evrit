@@ -54,11 +54,6 @@ export async function POST(req: NextRequest) {
     } = {};
 
     try {
-      const userStats =
-        typeof learningSystem.getUserStats === 'function'
-          ? await Promise.resolve(learningSystem.getUserStats(userId))
-          : null;
-
       const writingSuggestions =
         typeof learningSystem.getWritingSuggestions === 'function'
           ? await Promise.resolve(
@@ -71,12 +66,10 @@ export async function POST(req: NextRequest) {
         userPreferences.forbiddenWords = writingSuggestions.commonMistakes
           .filter((m) => m.frequency >= 2)
           .map((m) => m.mistake);
-
-        // תחליפים מועדפים
-        if (userStats && userStats.preferences) {
-          userPreferences.preferredWords = userStats.preferences.preferredWords || {};
-        }
       }
+
+      // תחליפים מועדפים - ניתן להוסיף בעתיד מתוך userProfile
+      // כרגע נשאיר את זה ריק עד שנוסיף פונקציה לקבלת userProfile
     } catch (error) {
       console.error('Error loading user preferences:', error);
       // ממשיכים בלי העדפות אם יש שגיאה
