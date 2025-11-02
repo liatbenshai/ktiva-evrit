@@ -141,17 +141,29 @@ ${context ? `**הקשר:** ${context}` : ''}
     // ביצוע הבקשה
     let response: string;
     try {
+      console.log('Calling generateText for suggestions...');
+      console.log('Selected text:', selectedText.substring(0, 50) + '...');
+      console.log('From lang:', fromLang, 'To lang:', toLang);
+      
       response = await generateText({
         prompt,
         systemPrompt,
         maxTokens: 2048,
         temperature: 0.7, // טמפרטורה גבוהה יותר לווריאציות
       });
+      
+      console.log('Received response, length:', response?.length || 0);
     } catch (apiError: any) {
       console.error('Error calling generateText:', apiError);
+      console.error('Error details:', {
+        message: apiError?.message,
+        status: apiError?.status,
+        statusCode: apiError?.statusCode,
+        stack: apiError?.stack?.substring(0, 500)
+      });
       
       // טיפול בשגיאות ספציפיות
-      if (apiError.message?.includes('apiKey') || apiError.message?.includes('authentication')) {
+      if (apiError?.message?.includes('apiKey') || apiError?.message?.includes('authentication') || apiError?.message?.includes('auth')) {
         return NextResponse.json(
           { 
             error: 'API key not configured',
@@ -161,17 +173,25 @@ ${context ? `**הקשר:** ${context}` : ''}
         );
       }
       
-      if (apiError.status === 429 || apiError.message?.includes('rate limit')) {
+      if (apiError?.status === 429 || apiError?.statusCode === 429 || apiError?.message?.includes('rate limit')) {
         return NextResponse.json(
           { error: 'Rate limit exceeded. Please try again later.' },
           { status: 429 }
         );
       }
       
+      const errorDetails = process.env.NODE_ENV === 'development' 
+        ? {
+            message: apiError?.message || 'Unknown error',
+            status: apiError?.status || apiError?.statusCode,
+            type: apiError?.constructor?.name
+          }
+        : 'An error occurred while generating suggestions';
+      
       return NextResponse.json(
         { 
           error: 'Failed to generate suggestions',
-          details: process.env.NODE_ENV === 'development' ? String(apiError) : 'An error occurred while generating suggestions'
+          details: errorDetails
         },
         { status: 500 }
       );
