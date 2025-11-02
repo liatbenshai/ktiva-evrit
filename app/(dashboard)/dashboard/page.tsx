@@ -32,10 +32,10 @@ const modules = [
     color: 'bg-cyan-500',
   },
   {
-    title: 'הצעות מחיר',
-    description: 'יצירת הצעות מחיר מקצועיות',
-    icon: FileText,
-    href: '/dashboard/quotes',
+    title: 'דפי עבודה ללימודים',
+    description: 'יצירת דפי עבודה מוכנים להדפסה',
+    icon: BookOpen,
+    href: '/dashboard/worksheets',
     color: 'bg-yellow-500',
   },
   {

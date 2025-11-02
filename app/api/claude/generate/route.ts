@@ -10,6 +10,7 @@ import {
   scriptPrompt,
   quotePrompt,
   aiPromptPrompt,
+  worksheetPrompt,
 } from '@/prompts';
 
 export async function POST(req: NextRequest) {
@@ -80,6 +81,16 @@ export async function POST(req: NextRequest) {
           data.additionalTerms
         );
         systemPrompt = 'אתה יועץ עסקי ומומחה בכתיבת הצעות מחיר מקצועיות בעברית. אתה כותב בעברית עסקית תקנית וטבעית - לא תרגום מילולי מאנגלית. אתה פתוח ללמוד ולשפר מעריכות המשתמש ומשוב שלו.';
+        break;
+
+      case 'worksheet':
+        prompt = worksheetPrompt(
+          data.instruction,
+          data.story,
+          data.grade,
+          data.subject
+        );
+        systemPrompt = 'אתה מורה מקצועי ומומחה בהכנת דפי עבודה וחומרי לימוד. אתה מכין דפי עבודה מקצועיים, מוכנים להדפסה, ומותאמים לרמת הכיתה. אתה כותב בעברית תקנית וקריאה - לא תרגום מילולי מאנגלית.';
         break;
 
       case 'aiPrompt':
