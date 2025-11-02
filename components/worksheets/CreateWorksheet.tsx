@@ -255,7 +255,12 @@ export default function CreateWorksheet() {
                   display: block;
                   position: relative;
                   margin: 0 0 15px 0;
-                  padding: 12px 8px;
+                  padding: 15px 10px;
+                  page-break-after: avoid;
+                  page-break-inside: avoid;
+                }
+                
+                .student-info-box {
                   page-break-after: avoid;
                   page-break-inside: avoid;
                 }
@@ -299,7 +304,7 @@ export default function CreateWorksheet() {
                 flex: 1;
               }
               
-              .print-header .student-name {
+              .print-header .student-name-header {
                 font-size: 16px;
                 ${isHebrew ? 'margin-left: 20px;' : 'margin-right: 20px;'}
                 padding: 10px 18px;
@@ -308,6 +313,26 @@ export default function CreateWorksheet() {
                 border-radius: 8px;
                 white-space: nowrap;
                 backdrop-filter: blur(10px);
+              }
+              
+              .student-info-box {
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                padding: 12px 15px;
+                margin: 0 0 20px 0;
+                display: flex;
+                ${isHebrew ? 'flex-direction: row-reverse;' : 'flex-direction: row;'}
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 10px;
+              }
+              
+              .student-field {
+                font-size: 14px;
+                color: #495057;
+                white-space: nowrap;
               }
               
               body[dir="ltr"] .question, 
@@ -392,7 +417,13 @@ export default function CreateWorksheet() {
             <div class="worksheet-wrapper">
               <div class="print-header">
                 <h1>${escapedTitle}</h1>
-                <div class="student-name">${isHebrew ? 'שם: __________________' : 'Name: __________________'}</div>
+                <div class="student-name-header">${isHebrew ? 'שם: __________________' : 'Name: __________________'}</div>
+              </div>
+              
+              <div class="student-info-box">
+                <div class="student-field">${isHebrew ? 'שם התלמיד:' : 'Student Name:'} ________________________</div>
+                <div class="student-field">${isHebrew ? 'כיתה:' : 'Class:'} ________</div>
+                <div class="student-field">${isHebrew ? 'תאריך:' : 'Date:'} ________</div>
               </div>
               
               <div class="content">
