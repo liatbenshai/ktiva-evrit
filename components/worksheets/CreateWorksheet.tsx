@@ -237,37 +237,29 @@ export default function CreateWorksheet() {
               
               @media print {
                 @page {
-                  margin: 10mm;
+                  margin: 15mm 10mm;
                   size: A4;
                 }
                 
                 body {
                   padding: 0;
+                  margin: 0;
                 }
                 
                 .worksheet-wrapper {
                   padding: 0;
+                  margin: 0;
                 }
                 
                 .print-header {
                   display: block;
                   position: relative;
-                  margin: 0 0 20px 0;
+                  margin: 0 0 25px 0;
                   page-break-after: avoid;
                   page-break-inside: avoid;
                 }
                 
-                /* הכותרת תופיע רק בעמוד הראשון */
-                .worksheet-wrapper > .print-header {
-                  display: block;
-                }
-                
-                /* הסתרת כותרת מעמודים שניים ומעלה */
-                @page :not(:first) {
-                  .print-header {
-                    display: none !important;
-                  }
-                }
+                /* הכותרת היא חלק מה-content, אז היא תופיע רק בעמוד הראשון אוטומטית */
                 
                 .print-footer {
                   display: none;
@@ -276,6 +268,11 @@ export default function CreateWorksheet() {
                 .content {
                   padding: 0;
                   margin-top: 0;
+                }
+                
+                /* וידוא שהתוכן לא מתחיל בחלק התחתון של העמוד */
+                .content > div:first-child {
+                  page-break-before: avoid;
                 }
               }
               
