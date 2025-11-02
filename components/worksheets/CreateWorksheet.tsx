@@ -94,6 +94,10 @@ export default function CreateWorksheet() {
     return hebrewCount > englishCount ? 'he' : 'en';
   };
 
+  // זיהוי שפה מתוצאה (אם קיימת)
+  const detectedLanguage = result ? detectLanguage(result) : 'he';
+  const isResultHebrew = detectedLanguage === 'he';
+
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
