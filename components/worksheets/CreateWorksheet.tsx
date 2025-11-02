@@ -47,6 +47,8 @@ export default function CreateWorksheet() {
   // פונקציה להמרת markdown בסיסי לטקסט נקי
   const cleanMarkdown = (text: string): string => {
     return text
+      // הסרת תגי HTML - קודם כל!
+      .replace(/<[^>]+>/g, '')
       // הסרת code blocks (``` או ''')
       .replace(/```[\s\S]*?```/g, '')
       .replace(/'''[\s\S]*?'''/g, '')
@@ -123,10 +125,23 @@ export default function CreateWorksheet() {
         }
       }
       
-      // הוספת מקומות תשובה אוטומטיים אחרי כל שאלה/תרגיל
-      const contentWithAnswers = content
-        .replace(/(\d+[\.\)]\s*.+?)(\n\n|$)/g, '$1<br><br><div class="answer-space"></div><br>')
-        .replace(/([א-ת]+[?:])(\n|$)/g, '$1<br><br><div class="answer-space"></div><br>');
+      // ניקוי תגי HTML מהתוכן לפני הוספת תגים חדשים
+      const cleanedContent = content
+        .replace(/<[^>]+>/g, '') // הסרת כל תגי HTML
+        .replace(/&nbsp;/g, ' ') // המרת &nbsp; לרווח
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&');
+      
+      // הוספת מקומות תשובה אוטומטיים אחרי כל שאלה/תרגיל (רק אם אין כבר)
+      let contentWithAnswers = cleanedContent
+        .replace(/(\d+[\.\)]\s*.+?)(\n\n|$)/g, (match, question, end) => {
+          // בדיקה אם כבר יש answer-space
+          if (!match.includes('answer-space')) {
+            return question + '<br><br><div class="answer-space"></div><br>';
+          }
+          return match;
+        });
       
       const escapedContent = contentWithAnswers
         .replace(/&/g, '&amp;')
@@ -174,7 +189,7 @@ export default function CreateWorksheet() {
               }
               
               body {
-                counter-reset: page-number;
+                counter-reset: page-number 0;
               }
               
               @media print {
@@ -185,6 +200,11 @@ export default function CreateWorksheet() {
                 
                 @page:first {
                   margin-top: 0;
+                  counter-reset: page-number 0;
+                }
+                
+                body {
+                  counter-reset: page-number 0;
                 }
                 
                 .print-header,
@@ -216,6 +236,7 @@ export default function CreateWorksheet() {
                 
                 .print-footer .page-counter::after {
                   content: counter(page-number);
+                  display: inline;
                 }
               }
               
