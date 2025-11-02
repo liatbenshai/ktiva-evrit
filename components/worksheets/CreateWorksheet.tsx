@@ -148,14 +148,45 @@ export default function CreateWorksheet() {
           continue;
         }
         
-        // אם זה תרגיל/שאלה (מתחיל במספר)
-        if (/^\d+[\.\)]\s/.test(line)) {
+        // אם זה תרגיל/שאלה (מתחיל במספר או בסוגריים עם מספר)
+        if (/^\(?\d+\)?\s/.test(line) || /^\d+[\.\)]\s/.test(line)) {
+          // אם זה רק מספור בשורה נפרדת כמו "(1)" או "(1) " - לא להוסיף answer-space כאן
+          if (/^\(?\d+\)?\s*$/.test(line.trim())) {
+            const escapedLine = line
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;');
+            
+            htmlParts.push(`<div style="margin-bottom: 4px; font-size: 15px; font-weight: bold;">${escapedLine}</div>`);
+            continue;
+          }
+          
           // Escape הטקסט
           const escapedLine = line
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
+          
+          // בדיקה אם זה תרגיל חשבון מאונך (מכיל קו הפרדה או סימן + - בשורה הבאה)
+          // אם השורה מכילה רק מספר או מספר עם סימן, זה חלק מתרגיל מאונך
+          if (/^\d+$/.test(line.trim()) || /^[+\-×*÷]\s*\d+/.test(line.trim())) {
+            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: right;">${escapedLine}</div>`);
+            continue;
+          }
+          
+          // אם יש קו הפרדה
+          if (/^-{3,}/.test(line.trim())) {
+            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; border-bottom: 1px solid #333; width: 60px;"></div>`);
+            continue;
+          }
+          
+          // אם זה שורה עם "תשובה:"
+          if (/תשובה:/.test(line) || /Answer:/.test(line)) {
+            htmlParts.push(`<div class="answer-space"></div>`);
+            continue;
+          }
           
           htmlParts.push(`<div style="margin-bottom: 8px;">
             <div style="margin-bottom: 4px; font-size: 15px;">${escapedLine}</div>
