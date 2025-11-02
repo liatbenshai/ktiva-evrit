@@ -125,7 +125,7 @@ export default function CreateWorksheet() {
         }
       }
       
-      // ניקוי תגי HTML מהתוכן לפני הוספת תגים חדשים
+      // ניקוי תגי HTML מהתוכן
       const cleanedContent = content
         .replace(/<[^>]+>/g, '') // הסרת כל תגי HTML
         .replace(/&nbsp;/g, ' ') // המרת &nbsp; לרווח
@@ -133,42 +133,60 @@ export default function CreateWorksheet() {
         .replace(/&gt;/g, '>')
         .replace(/&amp;/g, '&');
       
-      // פיצול לתוך paragraphs עם הפרדה טובה
-      const contentLines = cleanedContent.split('\n').filter(line => line.trim());
+      // פיצול לשורות
+      const contentLines = cleanedContent.split('\n');
       
-      // בניית HTML עם paragraphs נפרדים
-      let htmlContent = contentLines.map((line, index) => {
-        const trimmedLine = line.trim();
-        if (!trimmedLine) return '<div style="height: 15px;"></div>';
+      // בניית HTML בצורה פשוטה - כל שורה בנפרד
+      let htmlParts: string[] = [];
+      
+      for (let i = 0; i < contentLines.length; i++) {
+        const line = contentLines[i].trim();
         
-        // אם זה תרגיל/שאלה (מתחיל במספר)
-        if (/^\d+[\.\)]\s/.test(trimmedLine)) {
-          return `<div style="margin-bottom: 20px;">
-            <div style="margin-bottom: 12px; font-size: 18px; font-weight: 500;">${trimmedLine}</div>
-            <div class="answer-space"></div>
-          </div>`;
+        if (!line) {
+          // שורה ריקה - הפרדה
+          htmlParts.push('<div style="height: 12px;"></div>');
+          continue;
         }
         
-        // אם זה כותרת (מתחיל באותיות גדולות או סגנון כותרת)
-        if (trimmedLine.length < 60 && !trimmedLine.includes('=') && !trimmedLine.includes('?')) {
-          return `<div style="margin: 20px 0 10px 0; font-size: 20px; font-weight: bold; color: #667eea;">${trimmedLine}</div>`;
+        // אם זה תרגיל/שאלה (מתחיל במספר)
+        if (/^\d+[\.\)]\s/.test(line)) {
+          // Escape הטקסט
+          const escapedLine = line
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+          
+          htmlParts.push(`<div style="margin-bottom: 25px;">
+            <div style="margin-bottom: 15px; font-size: 18px; font-weight: 500; line-height: 1.6;">${escapedLine}</div>
+            <div class="answer-space"></div>
+          </div>`);
+          continue;
+        }
+        
+        // אם זה כותרת קצרה
+        if (line.length < 60 && !line.includes('=') && !line.includes('?') && !line.includes(':')) {
+          const escapedLine = line
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+          
+          htmlParts.push(`<div style="margin: 25px 0 15px 0; font-size: 20px; font-weight: bold; color: #667eea;">${escapedLine}</div>`);
+          continue;
         }
         
         // שורה רגילה
-        return `<div style="margin-bottom: 10px; line-height: 1.8;">${trimmedLine}</div>`;
-      }).join('');
+        const escapedLine = line
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+        
+        htmlParts.push(`<div style="margin-bottom: 12px; line-height: 1.8; font-size: 16px;">${escapedLine}</div>`);
+      }
       
-      // Escape HTML - אבל שמירה על תגי div שכבר יצרנו
-      const escapedContent = htmlContent
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-        // החזרת div tags שלנו
-        .replace(/&lt;div([^&]+)&gt;/g, '<div$1>')
-        .replace(/&lt;\/div&gt;/g, '</div>')
-        .replace(/&lt;div class="answer-space"&gt;&lt;\/div&gt;/g, '<div class="answer-space"></div>');
+      const escapedContent = htmlParts.join('');
       
       const escapedTitle = title
         .replace(/&/g, '&amp;')
