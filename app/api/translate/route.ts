@@ -34,14 +34,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // טעינת idioms מהמאגר
-    const idioms = await prisma.idiom.findMany({
-      where: { learned: true },
-      select: {
-        english: true,
-        hebrew: true,
-      },
-    });
+    // טעינת idioms מהמאגר (עם טיפול בשגיאות)
+    let idioms: Array<{ english: string; hebrew: string }> = [];
+    try {
+      idioms = await prisma.idiom.findMany({
+        where: { learned: true },
+        select: {
+          english: true,
+          hebrew: true,
+        },
+      });
+    } catch (dbError) {
+      console.warn('Failed to load idioms from database, continuing without idioms:', dbError);
+      // ממשיכים בלי idioms אם יש בעיה במסד הנתונים
+      idioms = [];
+    }
 
     // טעינת העדפות המשתמש ממערכת הלמידה
     let userPreferences: {
@@ -78,8 +85,8 @@ export async function POST(req: NextRequest) {
     // בניית ה-prompt המתוחכם
     const prompt = translationPrompt(
       text,
-      fromLang as 'hebrew' | 'english',
-      toLang as 'hebrew' | 'english',
+      fromLang as 'hebrew' | 'english' | 'russian',
+      toLang as 'hebrew' | 'english' | 'russian',
       idioms,
       userPreferences,
       context
@@ -99,12 +106,43 @@ export async function POST(req: NextRequest) {
     const systemPrompt = getSystemPrompt();
 
     // ביצוע התרגום עם אפשרויות חלופיות
-    const translationResponse = await generateText({
-      prompt,
-      systemPrompt,
-      maxTokens: 4096, // יותר tokens לאפשרויות חלופיות
-      temperature: 0.5, // טמפרטורה קצת גבוהה יותר כדי לקבל וריאציות
-    });
+    let translationResponse: string;
+    try {
+      translationResponse = await generateText({
+        prompt,
+        systemPrompt,
+        maxTokens: 4096, // יותר tokens לאפשרויות חלופיות
+        temperature: 0.5, // טמפרטורה קצת גבוהה יותר כדי לקבל וריאציות
+      });
+    } catch (apiError) {
+      console.error('Anthropic API error:', apiError);
+      const errorMessage = apiError instanceof Error ? apiError.message : String(apiError);
+      
+      // בדיקת סוגי שגיאות נפוצות
+      if (errorMessage.includes('API key') || errorMessage.includes('authentication')) {
+        return NextResponse.json(
+          { 
+            error: 'Translation failed', 
+            details: 'API key configuration issue. Please check your ANTHROPIC_API_KEY environment variable.',
+            code: 'API_KEY_ERROR'
+          },
+          { status: 500 }
+        );
+      }
+      
+      if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {
+        return NextResponse.json(
+          { 
+            error: 'Translation failed', 
+            details: 'Rate limit exceeded. Please try again later.',
+            code: 'RATE_LIMIT_ERROR'
+          },
+          { status: 429 }
+        );
+      }
+      
+      throw apiError; // זורקים הלאה אם זה לא שגיאה מוכרת
+    }
 
     // ניסיון לפרש את התשובה כ-JSON
     let translationData: {
@@ -161,8 +199,23 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Translation error:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    // לוג מפורט יותר ל-production debugging
+    console.error('Translation error details:', {
+      message: errorMessage,
+      stack: errorStack,
+      timestamp: new Date().toISOString(),
+    });
+    
     return NextResponse.json(
-      { error: 'Translation failed', details: String(error) },
+      { 
+        error: 'Translation failed', 
+        details: process.env.NODE_ENV === 'development' ? errorMessage : 'An error occurred during translation. Please try again.',
+        code: 'TRANSLATION_ERROR'
+      },
       { status: 500 }
     );
   }
