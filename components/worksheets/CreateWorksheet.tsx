@@ -455,7 +455,9 @@ export default function CreateWorksheet() {
             
           </body>
         </html>
-      `);
+      `;
+      
+      printWindow.document.write(htmlContent);
       printWindow.document.close();
       setTimeout(() => {
         printWindow.print();
