@@ -78,15 +78,36 @@ export default function CreateWorksheet() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // פונקציה לזיהוי שפה - בודקת אם הטקסט בעברית או באנגלית
+  const detectLanguage = (text: string): 'he' | 'en' => {
+    const hebrewChars = /[\u0590-\u05FF]/;
+    const englishChars = /[a-zA-Z]/;
+    
+    let hebrewCount = 0;
+    let englishCount = 0;
+    
+    for (let i = 0; i < Math.min(text.length, 500); i++) {
+      if (hebrewChars.test(text[i])) hebrewCount++;
+      if (englishChars.test(text[i])) englishCount++;
+    }
+    
+    return hebrewCount > englishCount ? 'he' : 'en';
+  };
+
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       // ניקוי markdown ואז escape ל-HTML
       const cleanedResult = cleanMarkdown(result);
       
+      // זיהוי שפה
+      const language = detectLanguage(cleanedResult);
+      const isHebrew = language === 'he';
+      const dir = isHebrew ? 'rtl' : 'ltr';
+      
       // חילוץ כותרת (שורה ראשונה או שורה שמתחילה במילים מסוימות)
       const lines = cleanedResult.split('\n').filter(line => line.trim());
-      let title = 'דף עבודה';
+      let title = isHebrew ? 'דף עבודה' : 'Worksheet';
       let content = cleanedResult;
       
       // ננסה למצוא כותרת
@@ -119,7 +140,7 @@ export default function CreateWorksheet() {
       
       printWindow.document.write(`
         <!DOCTYPE html>
-        <html dir="rtl">
+        <html dir="${dir}" lang="${language}">
           <head>
             <meta charset="UTF-8">
             <title>${escapedTitle}</title>
@@ -217,11 +238,28 @@ export default function CreateWorksheet() {
               
               .print-header .student-name {
                 font-size: 16px;
-                margin-left: 20px;
+                ${isHebrew ? 'margin-left: 20px;' : 'margin-right: 20px;'}
                 padding: 8px 15px;
                 background: rgba(255,255,255,0.2);
                 border-radius: 8px;
                 white-space: nowrap;
+              }
+              
+              body[dir="ltr"] .question, 
+              body[dir="ltr"] .exercise {
+                border-right: none;
+                border-left: 4px solid #667eea;
+              }
+              
+              body[dir="ltr"] .question-number,
+              body[dir="ltr"] .exercise-number {
+                margin-left: 0;
+                margin-right: 10px;
+              }
+              
+              body[dir="ltr"] .answer-space {
+                margin-right: 0;
+                margin-left: 10px;
               }
               
               .print-footer {
@@ -281,7 +319,7 @@ export default function CreateWorksheet() {
               }
               
               .answer-space::before {
-                content: "תשובה:";
+                content: "${isHebrew ? 'תשובה:' : 'Answer:'}";
                 color: #7f8c8d;
                 font-size: 14px;
                 margin-bottom: 10px;
@@ -324,13 +362,13 @@ export default function CreateWorksheet() {
           <body>
             <div class="print-header">
               <h1>${escapedTitle}</h1>
-              <div class="student-name">שם: __________________</div>
+              <div class="student-name">${isHebrew ? 'שם: __________________' : 'Name: __________________'}</div>
             </div>
             
             <div class="print-footer">
-              <div>תאריך: _______________</div>
-              <div class="page-number">עמוד <span class="page-counter"></span></div>
-              <div>בהצלחה! 🌟</div>
+              <div>${isHebrew ? 'תאריך: _______________' : 'Date: _______________'}</div>
+              <div class="page-number">${isHebrew ? 'עמוד ' : 'Page '}<span class="page-counter"></span></div>
+              <div>${isHebrew ? 'בהצלחה! 🌟' : 'Good luck! 🌟'}</div>
             </div>
             
             <div class="content">
