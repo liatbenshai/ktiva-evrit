@@ -133,22 +133,33 @@ export default function CreateWorksheet() {
         .replace(/&gt;/g, '>')
         .replace(/&amp;/g, '&');
       
-      // הוספת מקומות תשובה אוטומטיים אחרי כל שאלה/תרגיל (רק אם אין כבר)
-      let contentWithAnswers = cleanedContent
-        .replace(/(\d+[\.\)]\s*.+?)(\n\n|$)/g, (match, question, end) => {
+      // המרת שורות חדשות ל-<br> עם הפרדה נכונה
+      // קודם ניצור פורמט HTML מתוך הטקסט
+      let formattedContent = cleanedContent
+        // המרת שורות חדשות ל-<br>
+        .replace(/\n/g, '<br>')
+        // הוספת הפרדה נוספת אחרי כל שורה ריקה
+        .replace(/<br><br>/g, '<br><br><div style="height: 10px;"></div>')
+        // הוספת מקומות תשובה אוטומטיים אחרי כל שאלה/תרגיל
+        .replace(/(\d+[\.\)]\s*.+?)(<br>|$)/g, (match, question, br) => {
           // בדיקה אם כבר יש answer-space
           if (!match.includes('answer-space')) {
-            return question + '<br><br><div class="answer-space"></div><br>';
+            return question + '<br><br><div class="answer-space"></div><br><div style="height: 15px;"></div>';
           }
           return match;
         });
       
-      const escapedContent = contentWithAnswers
+      const escapedContent = formattedContent
         .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
+        // לא נסיר <br> ו-<div> - הם חלק מה-HTML שאנחנו רוצים
+        .replace(/<(?!\/?(br|div|span|p|h[1-6]|class="answer-space"|style=")[> ])/gi, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+        .replace(/'/g, '&#039;')
+        // החזרת <br> ו-<div> כי אנחנו רוצים אותם
+        .replace(/&lt;(br|div|span|p|h[1-6])([^>]*)&gt;/gi, '<$1$2>')
+        .replace(/&lt;\/(br|div|span|p|h[1-6])&gt;/gi, '</$1>')
+        .replace(/&lt;div class="answer-space"&gt;&lt;\/div&gt;/g, '<div class="answer-space"></div>');
       
       const escapedTitle = title
         .replace(/&/g, '&amp;')
@@ -317,6 +328,22 @@ export default function CreateWorksheet() {
                 position: relative;
               }
               
+              /* הפרדה טובה יותר בין שורות */
+              .content {
+                line-height: 2.2;
+              }
+              
+              .content br {
+                display: block;
+                margin: 8px 0;
+                content: "";
+              }
+              
+              /* הפרדה בין תרגילים/שאלות */
+              .content > * {
+                margin-bottom: 20px;
+              }
+              
               .question-number, .exercise-number {
                 display: inline-block;
                 width: 35px;
@@ -396,7 +423,7 @@ export default function CreateWorksheet() {
               <div>${isHebrew ? 'בהצלחה! 🌟' : 'Good luck! 🌟'}</div>
             </div>
             
-            <div class="content">
+            <div class="content" style="line-height: 2.2; white-space: pre-wrap;">
               ${escapedContent}
             </div>
             
