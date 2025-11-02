@@ -219,7 +219,7 @@ export default function CreateWorksheet() {
               }
               
               @page {
-                margin: 100px 0 60px 0;
+                margin: 10mm 5mm;
                 size: A4;
               }
               
@@ -237,7 +237,7 @@ export default function CreateWorksheet() {
               
               @media print {
                 @page {
-                  margin: 15mm 10mm;
+                  margin: 10mm 5mm;
                   size: A4;
                 }
                 
