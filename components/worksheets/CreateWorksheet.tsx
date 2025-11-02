@@ -231,35 +231,41 @@ export default function CreateWorksheet() {
                 counter-reset: page-number 0;
               }
               
+              .worksheet-wrapper {
+                position: relative;
+              }
+              
               @media print {
                 @page {
-                  margin: 15mm 10mm;
-                }
-                
-                @page:first {
-                  margin-top: 15mm;
+                  margin: 10mm;
+                  size: A4;
                 }
                 
                 body {
                   padding: 0;
                 }
                 
+                .worksheet-wrapper {
+                  padding: 0;
+                }
+                
                 .print-header {
                   display: block;
                   position: relative;
-                  margin: 0 0 25px 0;
+                  margin: 0 0 20px 0;
                   page-break-after: avoid;
+                  page-break-inside: avoid;
                 }
                 
-                /* הסתרת כותרת מעמודים שניים ומעלה */
-                body > .print-header {
+                /* הכותרת תופיע רק בעמוד הראשון */
+                .worksheet-wrapper > .print-header {
                   display: block;
                 }
                 
-                /* בהדפסה, הכותרת תופיע רק כשהיא בתוך העמוד הראשון */
-                @page {
-                  @top-center {
-                    content: none;
+                /* הסתרת כותרת מעמודים שניים ומעלה */
+                @page :not(:first) {
+                  .print-header {
+                    display: none !important;
                   }
                 }
                 
@@ -385,13 +391,15 @@ export default function CreateWorksheet() {
             </style>
           </head>
           <body>
-            <div class="print-header" style="display: block;">
-              <h1>${escapedTitle}</h1>
-              <div class="student-name">${isHebrew ? 'שם: __________________' : 'Name: __________________'}</div>
-            </div>
-            
-            <div class="content" style="page-break-before: avoid;">
-            ${escapedContent}
+            <div class="worksheet-wrapper">
+              <div class="print-header">
+                <h1>${escapedTitle}</h1>
+                <div class="student-name">${isHebrew ? 'שם: __________________' : 'Name: __________________'}</div>
+              </div>
+              
+              <div class="content">
+              ${escapedContent}
+              </div>
             </div>
             
           </body>
