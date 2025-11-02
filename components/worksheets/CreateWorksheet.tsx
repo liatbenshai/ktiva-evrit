@@ -180,21 +180,29 @@ export default function CreateWorksheet() {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
           
-          // אם זה מספר (שורה ראשונה של התרגיל)
+          // אם זה מספר (שורה ראשונה של התרגיל) - מיושר ימינה עם הזחה
           if (/^\d+$/.test(line)) {
-            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: right; ${isHebrew ? 'padding-right: 20px;' : 'padding-left: 20px;'}">${escapedLine}</div>`);
+            // שמירת המספר הראשון כדי ליישר את השורה הבאה
+            const firstNumber = line;
+            // יישור ימין עם הזחה - המספר יופיע מימין
+            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: right; ${isHebrew ? 'direction: rtl; padding-right: 30px;' : 'direction: ltr; padding-left: 30px;'}">${escapedLine}</div>`);
             continue;
           }
           
-          // אם זה סימן + מספר (שורה שנייה)
-          if (/^[+\-×*÷]\s*\d+/.test(line)) {
-            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: right; ${isHebrew ? 'padding-right: 20px;' : 'padding-left: 20px;'}">${escapedLine}</div>`);
+          // אם זה סימן + מספר (שורה שנייה) - צריך ליישר עם המספר הראשון
+          const signMatch = line.match(/^([+\-×*÷])\s*(\d+)$/);
+          if (signMatch) {
+            const sign = signMatch[1];
+            const number = signMatch[2];
+            // יישור כך שהמספר יתחיל באותה הזחה כמו המספר הראשון
+            // הסימן מופיע משמאל (או מימין בעברית)
+            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: right; ${isHebrew ? 'direction: rtl; padding-right: 30px;' : 'direction: ltr; padding-left: 30px;'}"><span style="display: inline-block; ${isHebrew ? 'margin-left: 5px;' : 'margin-right: 5px;'}">${sign}</span>${number}</div>`);
             continue;
           }
           
-          // אם זה קו הפרדה
+          // אם זה קו הפרדה - מיושר כמו המספרים
           if (/^-{2,}/.test(line)) {
-            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; border-bottom: 1px solid #333; width: 80px; ${isHebrew ? 'margin-right: 20px;' : 'margin-left: 20px;'}"></div>`);
+            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; border-bottom: 1px solid #333; width: 80px; ${isHebrew ? 'margin-right: 30px; margin-left: auto;' : 'margin-left: 30px; margin-right: auto;'}"></div>`);
             continue;
           }
           
