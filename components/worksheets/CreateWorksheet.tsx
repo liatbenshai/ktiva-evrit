@@ -110,13 +110,13 @@ export default function CreateWorksheet() {
             <title>${escapedTitle}</title>
             <style>
               @page {
-                margin: 0;
+                margin: 80px 0 50px 0;
                 size: A4;
                 counter-increment: page;
               }
               
-              body {
-                counter-reset: page 0;
+              @page:first {
+                margin-top: 0;
               }
               
               @media print {
@@ -139,8 +139,12 @@ export default function CreateWorksheet() {
                 }
                 
                 body {
-                  padding-top: 100px;
-                  padding-bottom: 60px;
+                  padding-top: 0;
+                  padding-bottom: 0;
+                }
+                
+                .content {
+                  padding: 20px 30px;
                 }
               }
               
@@ -205,8 +209,14 @@ export default function CreateWorksheet() {
                 font-weight: bold;
               }
               
-              .print-footer .page-number::after {
-                content: counter(page);
+              @media print {
+                body {
+                  counter-reset: page 0;
+                }
+                
+                .print-footer .page-counter::after {
+                  content: counter(page);
+                }
               }
               
               .content {
@@ -296,13 +306,14 @@ export default function CreateWorksheet() {
             
             <div class="print-footer">
               <div>תאריך: _______________</div>
-              <div class="page-number">עמוד </div>
+              <div class="page-number">עמוד <span class="page-counter"></span></div>
               <div>בהצלחה! 🌟</div>
             </div>
             
             <div class="content">
               ${escapedContent}
             </div>
+            
           </body>
         </html>
       `);
