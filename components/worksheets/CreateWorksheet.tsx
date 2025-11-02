@@ -112,16 +112,16 @@ export default function CreateWorksheet() {
       const dir = isHebrew ? 'rtl' : 'ltr';
       
       // חילוץ כותרת (שורה ראשונה או שורה שמתחילה במילים מסוימות)
-      const lines = cleanedResult.split('\n').filter(line => line.trim());
+      const resultLines = cleanedResult.split('\n').filter(line => line.trim());
       let title = isHebrew ? 'דף עבודה' : 'Worksheet';
       let content = cleanedResult;
       
       // ננסה למצוא כותרת
-      if (lines.length > 0) {
-        const firstLine = lines[0].trim();
+      if (resultLines.length > 0) {
+        const firstLine = resultLines[0].trim();
         if (firstLine.length < 60 && !firstLine.includes('?') && !firstLine.includes(':')) {
           title = firstLine;
-          content = lines.slice(1).join('\n');
+          content = resultLines.slice(1).join('\n');
         }
       }
       
@@ -134,10 +134,10 @@ export default function CreateWorksheet() {
         .replace(/&amp;/g, '&');
       
       // פיצול לתוך paragraphs עם הפרדה טובה
-      const lines = cleanedContent.split('\n').filter(line => line.trim());
+      const contentLines = cleanedContent.split('\n').filter(line => line.trim());
       
       // בניית HTML עם paragraphs נפרדים
-      let htmlContent = lines.map((line, index) => {
+      let htmlContent = contentLines.map((line, index) => {
         const trimmedLine = line.trim();
         if (!trimmedLine) return '<div style="height: 15px;"></div>';
         
