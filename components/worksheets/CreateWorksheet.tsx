@@ -98,13 +98,17 @@ export default function CreateWorksheet() {
         }
       }
       
-      const escapedContent = content
+      // הוספת מקומות תשובה אוטומטיים אחרי כל שאלה/תרגיל
+      const contentWithAnswers = content
+        .replace(/(\d+[\.\)]\s*.+?)(\n\n|$)/g, '$1<br><br><div class="answer-space"></div><br>')
+        .replace(/([א-ת]+[?:])(\n|$)/g, '$1<br><br><div class="answer-space"></div><br>');
+      
+      const escapedContent = contentWithAnswers
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-        .replace(/\n/g, '<br>');
+        .replace(/'/g, '&#039;');
       
       const escapedTitle = title
         .replace(/&/g, '&amp;')
@@ -144,18 +148,18 @@ export default function CreateWorksheet() {
                 margin-top: 0;
               }
               
+              body {
+                counter-reset: page-number;
+              }
+              
               @media print {
                 @page {
-                  counter-increment: page;
+                  counter-increment: page-number;
                   margin: 80px 0 50px 0;
                 }
                 
                 @page:first {
                   margin-top: 0;
-                }
-                
-                body {
-                  counter-reset: page;
                 }
                 
                 .print-header,
@@ -186,7 +190,7 @@ export default function CreateWorksheet() {
                 }
                 
                 .print-footer .page-counter::after {
-                  content: counter(page);
+                  content: counter(page-number);
                 }
               }
               
@@ -266,21 +270,23 @@ export default function CreateWorksheet() {
               }
               
               .answer-space {
-                margin-top: 15px;
-                min-height: 60px;
+                margin-top: 20px;
+                min-height: 120px;
                 border-bottom: 2px dashed #95a5a6;
-                padding: 15px;
+                padding: 20px;
                 background: white;
                 border-radius: 5px;
                 margin-right: 10px;
+                line-height: 2;
               }
               
               .answer-space::before {
                 content: "תשובה:";
                 color: #7f8c8d;
                 font-size: 14px;
-                margin-bottom: 5px;
+                margin-bottom: 10px;
                 display: block;
+                font-weight: bold;
               }
               
               
