@@ -233,69 +233,67 @@ export default function CreateWorksheet() {
               
               @media print {
                 @page {
-                  counter-increment: page-number;
-                  margin: 0 0 50px 0;
+                  margin: 0;
                 }
                 
                 @page:first {
                   margin-top: 0;
-                  counter-reset: page-number 0;
                 }
                 
                 body {
-                  counter-reset: page-number 0;
-                  padding: 0 30px 50px 30px;
+                  padding: 0 30px 30px 30px;
                 }
                 
                 .print-header {
+                  display: block;
+                  position: relative;
+                  margin-bottom: 20px;
+                }
+                
+                @page:not(:first) .print-header {
                   display: none;
                 }
                 
                 .print-footer {
-                  position: fixed;
-                  left: 0;
-                  right: 0;
-                  bottom: 0;
-                  height: 50px;
-                  z-index: 1000;
+                  display: none;
                 }
                 
                 .content {
                   padding: 10px 0;
                 }
-                
-                .print-footer .page-counter::after {
-                  content: counter(page-number);
-                  display: inline;
-                }
               }
               
               .print-header {
-                background: #f8f9fa;
-                color: #2c3e50;
-                padding: 12px 30px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 20px 30px;
                 text-align: center;
-                border-bottom: 2px solid #dee2e6;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
+                margin-bottom: 25px;
               }
               
               .print-header h1 {
                 margin: 0;
-                font-size: 20px;
-                font-weight: 600;
+                font-size: 24px;
+                font-weight: bold;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+                letter-spacing: 0.5px;
                 flex: 1;
               }
               
               .print-header .student-name {
-                font-size: 14px;
+                font-size: 16px;
                 ${isHebrew ? 'margin-left: 20px;' : 'margin-right: 20px;'}
-                padding: 5px 12px;
-                background: white;
-                border: 1px solid #dee2e6;
-                border-radius: 4px;
+                padding: 10px 18px;
+                background: rgba(255,255,255,0.25);
+                border: 2px solid rgba(255,255,255,0.3);
+                border-radius: 8px;
                 white-space: nowrap;
+                backdrop-filter: blur(10px);
               }
               
               body[dir="ltr"] .question, 
@@ -315,21 +313,6 @@ export default function CreateWorksheet() {
                 margin-left: 10px;
               }
               
-              .print-footer {
-                background: #f8f9fa;
-                padding: 8px 30px;
-                text-align: center;
-                border-top: 2px solid #dee2e6;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                color: #6c757d;
-                font-size: 13px;
-              }
-              
-              .print-footer .page-number {
-                font-weight: bold;
-              }
               
               .content {
                 margin-top: 10px;
@@ -384,13 +367,8 @@ export default function CreateWorksheet() {
                 .print-header {
                   -webkit-print-color-adjust: exact;
                   print-color-adjust: exact;
-                  background: #f8f9fa !important;
-                  color: #2c3e50 !important;
-                }
-                .print-footer {
-                  -webkit-print-color-adjust: exact;
-                  print-color-adjust: exact;
-                  background: #f8f9fa !important;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                  color: white !important;
                 }
               }
             </style>
@@ -399,12 +377,6 @@ export default function CreateWorksheet() {
             <div class="print-header">
               <h1>${escapedTitle}</h1>
               <div class="student-name">${isHebrew ? 'שם: __________________' : 'Name: __________________'}</div>
-            </div>
-            
-            <div class="print-footer">
-              <div>${isHebrew ? 'תאריך: _______________' : 'Date: _______________'}</div>
-              <div class="page-number">${isHebrew ? 'עמוד ' : 'Page '}<span class="page-counter"></span></div>
-              <div>${isHebrew ? 'בהצלחה! 🌟' : 'Good luck! 🌟'}</div>
             </div>
             
             <div class="content">
