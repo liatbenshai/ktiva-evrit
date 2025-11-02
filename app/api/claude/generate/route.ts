@@ -8,7 +8,6 @@ import {
   summaryPrompt,
   protocolPrompt,
   scriptPrompt,
-  quotePrompt,
   aiPromptPrompt,
   worksheetPrompt,
 } from '@/prompts';
@@ -70,17 +69,6 @@ export async function POST(req: NextRequest) {
           data.additionalInstructions
         );
         systemPrompt = 'אתה תסריטאי מקצועי עם ניסיון רב בכתיבת תסריטים. אתה כותב בעברית מדוברת, טבעית וזורמת - לא תרגום מילולי מאנגלית. אתה פתוח ללמוד ולשפר מעריכות המשתמש ומשוב שלו.';
-        break;
-
-      case 'quote':
-        prompt = quotePrompt(
-          data.clientName,
-          data.projectDescription,
-          data.services,
-          data.budget,
-          data.additionalTerms
-        );
-        systemPrompt = 'אתה יועץ עסקי ומומחה בכתיבת הצעות מחיר מקצועיות בעברית. אתה כותב בעברית עסקית תקנית וטבעית - לא תרגום מילולי מאנגלית. אתה פתוח ללמוד ולשפר מעריכות המשתמש ומשוב שלו.';
         break;
 
       case 'worksheet':

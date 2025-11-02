@@ -44,8 +44,25 @@ export default function CreateWorksheet() {
     }
   };
 
+  // פונקציה להמרת markdown בסיסי לטקסט נקי
+  const cleanMarkdown = (text: string): string => {
+    return text
+      // הסרת ** (bold markdown)
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      // הסרת * (italic markdown)  
+      .replace(/\*(.+?)\*/g, '$1')
+      // הסרת # (headers)
+      .replace(/^#{1,6}\s+/gm, '')
+      // הסרת --- (horizontal rules)
+      .replace(/^---+/gm, '')
+      // הסרת []() (links) - נשאיר רק הטקסט
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+      // ניקוי רווחים כפולים
+      .replace(/\n{3,}/g, '\n\n');
+  };
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(result);
+    navigator.clipboard.writeText(cleanMarkdown(result));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -53,7 +70,9 @@ export default function CreateWorksheet() {
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      const escapedResult = result
+      // ניקוי markdown ואז escape ל-HTML
+      const cleanedResult = cleanMarkdown(result);
+      const escapedResult = cleanedResult
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -260,7 +279,7 @@ export default function CreateWorksheet() {
               className="bg-gray-50 p-6 rounded-lg border border-gray-200 whitespace-pre-wrap text-base leading-relaxed"
               dir="rtl"
             >
-              {result.split('\n').map((line, index) => (
+              {cleanMarkdown(result).split('\n').map((line, index) => (
                 <div key={index} className={index > 0 ? 'mt-2' : ''}>
                   {line || '\u00A0'}
                 </div>
