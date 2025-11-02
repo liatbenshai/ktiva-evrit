@@ -47,6 +47,14 @@ export default function CreateWorksheet() {
   // פונקציה להמרת markdown בסיסי לטקסט נקי
   const cleanMarkdown = (text: string): string => {
     return text
+      // הסרת code blocks (``` או ''')
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/'''[\s\S]*?'''/g, '')
+      // הסרת גרשיים בודדים (''' או ```) - לפני/אחרי תרגילים
+      .replace(/'''+/g, '')
+      .replace(/```+/g, '')
+      // הסרת backticks בודדים
+      .replace(/`+/g, '')
       // הסרת ** (bold markdown)
       .replace(/\*\*(.+?)\*\*/g, '$1')
       // הסרת * (italic markdown)  
@@ -58,7 +66,10 @@ export default function CreateWorksheet() {
       // הסרת []() (links) - נשאיר רק הטקסט
       .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
       // ניקוי רווחים כפולים
-      .replace(/\n{3,}/g, '\n\n');
+      .replace(/\n{3,}/g, '\n\n')
+      // הסרת שורות ריקות מיותרות
+      .replace(/^\s+$/gm, '')
+      .trim();
   };
 
   const handleCopy = () => {
@@ -128,7 +139,6 @@ export default function CreateWorksheet() {
               @page {
                 margin: 80px 0 50px 0;
                 size: A4;
-                counter-increment: page;
               }
               
               @page:first {
@@ -136,6 +146,19 @@ export default function CreateWorksheet() {
               }
               
               @media print {
+                @page {
+                  counter-increment: page;
+                  margin: 80px 0 50px 0;
+                }
+                
+                @page:first {
+                  margin-top: 0;
+                }
+                
+                body {
+                  counter-reset: page 0;
+                }
+                
                 .print-header,
                 .print-footer {
                   position: fixed;
@@ -165,6 +188,7 @@ export default function CreateWorksheet() {
                 
                 .print-footer .page-counter::after {
                   content: counter(page);
+                  display: inline;
                 }
               }
               
