@@ -27,13 +27,20 @@ export async function POST(req: NextRequest) {
     }
 
     // טעינת idioms מהמאגר
-    const idioms = await prisma.idiom.findMany({
-      where: { learned: true },
-      select: {
-        english: true,
-        hebrew: true,
-      },
-    });
+    let idioms: Array<{ english: string; hebrew: string }> = [];
+    try {
+      idioms = await prisma.idiom.findMany({
+        where: { learned: true },
+        select: {
+          english: true,
+          hebrew: true,
+        },
+      });
+    } catch (dbError) {
+      console.error('Error loading idioms:', dbError);
+      // נמשיך בלי idioms אם יש בעיה
+      idioms = [];
+    }
 
     // טעינת העדפות המשתמש
     let userPreferences: {
@@ -127,12 +134,43 @@ ${context ? `**הקשר:** ${context}` : ''}
     const systemPrompt = getSystemPrompt();
 
     // ביצוע הבקשה
-    const response = await generateText({
-      prompt,
-      systemPrompt,
-      maxTokens: 2048,
-      temperature: 0.7, // טמפרטורה גבוהה יותר לווריאציות
-    });
+    let response: string;
+    try {
+      response = await generateText({
+        prompt,
+        systemPrompt,
+        maxTokens: 2048,
+        temperature: 0.7, // טמפרטורה גבוהה יותר לווריאציות
+      });
+    } catch (apiError: any) {
+      console.error('Error calling generateText:', apiError);
+      
+      // טיפול בשגיאות ספציפיות
+      if (apiError.message?.includes('apiKey') || apiError.message?.includes('authentication')) {
+        return NextResponse.json(
+          { 
+            error: 'API key not configured',
+            details: process.env.NODE_ENV === 'development' ? String(apiError) : 'Please configure ANTHROPIC_API_KEY'
+          },
+          { status: 500 }
+        );
+      }
+      
+      if (apiError.status === 429 || apiError.message?.includes('rate limit')) {
+        return NextResponse.json(
+          { error: 'Rate limit exceeded. Please try again later.' },
+          { status: 429 }
+        );
+      }
+      
+      return NextResponse.json(
+        { 
+          error: 'Failed to generate suggestions',
+          details: process.env.NODE_ENV === 'development' ? String(apiError) : 'An error occurred while generating suggestions'
+        },
+        { status: 500 }
+      );
+    }
 
     // ניסיון לפרש את התשובה כ-JSON
     let suggestionsData: {
@@ -153,8 +191,9 @@ ${context ? `**הקשר:** ${context}` : ''}
       }
       
       suggestionsData = JSON.parse(cleanedResponse);
-    } catch (error) {
-      console.warn('Failed to parse suggestions as JSON:', error);
+    } catch (parseError) {
+      console.warn('Failed to parse suggestions as JSON:', parseError);
+      console.warn('Response was:', response.substring(0, 200));
       // אם לא הצלחנו לפרש, נחזיר רשימה ריקה
       suggestionsData = { suggestions: [] };
     }
@@ -166,8 +205,12 @@ ${context ? `**הקשר:** ${context}` : ''}
     });
   } catch (error) {
     console.error('Suggestions error:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'Failed to get suggestions', details: String(error) },
+      { 
+        error: 'Failed to get suggestions',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : 'An unexpected error occurred'
+      },
       { status: 500 }
     );
   }
