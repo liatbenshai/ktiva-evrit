@@ -133,7 +133,6 @@ export default function CreateWorksheet() {
                 margin: 0 auto;
                 color: #2c3e50;
                 background: #fff;
-                counter-reset: page 0;
               }
               
               @page {
@@ -156,7 +155,7 @@ export default function CreateWorksheet() {
                 }
                 
                 body {
-                  counter-reset: page 0;
+                  counter-reset: page;
                 }
                 
                 .print-header,
@@ -188,7 +187,6 @@ export default function CreateWorksheet() {
                 
                 .print-footer .page-counter::after {
                   content: counter(page);
-                  display: inline;
                 }
               }
               
@@ -332,22 +330,6 @@ export default function CreateWorksheet() {
             <div class="content">
               ${escapedContent}
             </div>
-            
-            <script>
-              // פתרון חלופי למספר עמוד אם CSS counter לא עובד
-              (function() {
-                // נסה לחשב מספר עמודים בפועל
-                if (window.matchMedia) {
-                  var mediaQueryList = window.matchMedia('print');
-                  mediaQueryList.addListener(function(mql) {
-                    if (mql.matches) {
-                      // בזמן הדפסה - נשתמש ב-CSS counter
-                      // אם זה לא עובד, אפשר לנסות לחשב בעזרת JavaScript
-                    }
-                  });
-                }
-              })();
-            </script>
             
           </body>
         </html>
