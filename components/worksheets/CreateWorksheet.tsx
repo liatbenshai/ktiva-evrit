@@ -133,32 +133,41 @@ export default function CreateWorksheet() {
         .replace(/&gt;/g, '>')
         .replace(/&amp;/g, '&');
       
-      // המרת שורות חדשות ל-<br> עם הפרדה נכונה
-      // קודם ניצור פורמט HTML מתוך הטקסט
-      let formattedContent = cleanedContent
-        // המרת שורות חדשות ל-<br>
-        .replace(/\n/g, '<br>')
-        // הוספת הפרדה נוספת אחרי כל שורה ריקה
-        .replace(/<br><br>/g, '<br><br><div style="height: 10px;"></div>')
-        // הוספת מקומות תשובה אוטומטיים אחרי כל שאלה/תרגיל
-        .replace(/(\d+[\.\)]\s*.+?)(<br>|$)/g, (match, question, br) => {
-          // בדיקה אם כבר יש answer-space
-          if (!match.includes('answer-space')) {
-            return question + '<br><br><div class="answer-space"></div><br><div style="height: 15px;"></div>';
-          }
-          return match;
-        });
+      // פיצול לתוך paragraphs עם הפרדה טובה
+      const lines = cleanedContent.split('\n').filter(line => line.trim());
       
-      const escapedContent = formattedContent
+      // בניית HTML עם paragraphs נפרדים
+      let htmlContent = lines.map((line, index) => {
+        const trimmedLine = line.trim();
+        if (!trimmedLine) return '<div style="height: 15px;"></div>';
+        
+        // אם זה תרגיל/שאלה (מתחיל במספר)
+        if (/^\d+[\.\)]\s/.test(trimmedLine)) {
+          return `<div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 12px; font-size: 18px; font-weight: 500;">${trimmedLine}</div>
+            <div class="answer-space"></div>
+          </div>`;
+        }
+        
+        // אם זה כותרת (מתחיל באותיות גדולות או סגנון כותרת)
+        if (trimmedLine.length < 60 && !trimmedLine.includes('=') && !trimmedLine.includes('?')) {
+          return `<div style="margin: 20px 0 10px 0; font-size: 20px; font-weight: bold; color: #667eea;">${trimmedLine}</div>`;
+        }
+        
+        // שורה רגילה
+        return `<div style="margin-bottom: 10px; line-height: 1.8;">${trimmedLine}</div>`;
+      }).join('');
+      
+      // Escape HTML - אבל שמירה על תגי div שכבר יצרנו
+      const escapedContent = htmlContent
         .replace(/&/g, '&amp;')
-        // לא נסיר <br> ו-<div> - הם חלק מה-HTML שאנחנו רוצים
-        .replace(/<(?!\/?(br|div|span|p|h[1-6]|class="answer-space"|style=")[> ])/gi, '&lt;')
+        .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;')
-        // החזרת <br> ו-<div> כי אנחנו רוצים אותם
-        .replace(/&lt;(br|div|span|p|h[1-6])([^>]*)&gt;/gi, '<$1$2>')
-        .replace(/&lt;\/(br|div|span|p|h[1-6])&gt;/gi, '</$1>')
+        // החזרת div tags שלנו
+        .replace(/&lt;div([^&]+)&gt;/g, '<div$1>')
+        .replace(/&lt;\/div&gt;/g, '</div>')
         .replace(/&lt;div class="answer-space"&gt;&lt;\/div&gt;/g, '<div class="answer-space"></div>');
       
       const escapedTitle = title
@@ -423,7 +432,7 @@ export default function CreateWorksheet() {
               <div>${isHebrew ? 'בהצלחה! 🌟' : 'Good luck! 🌟'}</div>
             </div>
             
-            <div class="content" style="line-height: 2.2; white-space: pre-wrap;">
+            <div class="content">
               ${escapedContent}
             </div>
             
