@@ -211,9 +211,9 @@ export default function CreateWorksheet() {
                 font-family: 'Segoe UI', 'Arial', 'Helvetica', sans-serif;
                 font-size: 15px;
                 line-height: 1.3;
-                padding: 20px 30px;
-                max-width: 850px;
-                margin: 0 auto;
+                padding: 0;
+                max-width: 100%;
+                margin: 0;
                 color: #2c3e50;
                 background: #fff;
               }
@@ -237,7 +237,7 @@ export default function CreateWorksheet() {
               
               @media print {
                 @page {
-                  margin: 10mm 5mm;
+                  margin: 8mm 3mm;
                   size: A4;
                 }
                 
@@ -254,7 +254,8 @@ export default function CreateWorksheet() {
                 .print-header {
                   display: block;
                   position: relative;
-                  margin: 0 0 25px 0;
+                  margin: 0 0 15px 0;
+                  padding: 12px 8px;
                   page-break-after: avoid;
                   page-break-inside: avoid;
                 }
@@ -279,14 +280,14 @@ export default function CreateWorksheet() {
               .print-header {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
-                padding: 18px 25px;
+                padding: 15px 10px;
                 text-align: center;
-                border-radius: 10px;
+                border-radius: 8px;
                 box-shadow: 0 3px 5px rgba(0,0,0,0.15);
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                margin: 0 0 20px 0;
+                margin: 0 0 15px 0;
               }
               
               .print-header h1 {
