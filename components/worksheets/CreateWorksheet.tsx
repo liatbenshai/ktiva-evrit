@@ -211,7 +211,7 @@ export default function CreateWorksheet() {
                 font-family: 'Segoe UI', 'Arial', 'Helvetica', sans-serif;
                 font-size: 15px;
                 line-height: 1.3;
-                padding: 20px 30px 60px 30px;
+                padding: 20px 30px;
                 max-width: 850px;
                 margin: 0 auto;
                 color: #2c3e50;
@@ -233,22 +233,34 @@ export default function CreateWorksheet() {
               
               @media print {
                 @page {
-                  margin: 0;
+                  margin: 15mm 10mm;
                 }
                 
                 @page:first {
-                  margin-top: 0;
+                  margin-top: 15mm;
                 }
                 
                 body {
-                  padding: 0 30px 30px 30px;
+                  padding: 0;
                 }
                 
                 .print-header {
                   display: block;
                   position: relative;
-                  margin-bottom: 20px;
+                  margin: 0 0 25px 0;
                   page-break-after: avoid;
+                }
+                
+                /* הסתרת כותרת מעמודים שניים ומעלה */
+                body > .print-header {
+                  display: block;
+                }
+                
+                /* בהדפסה, הכותרת תופיע רק כשהיא בתוך העמוד הראשון */
+                @page {
+                  @top-center {
+                    content: none;
+                  }
                 }
                 
                 .print-footer {
@@ -256,21 +268,22 @@ export default function CreateWorksheet() {
                 }
                 
                 .content {
-                  padding: 10px 0;
+                  padding: 0;
+                  margin-top: 0;
                 }
               }
               
               .print-header {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
-                padding: 20px 30px;
+                padding: 18px 25px;
                 text-align: center;
-                border-radius: 12px;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                border-radius: 10px;
+                box-shadow: 0 3px 5px rgba(0,0,0,0.15);
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                margin-bottom: 25px;
+                margin: 0 0 20px 0;
               }
               
               .print-header h1 {
@@ -312,8 +325,9 @@ export default function CreateWorksheet() {
               
               
               .content {
-                margin-top: 10px;
-                line-height: 1.3;
+                margin-top: 0;
+                line-height: 1.4;
+                padding: 0;
               }
               
               .question, .exercise {
