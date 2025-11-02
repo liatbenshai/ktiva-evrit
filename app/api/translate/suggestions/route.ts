@@ -1,0 +1,175 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { generateText } from '@/lib/ai/claude';
+import { prisma } from '@/lib/prisma';
+import { learningSystem } from '@/lib/learning-system';
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const {
+      selectedText,
+      fullText,
+      fromLang,
+      toLang,
+      context,
+      userId = 'default-user',
+    } = body;
+
+    if (
+      !selectedText || !fullText || !fromLang || !toLang ||
+      (fromLang !== 'hebrew' && fromLang !== 'english' && fromLang !== 'russian') ||
+      (toLang !== 'hebrew' && toLang !== 'english' && toLang !== 'russian')
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid parameters' },
+        { status: 400 }
+      );
+    }
+
+    // טעינת idioms מהמאגר
+    const idioms = await prisma.idiom.findMany({
+      where: { learned: true },
+      select: {
+        english: true,
+        hebrew: true,
+      },
+    });
+
+    // טעינת העדפות המשתמש
+    let userPreferences: {
+      forbiddenWords?: string[];
+      preferredWords?: { [key: string]: string };
+    } = {};
+
+    try {
+      const writingSuggestions =
+        typeof learningSystem.getWritingSuggestions === 'function'
+          ? await Promise.resolve(
+              learningSystem.getWritingSuggestions(userId, 'translation')
+            )
+          : null;
+
+      if (writingSuggestions) {
+        userPreferences.forbiddenWords = writingSuggestions.commonMistakes
+          .filter((m) => m.frequency >= 2)
+          .map((m) => m.mistake);
+      }
+    } catch (error) {
+      console.error('Error loading user preferences:', error);
+    }
+
+    // בניית prompt להצעות חלופיות
+    // הצעות הן חלופות באותה שפה של התרגום (toLang)
+    // אבל אנחנו צריכים לדעת מה היה המקור כדי לתת הצעות טובות
+    
+    const idiomsSection = idioms && idioms.length > 0 ? `
+**מילון תרגומים מועדפים:**
+${idioms.map(idiom => {
+  return `- "${idiom.english}" → "${idiom.hebrew}"`;
+}).join('\n')}` : '';
+
+    const prompt = `אתה מתרגם מקצועי. אני מבקש הצעות חלופיות לניסוח של טקסט ספציפי בתרגום.
+
+**הטקסט המלא:**
+${fullText}
+
+**הטקסט הנבחר (שצריך הצעות חלופיות):**
+"${selectedText}"
+
+${idiomsSection}
+
+${userPreferences.forbiddenWords && userPreferences.forbiddenWords.length > 0 ? `
+**מילים להימנעות:**
+${userPreferences.forbiddenWords.map(word => `- ❌ "${word}"`).join('\n')}` : ''}
+
+${context ? `**הקשר:** ${context}` : ''}
+
+**כיוון התרגום המקורי:** ${fromLang} → ${toLang}
+
+**בקשה:**
+צור 5-7 אפשרויות ניסוח חלופיות לטקסט הנבחר "${selectedText}" בשפה ${toLang === 'hebrew' ? 'עברית' : 'אנגלית'}. כל אפשרות צריכה להיות:
+- טבעית ונשמעת טוב
+- שונה מהאחרות (גישות שונות לתרגום)
+- מתאימה להקשר של הטקסט המלא
+- מתאימה למילון התרגומים המועדפים
+
+**פורמט הפלט - JSON בלבד:**
+{
+  "suggestions": [
+    {
+      "text": "אפשרות תרגום 1",
+      "explanation": "הסבר קצר למה אפשרות זו מתאימה",
+      "tone": "רשמי / לא פורמלי / מקצועי / וכו",
+      "whenToUse": "מתי להשתמש באפשרות זו"
+    },
+    {
+      "text": "אפשרות תרגום 2",
+      "explanation": "הסבר קצר",
+      "tone": "...",
+      "whenToUse": "..."
+    }
+  ]
+}
+
+**חשוב מאוד:** החזר רק JSON תקין, ללא markdown, ללא הסברים נוספים.`;
+
+    const getSystemPrompt = () => {
+      if (toLang === 'hebrew') {
+        return 'אתה מומחה בעברית תקנית וטבעית. אתה מספק הצעות חלופיות לניסוח בעברית שמשפרות את התרגום. **חשוב מאוד:** החזר תמיד JSON תקין בלבד, ללא טקסט נוסף.';
+      } else if (toLang === 'english') {
+        return 'אתה מומחה באנגלית תקנית וטבעית. אתה מספק הצעות חלופיות לניסוח באנגלית שמשפרות את התרגום. **חשוב מאוד:** החזר תמיד JSON תקין בלבד, ללא טקסט נוסף.';
+      } else if (toLang === 'russian') {
+        return 'אתה מומחה ברוסית תקנית וטבעית. אתה מספק הצעות חלופיות לניסוח ברוסית שמשפרות את התרגום. **חשוב מאוד:** החזר תמיד JSON תקין בלבד, ללא טקסט נוסף.';
+      }
+      return 'אתה מומחה בתרגום. **חשוב מאוד:** החזר תמיד JSON תקין בלבד, ללא טקסט נוסף.';
+    };
+    
+    const systemPrompt = getSystemPrompt();
+
+    // ביצוע הבקשה
+    const response = await generateText({
+      prompt,
+      systemPrompt,
+      maxTokens: 2048,
+      temperature: 0.7, // טמפרטורה גבוהה יותר לווריאציות
+    });
+
+    // ניסיון לפרש את התשובה כ-JSON
+    let suggestionsData: {
+      suggestions: Array<{
+        text: string;
+        explanation?: string;
+        tone?: string;
+        whenToUse?: string;
+      }>;
+    };
+
+    try {
+      let cleanedResponse = response.trim();
+      if (cleanedResponse.startsWith('```json')) {
+        cleanedResponse = cleanedResponse.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+      } else if (cleanedResponse.startsWith('```')) {
+        cleanedResponse = cleanedResponse.replace(/^```\n?/, '').replace(/\n?```$/, '');
+      }
+      
+      suggestionsData = JSON.parse(cleanedResponse);
+    } catch (error) {
+      console.warn('Failed to parse suggestions as JSON:', error);
+      // אם לא הצלחנו לפרש, נחזיר רשימה ריקה
+      suggestionsData = { suggestions: [] };
+    }
+
+    return NextResponse.json({
+      success: true,
+      selectedText,
+      suggestions: suggestionsData.suggestions || [],
+    });
+  } catch (error) {
+    console.error('Suggestions error:', error);
+    return NextResponse.json(
+      { error: 'Failed to get suggestions', details: String(error) },
+      { status: 500 }
+    );
+  }
+}
+

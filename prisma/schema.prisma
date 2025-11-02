@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -58,8 +58,8 @@ model GeneratedContent {
   
   type        String   // article, email, post, story, etc.
   title       String?
-  content     String   @db.Text
-  prompt      String   @db.Text
+  content     String
+  prompt      String
   wordCount   Int?
   
   // Metadata

@@ -7,9 +7,9 @@ export interface TextCorrection {
   id: string
   originalText: string
   correctedText: string
-  correctionType: 'synonym' | 'grammar' | 'style' | 'terminology' | 'context'
+  correctionType: 'synonym' | 'grammar' | 'style' | 'terminology' | 'context' | 'translation' | 'manual'
   context: string
-  category: 'articles' | 'emails' | 'posts' | 'protocols' | 'scripts' | 'stories' | 'summaries' | 'quotes'
+  category: 'articles' | 'emails' | 'posts' | 'protocols' | 'scripts' | 'stories' | 'summaries' | 'quotes' | 'translation'
   userId: string
   timestamp: Date
   confidence: number

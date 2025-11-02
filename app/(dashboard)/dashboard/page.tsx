@@ -39,9 +39,9 @@ const modules = [
     color: 'bg-yellow-500',
   },
   {
-    title: 'Prompts',
-    description: 'כתיבת prompts אפקטיביים ל-AI',
-    icon: MessageSquare,
+    title: 'תרגום',
+    description: 'תרגום מתוחכם עם למידה מתיקונים',
+    icon: Languages,
     href: '/dashboard/prompts',
     color: 'bg-teal-500',
   },

@@ -973,3 +973,528 @@ export const aiPromptPrompt = (
 ${additionalRequirements ? `דרישות: ${additionalRequirements}` : ''}
 
 הPrompt צריך להיות ברור, מפורט, עם הגדרת תפקיד, משימה, דרישות, ופורמט פלט.`;
+
+// Translation Prompt - מתוחכם עם למידה
+export const translationPrompt = (
+  text: string,
+  fromLang: 'hebrew' | 'english' | 'russian',
+  toLang: 'hebrew' | 'english' | 'russian',
+  idioms?: Array<{ english: string; hebrew: string }>,
+  userPreferences?: {
+    forbiddenWords?: string[];
+    preferredWords?: { [key: string]: string };
+    stylePreferences?: {
+      formality?: 'formal' | 'casual' | 'professional';
+      tone?: string;
+    };
+  },
+  context?: string
+) => {
+  const isEnglishToHebrew = fromLang === 'english' && toLang === 'hebrew';
+  const isHebrewToEnglish = fromLang === 'hebrew' && toLang === 'english';
+  const isEnglishToRussian = fromLang === 'english' && toLang === 'russian';
+  const isRussianToEnglish = fromLang === 'russian' && toLang === 'english';
+  const isHebrewToRussian = fromLang === 'hebrew' && toLang === 'russian';
+  const isRussianToHebrew = fromLang === 'russian' && toLang === 'hebrew';
+  
+  const idiomsSection = idioms && idioms.length > 0 ? `
+**מילון תרגומים מועדפים (חשוב מאוד!):**
+${idioms.map(idiom => {
+  if (isEnglishToHebrew || isEnglishToRussian) {
+    return `- "${idiom.english}" → "${idiom.hebrew}"`;
+  } else if (isHebrewToEnglish || isHebrewToRussian) {
+    return `- "${idiom.hebrew}" → "${idiom.english}"`;
+  } else {
+    return `- "${idiom.english}" → "${idiom.hebrew}"`;
+  }
+}).join('\n')}
+
+**חוק ברזל:** כאשר אתה נתקל בביטוי או מילה מהמילון לעיל, חובה להשתמש בתרגום מהמילון. אל תמציא תרגום חדש!
+` : '';
+
+  const preferencesSection = userPreferences ? `
+**העדפות המשתמש (חשוב מאוד!):**
+
+${userPreferences.forbiddenWords && userPreferences.forbiddenWords.length > 0 ? `
+**מילים להימנעות:**
+${userPreferences.forbiddenWords.map(word => `- ❌ "${word}"`).join('\n')}
+אל תשתמש במילים האלה!` : ''}
+
+${userPreferences.preferredWords && Object.keys(userPreferences.preferredWords).length > 0 ? `
+**תחליפים מועדפים:**
+${Object.entries(userPreferences.preferredWords).map(([from, to]) => `- "${from}" → "${to}"`).join('\n')}
+השתמש בתחליפים האלה במקום המילים המקוריות!` : ''}
+
+${userPreferences.stylePreferences ? `
+**העדפות סגנון:**
+${userPreferences.stylePreferences.formality ? `- רמת פורמליות: ${userPreferences.stylePreferences.formality === 'formal' ? 'רשמית מאוד' : userPreferences.stylePreferences.formality === 'casual' ? 'לא פורמלית' : 'מקצועית'}` : ''}
+${userPreferences.stylePreferences.tone ? `- טון: ${userPreferences.stylePreferences.tone}` : ''}` : ''}
+` : '';
+
+  const contextSection = context ? `
+**הקשר:**
+${context}
+
+השתמש בהקשר הזה כדי להתאים את התרגום - שפה עסקית, טכנית, ספרותית, וכו'.` : '';
+
+  if (isEnglishToHebrew) {
+    return `אתה מתרגם מקצועי ומומחה בתרגום מאנגלית לעברית תקנית וזורמת.
+תפקידך לתרגם טקסט מאנגלית לעברית בצורה טבעית, מדויקת ומקצועית.
+
+**הטקסט לתרגום:**
+${text}
+
+${idiomsSection}
+
+${preferencesSection}
+
+${contextSection}
+
+**עקרונות תרגום מאנגלית לעברית:**
+
+✅ **תרגום טבעי, לא מילולי:**
+- "take into account" → "לקחת בחשבון" (לא "לקחת לתוך חשבון")
+- "make sure" → "לוודא" (לא "לעשות בטוח")
+- "in order to" → "כדי" / "על מנת" (לא "בסדר ל")
+- "as well as" → "כמו גם" / "ובנוסף" (לא "כמו גם כמו")
+
+✅ **מבנה משפטים עברי:**
+- אנגלית: נושא → פועל → מושא
+- עברית: נושא → מושא → פועל (בדרך כלל)
+- דוגמה: "I will send the document" → "אני אשלח את המסמך" (לא "אני אשלח את זה המסמך")
+
+✅ **ביטויים וניבים:**
+- "break the ice" → "לשבור את הקרח" / "לפתוח בשיחה"
+- "think outside the box" → "לחשוב מחוץ לקופסה" / "לחשוב בצורה יצירתית"
+- "it goes without saying" → "מובן מאליו" / "אין צורך לומר"
+
+✅ **שפה טבעית:**
+- הימנע מתרגום מילה-במילה
+- חפש את המשמעות מאחורי המילים
+- התאם את השפה להקשר (עסקי, טכני, ספרותי)
+
+✅ **פיסוק עברי:**
+- נקודה בסוף המשפט: "."
+- פסיק להפרדה: ","
+- סימן שאלה: "?"
+- סימן קריאה: "!"
+
+**פורמט הפלט - JSON עם אפשרויות חלופיות:**
+חזור JSON עם הפורמט הבא (חשוב מאוד - רק JSON, ללא טקסט נוסף):
+
+{
+  "main": "התרגום הראשי והמומלץ",
+  "alternatives": [
+    {
+      "text": "אפשרות חלופית 1",
+      "explanation": "הסבר קצר למה אפשרות זו שונה",
+      "context": "מתי להשתמש (למשל: רשמי, לא פורמלי, טכני)"
+    },
+    {
+      "text": "אפשרות חלופית 2",
+      "explanation": "הסבר קצר",
+      "context": "מתי להשתמש"
+    },
+    {
+      "text": "אפשרות חלופית 3",
+      "explanation": "הסבר קצר",
+      "context": "מתי להשתמש"
+    }
+  ],
+  "wordAlternatives": {
+    "מילה_חשובה_בטקסט": [
+      "תרגום מומלץ",
+      "תרגום חלופי 1",
+      "תרגום חלופי 2"
+    ]
+  }
+}
+
+כתוב תרגום מקצועי, טבעי ומדויק עם אפשרויות חלופיות!`;
+  } else if (isHebrewToEnglish) {
+    return `אתה מתרגם מקצועי ומומחה בתרגום מעברית לאנגלית תקנית וזורמת.
+תפקידך לתרגם טקסט מעברית לאנגלית בצורה טבעית, מדויקת ומקצועית.
+
+**הטקסט לתרגום:**
+${text}
+
+${idiomsSection}
+
+${preferencesSection}
+
+${contextSection}
+
+**עקרונות תרגום מעברית לאנגלית:**
+
+✅ **תרגום טבעי, לא מילולי:**
+- "לקחת בחשבון" → "take into account" (לא "take to account")
+- "לוודא" → "make sure" / "ensure" (לא "to make certain")
+- "כדי" → "in order to" / "to" (לא "for to")
+- "כמו גם" → "as well as" / "also" (לא "like also")
+
+✅ **מבנה משפטים אנגלי:**
+- עברית: נושא → מושא → פועל
+- אנגלית: נושא → פועל → מושא
+- דוגמה: "אני אשלח את המסמך" → "I will send the document"
+
+✅ **ביטויים וניבים:**
+- "מובן מאליו" → "it goes without saying" / "obviously"
+- "לשבור את הקרח" → "break the ice"
+- "לחשוב מחוץ לקופסה" → "think outside the box"
+
+✅ **שפה טבעית:**
+- הימנע מתרגום מילה-במילה
+- חפש את המשמעות מאחורי המילים
+- התאם את השפה להקשר (עסקי, טכני, ספרותי)
+
+✅ **דקדוק אנגלי:**
+- שימוש נכון ב-articles (a, an, the)
+- מבנה זמנים נכון (present, past, future)
+- שימוש נכון ב-prepositions
+
+**פורמט הפלט - JSON עם אפשרויות חלופיות:**
+חזור JSON עם הפורמט הבא (חשוב מאוד - רק JSON, ללא טקסט נוסף):
+
+{
+  "main": "The main recommended translation",
+  "alternatives": [
+    {
+      "text": "Alternative option 1",
+      "explanation": "Brief explanation of why this is different",
+      "context": "When to use (e.g., formal, informal, technical)"
+    },
+    {
+      "text": "Alternative option 2",
+      "explanation": "Brief explanation",
+      "context": "When to use"
+    },
+    {
+      "text": "Alternative option 3",
+      "explanation": "Brief explanation",
+      "context": "When to use"
+    }
+  ],
+  "wordAlternatives": {
+    "important_word_in_text": [
+      "recommended translation",
+      "alternative 1",
+      "alternative 2"
+    ]
+  }
+}
+
+כתוב תרגום מקצועי, טבעי ומדויק עם אפשרויות חלופיות!`;
+  } else if (isRussianToHebrew) {
+    return `אתה מתרגם מקצועי ומומחה בתרגום מרוסית לעברית תקנית וזורמת.
+תפקידך לתרגם טקסט מרוסית לעברית בצורה טבעית, מדויקת ומקצועית.
+
+**הטקסט לתרגום:**
+${text}
+
+${idiomsSection}
+
+${preferencesSection}
+
+${contextSection}
+
+**עקרונות תרגום מרוסית לעברית:**
+
+✅ **תרגום טבעי, לא מילולי:**
+- "принять во внимание" → "לקחת בחשבון" (לא "לקבל למחשבה")
+- "убедиться" → "לוודא" (לא "להתאמת")
+- "для того чтобы" → "כדי" / "על מנת" (לא "בשביל ל")
+
+✅ **מבנה משפטים עברי:**
+- רוסית: נושא → פועל → מושא (כמו אנגלית)
+- עברית: נושא → מושא → פועל (בדרך כלל)
+- דוגמה: "Я отправлю документ" → "אני אשלח את המסמך"
+
+✅ **ביטויים וניבים:**
+- "без сомнения" → "ללא ספק" / "מובן מאליו"
+- "сломать лед" → "לשבור את הקרח"
+- "думать нестандартно" → "לחשוב מחוץ לקופסה"
+
+✅ **שפה טבעית:**
+- הימנע מתרגום מילה-במילה
+- חפש את המשמעות מאחורי המילים
+- התאם את השפה להקשר (עסקי, טכני, ספרותי)
+
+✅ **פיסוק עברי:**
+- נקודה בסוף המשפט: "."
+- פסיק להפרדה: ","
+- סימן שאלה: "?"
+- סימן קריאה: "!"
+
+**פורמט הפלט - JSON עם אפשרויות חלופיות:**
+חזור JSON עם הפורמט הבא (חשוב מאוד - רק JSON, ללא טקסט נוסף):
+
+{
+  "main": "התרגום הראשי והמומלץ",
+  "alternatives": [
+    {
+      "text": "אפשרות חלופית 1",
+      "explanation": "הסבר קצר למה אפשרות זו שונה",
+      "context": "מתי להשתמש (למשל: רשמי, לא פורמלי, טכני)"
+    },
+    {
+      "text": "אפשרות חלופית 2",
+      "explanation": "הסבר קצר",
+      "context": "מתי להשתמש"
+    },
+    {
+      "text": "אפשרות חלופית 3",
+      "explanation": "הסבר קצר",
+      "context": "מתי להשתמש"
+    }
+  ],
+  "wordAlternatives": {
+    "מילה_חשובה_בטקסט": [
+      "תרגום מומלץ",
+      "תרגום חלופי 1",
+      "תרגום חלופי 2"
+    ]
+  }
+}
+
+כתוב תרגום מקצועי, טבעי ומדויק עם אפשרויות חלופיות!`;
+  } else if (isHebrewToRussian) {
+    return `אתה מתרגם מקצועי ומומחה בתרגום מעברית לרוסית תקנית וזורמת.
+תפקידך לתרגם טקסט מעברית לרוסית בצורה טבעית, מדויקת ומקצועית.
+
+**הטקסט לתרגום:**
+${text}
+
+${idiomsSection}
+
+${preferencesSection}
+
+${contextSection}
+
+**עקרונות תרגום מעברית לרוסית:**
+
+✅ **תרגום טבעי, לא מילולי:**
+- "לקחת בחשבון" → "принять во внимание" (לא "взять в расчет")
+- "לוודא" → "убедиться" / "проверить" (לא "сделать уверенным")
+- "כדי" → "для того чтобы" / "чтобы" (לא "для")
+
+✅ **מבנה משפטים רוסי:**
+- עברית: נושא → מושא → פועל
+- רוסית: נושא → פועל → מושא (בדרך כלל)
+- דוגמה: "אני אשלח את המסמך" → "Я отправлю документ"
+
+✅ **ביטויים וניבים:**
+- "מובן מאליו" → "без сомнения" / "очевидно"
+- "לשבור את הקרח" → "сломать лед"
+- "לחשוב מחוץ לקופסה" → "думать нестандартно"
+
+✅ **שפה טבעית:**
+- הימנע מתרגום מילה-במילה
+- חפש את המשמעות מאחורי המילים
+- התאם את השפה להקשר (עסקי, טכני, ספרותי)
+
+✅ **דקדוק רוסי:**
+- שימוש נכון ב-падежи (cases)
+- מבנה זמנים נכון (настоящее, прошедшее, будущее)
+- שימוש נכון ב-prepositions (предлоги)
+
+**פורמט הפלט - JSON עם אפשרויות חלופיות:**
+חזור JSON עם הפורמט הבא (חשוב מאוד - רק JSON, ללא טקסט נוסף):
+
+{
+  "main": "Основной рекомендуемый перевод",
+  "alternatives": [
+    {
+      "text": "Альтернативный вариант 1",
+      "explanation": "Краткое объяснение, почему этот вариант отличается",
+      "context": "Когда использовать (например: формальный, неформальный, технический)"
+    },
+    {
+      "text": "Альтернативный вариант 2",
+      "explanation": "Краткое объяснение",
+      "context": "Когда использовать"
+    },
+    {
+      "text": "Альтернативный вариант 3",
+      "explanation": "Краткое объяснение",
+      "context": "Когда использовать"
+    }
+  ],
+  "wordAlternatives": {
+    "важное_слово_в_тексте": [
+      "рекомендуемый перевод",
+      "альтернатива 1",
+      "альтернатива 2"
+    ]
+  }
+}
+
+כתוב תרגום מקצועי, טבעי ומדויק עם אפשרויות חלופיות!`;
+  } else if (isEnglishToRussian) {
+    return `אתה מתרגם מקצועי ומומחה בתרגום מאנגלית לרוסית תקנית וזורמת.
+תפקידך לתרגם טקסט מאנגלית לרוסית בצורה טבעית, מדויקת ומקצועית.
+
+**הטקסט לתרגום:**
+${text}
+
+${idiomsSection}
+
+${preferencesSection}
+
+${contextSection}
+
+**עקרונות תרגום מאנגלית לרוסית:**
+
+✅ **תרגום טבעי, לא מילולי:**
+- "take into account" → "принять во внимание" (לא "взять в учет")
+- "make sure" → "убедиться" (לא "сделать уверенным")
+- "in order to" → "для того чтобы" / "чтобы" (לא "в порядке к")
+
+✅ **מבנה משפטים רוסי:**
+- אנגלית: נושא → פועל → מושא
+- רוסית: נושא → פועל → מושא (דומה)
+- דוגמה: "I will send the document" → "Я отправлю документ"
+
+✅ **ביטויים וניבים:**
+- "break the ice" → "сломать лед"
+- "think outside the box" → "думать нестандартно"
+- "it goes without saying" → "само собой разумеется" / "очевидно"
+
+✅ **שפה טבעית:**
+- הימנע מתרגום מילה-במילה
+- חפש את המשמעות מאחורי המילים
+- התאם את השפה להקשר (עסקי, טכני, ספרותי)
+
+✅ **דקדוק רוסי:**
+- שימוש נכון ב-падежи (cases)
+- מבנה זמנים נכון (настоящее, прошедшее, будущее)
+- שימוש נכון ב-prepositions (предлоги)
+
+**פורמט הפלט - JSON עם אפשרויות חלופיות:**
+חזור JSON עם הפורמט הבא (חשוב מאוד - רק JSON, ללא טקסט נוסף):
+
+{
+  "main": "Основной рекомендуемый перевод",
+  "alternatives": [
+    {
+      "text": "Альтернативный вариант 1",
+      "explanation": "Краткое объяснение, почему этот вариант отличается",
+      "context": "Когда использовать (например: формальный, неформальный, технический)"
+    },
+    {
+      "text": "Альтернативный вариант 2",
+      "explanation": "Краткое объяснение",
+      "context": "Когда использовать"
+    },
+    {
+      "text": "Альтернативный вариант 3",
+      "explanation": "Краткое объяснение",
+      "context": "Когда использовать"
+    }
+  ],
+  "wordAlternatives": {
+    "important_word_in_text": [
+      "recommended translation",
+      "alternative 1",
+      "alternative 2"
+    ]
+  }
+}
+
+כתוב תרגום מקצועי, טבעי ומדויק עם אפשרויות חלופיות!`;
+  } else if (isRussianToEnglish) {
+    return `אתה מתרגם מקצועי ומומחה בתרגום מרוסית לאנגלית תקנית וזורמת.
+תפקידך לתרגם טקסט מרוסית לאנגלית בצורה טבעית, מדויקת ומקצועית.
+
+**הטקסט לתרגום:**
+${text}
+
+${idiomsSection}
+
+${preferencesSection}
+
+${contextSection}
+
+**עקרונות תרגום מרוסית לאנגלית:**
+
+✅ **תרגום טבעי, לא מילולי:**
+- "принять во внимание" → "take into account" (לא "accept in view")
+- "убедиться" → "make sure" / "ensure" (לא "to make certain")
+- "для того чтобы" → "in order to" / "to" (לא "for that to")
+
+✅ **מבנה משפטים אנגלי:**
+- רוסית: נושא → פועל → מושא
+- אנגלית: נושא → פועל → מושא (דומה)
+- דוגמה: "Я отправлю документ" → "I will send the document"
+
+✅ **ביטויים וניבים:**
+- "без сомнения" → "without doubt" / "obviously"
+- "сломать лед" → "break the ice"
+- "думать нестандартно" → "think outside the box"
+
+✅ **שפה טבעית:**
+- הימנע מתרגום מילה-במילה
+- חפש את המשמעות מאחורי המילים
+- התאם את השפה להקשר (עסקי, טכני, ספרותי)
+
+✅ **דקדוק אנגלי:**
+- שימוש נכון ב-articles (a, an, the)
+- מבנה זמנים נכון (present, past, future)
+- שימוש נכון ב-prepositions
+
+**פורמט הפלט - JSON עם אפשרויות חלופיות:**
+חזור JSON עם הפורמט הבא (חשוב מאוד - רק JSON, ללא טקסט נוסף):
+
+{
+  "main": "The main recommended translation",
+  "alternatives": [
+    {
+      "text": "Alternative option 1",
+      "explanation": "Brief explanation of why this is different",
+      "context": "When to use (e.g., formal, informal, technical)"
+    },
+    {
+      "text": "Alternative option 2",
+      "explanation": "Brief explanation",
+      "context": "When to use"
+    },
+    {
+      "text": "Alternative option 3",
+      "explanation": "Brief explanation",
+      "context": "When to use"
+    }
+  ],
+  "wordAlternatives": {
+    "важное_слово_в_тексте": [
+      "recommended translation",
+      "alternative 1",
+      "alternative 2"
+    ]
+  }
+}
+
+כתוב תרגום מקצועי, טבעי ומדויק עם אפשרויות חלופיות!`;
+  } else {
+    // ברירת מחדל - תרגום כללי
+    return `אתה מתרגם מקצועי. תרגם את הטקסט הבא מ-${fromLang} ל-${toLang} בצורה טבעית ומדויקת.
+
+**הטקסט לתרגום:**
+${text}
+
+${idiomsSection}
+
+${preferencesSection}
+
+${contextSection}
+
+**פורמט הפלט - JSON עם אפשרויות חלופיות:**
+חזור JSON עם הפורמט הבא:
+
+{
+  "main": "התרגום הראשי",
+  "alternatives": [],
+  "wordAlternatives": {}
+}
+
+כתוב תרגום מקצועי!`;
+  }
+};
