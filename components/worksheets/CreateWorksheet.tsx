@@ -143,8 +143,8 @@ export default function CreateWorksheet() {
         const line = contentLines[i].trim();
         
         if (!line) {
-          // שורה ריקה - הפרדה קטנה
-          htmlParts.push('<div style="height: 6px;"></div>');
+          // שורה ריקה - הפרדה קטנה מאוד
+          htmlParts.push('<div style="height: 3px;"></div>');
           continue;
         }
         
@@ -157,8 +157,8 @@ export default function CreateWorksheet() {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
           
-          htmlParts.push(`<div style="margin-bottom: 12px;">
-            <div style="margin-bottom: 8px; font-size: 16px;">${escapedLine}</div>
+          htmlParts.push(`<div style="margin-bottom: 8px;">
+            <div style="margin-bottom: 4px; font-size: 15px;">${escapedLine}</div>
             <div class="answer-space"></div>
           </div>`);
           continue;
@@ -172,7 +172,7 @@ export default function CreateWorksheet() {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
           
-          htmlParts.push(`<div style="margin: 12px 0 8px 0; font-size: 18px; font-weight: bold;">${escapedLine}</div>`);
+          htmlParts.push(`<div style="margin: 8px 0 4px 0; font-size: 17px; font-weight: bold;">${escapedLine}</div>`);
           continue;
         }
         
@@ -183,7 +183,7 @@ export default function CreateWorksheet() {
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;');
         
-        htmlParts.push(`<div style="margin-bottom: 6px; line-height: 1.4; font-size: 15px;">${escapedLine}</div>`);
+        htmlParts.push(`<div style="margin-bottom: 4px; line-height: 1.3; font-size: 15px;">${escapedLine}</div>`);
       }
       
       const escapedContent = htmlParts.join('');
@@ -210,8 +210,8 @@ export default function CreateWorksheet() {
               body {
                 font-family: 'Segoe UI', 'Arial', 'Helvetica', sans-serif;
                 font-size: 15px;
-                line-height: 1.5;
-                padding: 80px 30px 60px 30px;
+                line-height: 1.3;
+                padding: 20px 30px 60px 30px;
                 max-width: 850px;
                 margin: 0 auto;
                 color: #2c3e50;
@@ -234,7 +234,7 @@ export default function CreateWorksheet() {
               @media print {
                 @page {
                   counter-increment: page-number;
-                  margin: 100px 0 60px 0;
+                  margin: 0 0 50px 0;
                 }
                 
                 @page:first {
@@ -244,33 +244,24 @@ export default function CreateWorksheet() {
                 
                 body {
                   counter-reset: page-number 0;
+                  padding: 0 30px 50px 30px;
                 }
                 
-                .print-header,
+                .print-header {
+                  display: none;
+                }
+                
                 .print-footer {
                   position: fixed;
                   left: 0;
                   right: 0;
+                  bottom: 0;
+                  height: 50px;
                   z-index: 1000;
                 }
                 
-                .print-header {
-                  top: 0;
-                  height: 70px;
-                }
-                
-                .print-footer {
-                  bottom: 0;
-                  height: 50px;
-                }
-                
-                body {
-                  padding-top: 90px;
-                  padding-bottom: 60px;
-                }
-                
                 .content {
-                  padding: 10px 30px;
+                  padding: 10px 0;
                 }
                 
                 .print-footer .page-counter::after {
@@ -341,8 +332,8 @@ export default function CreateWorksheet() {
               }
               
               .content {
-                margin-top: 15px;
-                line-height: 1.5;
+                margin-top: 10px;
+                line-height: 1.3;
               }
               
               .question, .exercise {
@@ -360,7 +351,7 @@ export default function CreateWorksheet() {
               }
               
               .content > div {
-                margin-bottom: 6px;
+                margin-bottom: 4px;
               }
               
               .question-number, .exercise-number {
@@ -370,13 +361,13 @@ export default function CreateWorksheet() {
               }
               
               .answer-space {
-                margin-top: 8px;
-                min-height: 60px;
+                margin-top: 4px;
+                min-height: 50px;
                 border-bottom: 1px solid #adb5bd;
-                padding: 8px;
+                padding: 6px;
                 background: white;
                 margin-right: 10px;
-                line-height: 1.5;
+                line-height: 1.3;
               }
               
               .answer-space::before {
