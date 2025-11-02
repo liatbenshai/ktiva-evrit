@@ -143,8 +143,8 @@ export default function CreateWorksheet() {
         const line = contentLines[i].trim();
         
         if (!line) {
-          // שורה ריקה - הפרדה
-          htmlParts.push('<div style="height: 12px;"></div>');
+          // שורה ריקה - הפרדה קטנה
+          htmlParts.push('<div style="height: 6px;"></div>');
           continue;
         }
         
@@ -157,8 +157,8 @@ export default function CreateWorksheet() {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
           
-          htmlParts.push(`<div style="margin-bottom: 25px;">
-            <div style="margin-bottom: 15px; font-size: 18px; font-weight: 500; line-height: 1.6;">${escapedLine}</div>
+          htmlParts.push(`<div style="margin-bottom: 12px;">
+            <div style="margin-bottom: 8px; font-size: 16px;">${escapedLine}</div>
             <div class="answer-space"></div>
           </div>`);
           continue;
@@ -172,7 +172,7 @@ export default function CreateWorksheet() {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
           
-          htmlParts.push(`<div style="margin: 25px 0 15px 0; font-size: 20px; font-weight: bold; color: #667eea;">${escapedLine}</div>`);
+          htmlParts.push(`<div style="margin: 12px 0 8px 0; font-size: 18px; font-weight: bold;">${escapedLine}</div>`);
           continue;
         }
         
@@ -183,7 +183,7 @@ export default function CreateWorksheet() {
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;');
         
-        htmlParts.push(`<div style="margin-bottom: 12px; line-height: 1.8; font-size: 16px;">${escapedLine}</div>`);
+        htmlParts.push(`<div style="margin-bottom: 6px; line-height: 1.4; font-size: 15px;">${escapedLine}</div>`);
       }
       
       const escapedContent = htmlParts.join('');
@@ -209,9 +209,9 @@ export default function CreateWorksheet() {
               
               body {
                 font-family: 'Segoe UI', 'Arial', 'Helvetica', sans-serif;
-                font-size: 16px;
-                line-height: 1.8;
-                padding: 30px;
+                font-size: 15px;
+                line-height: 1.5;
+                padding: 80px 30px 60px 30px;
                 max-width: 850px;
                 margin: 0 auto;
                 color: #2c3e50;
@@ -219,7 +219,7 @@ export default function CreateWorksheet() {
               }
               
               @page {
-                margin: 80px 0 50px 0;
+                margin: 100px 0 60px 0;
                 size: A4;
               }
               
@@ -234,7 +234,7 @@ export default function CreateWorksheet() {
               @media print {
                 @page {
                   counter-increment: page-number;
-                  margin: 80px 0 50px 0;
+                  margin: 100px 0 60px 0;
                 }
                 
                 @page:first {
@@ -256,7 +256,7 @@ export default function CreateWorksheet() {
                 
                 .print-header {
                   top: 0;
-                  height: 80px;
+                  height: 70px;
                 }
                 
                 .print-footer {
@@ -265,12 +265,12 @@ export default function CreateWorksheet() {
                 }
                 
                 body {
-                  padding-top: 0;
-                  padding-bottom: 0;
+                  padding-top: 90px;
+                  padding-bottom: 60px;
                 }
                 
                 .content {
-                  padding: 20px 30px;
+                  padding: 10px 30px;
                 }
                 
                 .print-footer .page-counter::after {
@@ -280,32 +280,30 @@ export default function CreateWorksheet() {
               }
               
               .print-header {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 15px 30px;
+                background: #f8f9fa;
+                color: #2c3e50;
+                padding: 12px 30px;
                 text-align: center;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                border-bottom: 2px solid #dee2e6;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                border-bottom: 3px solid #ffd700;
               }
               
               .print-header h1 {
                 margin: 0;
-                font-size: 24px;
-                font-weight: bold;
-                text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-                letter-spacing: 0.5px;
+                font-size: 20px;
+                font-weight: 600;
                 flex: 1;
               }
               
               .print-header .student-name {
-                font-size: 16px;
+                font-size: 14px;
                 ${isHebrew ? 'margin-left: 20px;' : 'margin-right: 20px;'}
-                padding: 8px 15px;
-                background: rgba(255,255,255,0.2);
-                border-radius: 8px;
+                padding: 5px 12px;
+                background: white;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
                 white-space: nowrap;
               }
               
@@ -327,15 +325,15 @@ export default function CreateWorksheet() {
               }
               
               .print-footer {
-                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-                padding: 10px 30px;
+                background: #f8f9fa;
+                padding: 8px 30px;
                 text-align: center;
-                border-top: 2px solid #bdc3c7;
+                border-top: 2px solid #dee2e6;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                color: #7f8c8d;
-                font-size: 14px;
+                color: #6c757d;
+                font-size: 13px;
               }
               
               .print-footer .page-number {
@@ -343,66 +341,51 @@ export default function CreateWorksheet() {
               }
               
               .content {
-                margin-top: 30px;
+                margin-top: 15px;
+                line-height: 1.5;
               }
               
               .question, .exercise {
-                margin: 25px 0;
-                padding: 20px;
-                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-                border-right: 4px solid #667eea;
-                border-radius: 10px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                margin: 0;
+                padding: 0;
+                background: transparent;
+                border: none;
+                border-radius: 0;
+                box-shadow: none;
                 position: relative;
-              }
-              
-              /* הפרדה טובה יותר בין שורות */
-              .content {
-                line-height: 2;
               }
               
               .content div[style*="margin-bottom"] {
                 display: block;
               }
               
-              /* הפרדה בין תרגילים/שאלות */
               .content > div {
-                margin-bottom: 15px;
+                margin-bottom: 6px;
               }
               
               .question-number, .exercise-number {
                 display: inline-block;
-                width: 35px;
-                height: 35px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                border-radius: 50%;
-                text-align: center;
-                line-height: 35px;
-                font-weight: bold;
-                font-size: 18px;
-                margin-left: 10px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                margin: 0 5px 0 0;
+                font-weight: 600;
               }
               
               .answer-space {
-                margin-top: 20px;
-                min-height: 120px;
-                border-bottom: 2px dashed #95a5a6;
-                padding: 20px;
+                margin-top: 8px;
+                min-height: 60px;
+                border-bottom: 1px solid #adb5bd;
+                padding: 8px;
                 background: white;
-                border-radius: 5px;
                 margin-right: 10px;
-                line-height: 2;
+                line-height: 1.5;
               }
               
               .answer-space::before {
                 content: "${isHebrew ? 'תשובה:' : 'Answer:'}";
-                color: #7f8c8d;
-                font-size: 14px;
-                margin-bottom: 10px;
+                color: #6c757d;
+                font-size: 12px;
+                margin-bottom: 4px;
                 display: block;
-                font-weight: bold;
+                font-weight: 500;
               }
               
               
@@ -410,29 +393,13 @@ export default function CreateWorksheet() {
                 .print-header {
                   -webkit-print-color-adjust: exact;
                   print-color-adjust: exact;
-                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-                  color: white !important;
+                  background: #f8f9fa !important;
+                  color: #2c3e50 !important;
                 }
                 .print-footer {
                   -webkit-print-color-adjust: exact;
                   print-color-adjust: exact;
-                  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-                }
-                .student-info {
-                  -webkit-print-color-adjust: exact;
-                  print-color-adjust: exact;
-                  background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%) !important;
-                }
-                .question, .exercise {
-                  -webkit-print-color-adjust: exact;
-                  print-color-adjust: exact;
-                  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-                }
-                .question-number, .exercise-number {
-                  -webkit-print-color-adjust: exact;
-                  print-color-adjust: exact;
-                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-                  color: white !important;
+                  background: #f8f9fa !important;
                 }
               }
             </style>
