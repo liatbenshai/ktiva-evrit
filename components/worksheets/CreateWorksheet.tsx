@@ -223,10 +223,6 @@ export default function CreateWorksheet() {
                 size: A4;
               }
               
-              @page:first {
-                margin-top: 0;
-              }
-              
               body {
                 counter-reset: page-number 0;
               }
