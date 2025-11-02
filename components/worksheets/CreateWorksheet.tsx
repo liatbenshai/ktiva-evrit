@@ -109,9 +109,38 @@ export default function CreateWorksheet() {
             <meta charset="UTF-8">
             <title>${escapedTitle}</title>
             <style>
+              @page {
+                margin: 0;
+                size: A4;
+                counter-increment: page;
+              }
+              
+              body {
+                counter-reset: page 0;
+              }
+              
               @media print {
-                @page {
-                  margin: 1.5cm;
+                .print-header,
+                .print-footer {
+                  position: fixed;
+                  left: 0;
+                  right: 0;
+                  z-index: 1000;
+                }
+                
+                .print-header {
+                  top: 0;
+                  height: 80px;
+                }
+                
+                .print-footer {
+                  bottom: 0;
+                  height: 50px;
+                }
+                
+                body {
+                  padding-top: 100px;
+                  padding-bottom: 60px;
                 }
               }
               
@@ -130,35 +159,54 @@ export default function CreateWorksheet() {
                 background: #fff;
               }
               
-              .header {
-                text-align: center;
-                margin-bottom: 40px;
-                padding-bottom: 20px;
-                border-bottom: 4px solid #ffd700;
+              .print-header {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
-                padding: 30px;
-                border-radius: 15px;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-              }
-              
-              .header h1 {
-                margin: 0;
-                font-size: 32px;
-                font-weight: bold;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-                letter-spacing: 1px;
-              }
-              
-              .student-info {
-                margin: 30px 0;
-                padding: 15px 20px;
-                background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
-                border-radius: 10px;
-                border-right: 5px solid #e17055;
-                font-size: 18px;
-                font-weight: bold;
+                padding: 15px 30px;
+                text-align: center;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                border-bottom: 3px solid #ffd700;
+              }
+              
+              .print-header h1 {
+                margin: 0;
+                font-size: 24px;
+                font-weight: bold;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+                letter-spacing: 0.5px;
+                flex: 1;
+              }
+              
+              .print-header .student-name {
+                font-size: 16px;
+                margin-left: 20px;
+                padding: 8px 15px;
+                background: rgba(255,255,255,0.2);
+                border-radius: 8px;
+                white-space: nowrap;
+              }
+              
+              .print-footer {
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                padding: 10px 30px;
+                text-align: center;
+                border-top: 2px solid #bdc3c7;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                color: #7f8c8d;
+                font-size: 14px;
+              }
+              
+              .print-footer .page-number {
+                font-weight: bold;
+              }
+              
+              .print-footer .page-number::after {
+                content: counter(page);
               }
               
               .content {
@@ -208,21 +256,18 @@ export default function CreateWorksheet() {
                 display: block;
               }
               
-              .footer {
-                margin-top: 40px;
-                padding-top: 20px;
-                border-top: 2px dashed #bdc3c7;
-                text-align: center;
-                color: #7f8c8d;
-                font-size: 14px;
-              }
               
               @media print {
-                .header {
+                .print-header {
                   -webkit-print-color-adjust: exact;
                   print-color-adjust: exact;
                   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
                   color: white !important;
+                }
+                .print-footer {
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
                 }
                 .student-info {
                   -webkit-print-color-adjust: exact;
@@ -244,20 +289,19 @@ export default function CreateWorksheet() {
             </style>
           </head>
           <body>
-            <div class="header">
+            <div class="print-header">
               <h1>${escapedTitle}</h1>
+              <div class="student-name">שם: __________________</div>
             </div>
             
-            <div class="student-info">
-              שם התלמיד: ___________________________  &nbsp;&nbsp;&nbsp;  תאריך: _______________
+            <div class="print-footer">
+              <div>תאריך: _______________</div>
+              <div class="page-number">עמוד </div>
+              <div>בהצלחה! 🌟</div>
             </div>
             
             <div class="content">
               ${escapedContent}
-            </div>
-            
-            <div class="footer">
-              בהצלחה! 🌟
             </div>
           </body>
         </html>
