@@ -138,55 +138,87 @@ export default function CreateWorksheet() {
       
       // בניית HTML בצורה פשוטה - כל שורה בנפרד
       let htmlParts: string[] = [];
+      let inVerticalMath = false; // האם אנחנו בתרגיל חשבון מאונך
+      let exerciseStartIndex = -1; // איפה התחיל התרגיל
       
       for (let i = 0; i < contentLines.length; i++) {
         const line = contentLines[i].trim();
+        const nextLine = i < contentLines.length - 1 ? contentLines[i + 1].trim() : '';
         
         if (!line) {
-          // שורה ריקה - הפרדה קטנה מאוד
+          // שורה ריקה - סיום תרגיל מאונך אם היה
+          if (inVerticalMath) {
+            inVerticalMath = false;
+            htmlParts.push(`<div class="answer-space"></div>`);
+          }
           htmlParts.push('<div style="height: 3px;"></div>');
           continue;
         }
         
-        // אם זה תרגיל/שאלה (מתחיל במספר או בסוגריים עם מספר)
-        if (/^\(?\d+\)?\s/.test(line) || /^\d+[\.\)]\s/.test(line)) {
-          // אם זה רק מספור בשורה נפרדת כמו "(1)" או "(1) " - לא להוסיף answer-space כאן
-          if (/^\(?\d+\)?\s*$/.test(line.trim())) {
-            const escapedLine = line
-              .replace(/&/g, '&amp;')
-              .replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;')
-              .replace(/"/g, '&quot;');
-            
-            htmlParts.push(`<div style="margin-bottom: 4px; font-size: 15px; font-weight: bold;">${escapedLine}</div>`);
-            continue;
-          }
-          
-          // Escape הטקסט
+        // אם זה מספור בשורה נפרדת כמו "(1)" או "(1) "
+        if (/^\(?\d+\)?\s*$/.test(line)) {
           const escapedLine = line
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
           
-          // בדיקה אם זה תרגיל חשבון מאונך (מכיל קו הפרדה או סימן + - בשורה הבאה)
-          // אם השורה מכילה רק מספר או מספר עם סימן, זה חלק מתרגיל מאונך
-          if (/^\d+$/.test(line.trim()) || /^[+\-×*÷]\s*\d+/.test(line.trim())) {
-            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: right;">${escapedLine}</div>`);
+          htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; font-weight: bold;">${escapedLine}</div>`);
+          // בדיקה אם השורה הבאה היא מספר - אז זה תרגיל מאונך
+          if (/^\d+$/.test(nextLine)) {
+            inVerticalMath = true;
+            exerciseStartIndex = i;
+          }
+          continue;
+        }
+        
+        // אם זה חלק מתרגיל מאונך
+        if (inVerticalMath) {
+          const escapedLine = line
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+          
+          // אם זה מספר (שורה ראשונה של התרגיל)
+          if (/^\d+$/.test(line)) {
+            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: right; ${isHebrew ? 'padding-right: 20px;' : 'padding-left: 20px;'}">${escapedLine}</div>`);
             continue;
           }
           
-          // אם יש קו הפרדה
-          if (/^-{3,}/.test(line.trim())) {
-            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; border-bottom: 1px solid #333; width: 60px;"></div>`);
+          // אם זה סימן + מספר (שורה שנייה)
+          if (/^[+\-×*÷]\s*\d+/.test(line)) {
+            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: right; ${isHebrew ? 'padding-right: 20px;' : 'padding-left: 20px;'}">${escapedLine}</div>`);
             continue;
           }
           
-          // אם זה שורה עם "תשובה:"
+          // אם זה קו הפרדה
+          if (/^-{2,}/.test(line)) {
+            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; border-bottom: 1px solid #333; width: 80px; ${isHebrew ? 'margin-right: 20px;' : 'margin-left: 20px;'}"></div>`);
+            continue;
+          }
+          
+          // אם זה "תשובה:" - סיום התרגיל
           if (/תשובה:/.test(line) || /Answer:/.test(line)) {
+            inVerticalMath = false;
             htmlParts.push(`<div class="answer-space"></div>`);
             continue;
           }
+          
+          // אם השורה הבאה לא חלק מהתרגיל - סיום
+          if (!/^\d+$/.test(nextLine) && !/^[+\-×*÷]\s*\d+/.test(nextLine) && !/^-{2,}/.test(nextLine) && nextLine && !/^\(?\d+\)?\s*$/.test(nextLine)) {
+            inVerticalMath = false;
+            htmlParts.push(`<div class="answer-space"></div>`);
+          }
+        }
+        
+        // אם זה תרגיל/שאלה רגיל (מתחיל במספר עם נקודה או סוגריים)
+        if (/^\d+[\.\)]\s/.test(line)) {
+          const escapedLine = line
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
           
           htmlParts.push(`<div style="margin-bottom: 8px;">
             <div style="margin-bottom: 4px; font-size: 15px;">${escapedLine}</div>
