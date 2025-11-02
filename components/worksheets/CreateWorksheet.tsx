@@ -163,7 +163,8 @@ export default function CreateWorksheet() {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
           
-          htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; font-weight: bold;">${escapedLine}</div>`);
+          // המספור משמאל (או מימין בעברית), לא מיושר עם המספרים
+          htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; font-weight: bold; text-align: ${isHebrew ? 'right' : 'left'}; padding-${isHebrew ? 'right' : 'left'}: 0;">${escapedLine}</div>`);
           // בדיקה אם השורה הבאה היא מספר - אז זה תרגיל מאונך
           if (/^\d+$/.test(nextLine)) {
             inVerticalMath = true;
@@ -180,12 +181,12 @@ export default function CreateWorksheet() {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
           
-          // אם זה מספר (שורה ראשונה של התרגיל) - מיושר ימינה עם הזחה
+          // אם זה מספר (שורה ראשונה של התרגיל) - מיושר ימינה (או שמאלה בעברית)
+          // המספר צריך להיות באותו יישור כמו המספר הבא
           if (/^\d+$/.test(line)) {
             // שמירת המספר הראשון כדי ליישר את השורה הבאה
-            const firstNumber = line;
-            // יישור ימין עם הזחה - המספר יופיע מימין
-            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: right; ${isHebrew ? 'direction: rtl; padding-right: 30px;' : 'direction: ltr; padding-left: 30px;'}">${escapedLine}</div>`);
+            // יישור ימין (או שמאל בעברית) - המספר יופיע מימין בתוך container מיושר
+            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: ${isHebrew ? 'right' : 'left'}; padding-${isHebrew ? 'right' : 'left'}: 40px;">${escapedLine}</div>`);
             continue;
           }
           
@@ -195,14 +196,14 @@ export default function CreateWorksheet() {
             const sign = signMatch[1];
             const number = signMatch[2];
             // יישור כך שהמספר יתחיל באותה הזחה כמו המספר הראשון
-            // הסימן מופיע משמאל (או מימין בעברית)
-            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: right; ${isHebrew ? 'direction: rtl; padding-right: 30px;' : 'direction: ltr; padding-left: 30px;'}"><span style="display: inline-block; ${isHebrew ? 'margin-left: 5px;' : 'margin-right: 5px;'}">${sign}</span>${number}</div>`);
+            // הסימן מופיע משמאל (או מימין בעברית) למספר
+            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: ${isHebrew ? 'right' : 'left'}; padding-${isHebrew ? 'right' : 'left'}: 40px;"><span style="display: inline-block; ${isHebrew ? 'margin-left' : 'margin-right'}: 5px;">${sign}</span><span>${number}</span></div>`);
             continue;
           }
           
           // אם זה קו הפרדה - מיושר כמו המספרים
           if (/^-{2,}/.test(line)) {
-            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; border-bottom: 1px solid #333; width: 80px; ${isHebrew ? 'margin-right: 30px; margin-left: auto;' : 'margin-left: 30px; margin-right: auto;'}"></div>`);
+            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; border-bottom: 1px solid #333; width: 80px; ${isHebrew ? 'margin-right' : 'margin-left'}: 40px;"></div>`);
             continue;
           }
           
