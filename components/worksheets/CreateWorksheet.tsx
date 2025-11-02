@@ -155,16 +155,19 @@ export default function CreateWorksheet() {
           continue;
         }
         
-        // אם זה מספור בשורה נפרדת כמו "(1)" או "(1) "
+        // בדיקה אם זה תרגיל מאונך - אם השורה היא מספר והשורה הקודמת לא הייתה חלק מתרגיל
+        if (/^\d+$/.test(line) && !inVerticalMath) {
+          // בדיקה אם השורה הבאה היא סימן + מספר או קו הפרדה
+          if (/^[+\-×*÷]\s*\d+/.test(nextLine) || /^-{2,}/.test(nextLine)) {
+            inVerticalMath = true;
+            exerciseStartIndex = i;
+            // המשך לטפל בשורה זו כמספר ראשון
+          }
+        }
+        
+        // אם זה מספור בשורה נפרדת כמו "(1)" או "(1) " - דילוג עליו
         if (/^\(?\d+\)?\s*$/.test(line)) {
-          const escapedLine = line
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-          
-          // המספור משמאל (או מימין בעברית), לא מיושר עם המספרים
-          htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; font-weight: bold; text-align: ${isHebrew ? 'right' : 'left'}; padding-${isHebrew ? 'right' : 'left'}: 0;">${escapedLine}</div>`);
+          // דילוג על המספור - לא מציגים אותו
           // בדיקה אם השורה הבאה היא מספר - אז זה תרגיל מאונך
           if (/^\d+$/.test(nextLine)) {
             inVerticalMath = true;
