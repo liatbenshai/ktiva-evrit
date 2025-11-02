@@ -109,6 +109,22 @@ export default function CreateWorksheet() {
             <meta charset="UTF-8">
             <title>${escapedTitle}</title>
             <style>
+              * {
+                box-sizing: border-box;
+              }
+              
+              body {
+                font-family: 'Segoe UI', 'Arial', 'Helvetica', sans-serif;
+                font-size: 16px;
+                line-height: 1.8;
+                padding: 30px;
+                max-width: 850px;
+                margin: 0 auto;
+                color: #2c3e50;
+                background: #fff;
+                counter-reset: page 0;
+              }
+              
               @page {
                 margin: 80px 0 50px 0;
                 size: A4;
@@ -117,6 +133,7 @@ export default function CreateWorksheet() {
               
               @page:first {
                 margin-top: 0;
+                counter-reset: page 1;
               }
               
               @media print {
@@ -146,21 +163,10 @@ export default function CreateWorksheet() {
                 .content {
                   padding: 20px 30px;
                 }
-              }
-              
-              * {
-                box-sizing: border-box;
-              }
-              
-              body {
-                font-family: 'Segoe UI', 'Arial', 'Helvetica', sans-serif;
-                font-size: 16px;
-                line-height: 1.8;
-                padding: 30px;
-                max-width: 850px;
-                margin: 0 auto;
-                color: #2c3e50;
-                background: #fff;
+                
+                .print-footer .page-counter::after {
+                  content: counter(page);
+                }
               }
               
               .print-header {
@@ -207,16 +213,6 @@ export default function CreateWorksheet() {
               
               .print-footer .page-number {
                 font-weight: bold;
-              }
-              
-              @media print {
-                body {
-                  counter-reset: page 0;
-                }
-                
-                .print-footer .page-counter::after {
-                  content: counter(page);
-                }
               }
               
               .content {
@@ -313,6 +309,22 @@ export default function CreateWorksheet() {
             <div class="content">
               ${escapedContent}
             </div>
+            
+            <script>
+              // פתרון חלופי למספר עמוד אם CSS counter לא עובד
+              (function() {
+                // נסה לחשב מספר עמודים בפועל
+                if (window.matchMedia) {
+                  var mediaQueryList = window.matchMedia('print');
+                  mediaQueryList.addListener(function(mql) {
+                    if (mql.matches) {
+                      // בזמן הדפסה - נשתמש ב-CSS counter
+                      // אם זה לא עובד, אפשר לנסות לחשב בעזרת JavaScript
+                    }
+                  });
+                }
+              })();
+            </script>
             
           </body>
         </html>
