@@ -133,7 +133,6 @@ export default function CreateWorksheet() {
               
               @page:first {
                 margin-top: 0;
-                counter-reset: page 1;
               }
               
               @media print {
