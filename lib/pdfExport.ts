@@ -74,7 +74,6 @@ export async function exportWorksheetToPDF(worksheetText: string) {
   // בניית HTML
   let htmlParts: string[] = [];
   let inVerticalMath = false;
-  let exerciseNumber = '';
   
   for (let i = 0; i < contentLines.length; i++) {
     const line = contentLines[i].trim();
@@ -84,6 +83,7 @@ export async function exportWorksheetToPDF(worksheetText: string) {
       if (inVerticalMath) {
         inVerticalMath = false;
         htmlParts.push(`<div class="answer-space"></div>`);
+        htmlParts.push('</div>');
       }
       htmlParts.push('<div style="height: 3px;"></div>');
       continue;
@@ -94,6 +94,7 @@ export async function exportWorksheetToPDF(worksheetText: string) {
       // בדיקה אם השורה הבאה היא סימן + מספר או קו הפרדה
       if (/^[+\-×*÷]\s*\d+/.test(nextLine) || /^-{2,}/.test(nextLine)) {
         inVerticalMath = true;
+        htmlParts.push('<div class="question-container" style="margin-bottom: 8px;">');
       }
     }
     
@@ -103,6 +104,7 @@ export async function exportWorksheetToPDF(worksheetText: string) {
       // בדיקה אם השורה הבאה היא מספר - אז זה תרגיל מאונך
       if (/^\d+$/.test(nextLine)) {
         inVerticalMath = true;
+        htmlParts.push('<div class="question-container" style="margin-bottom: 8px;">');
       }
       continue;
     }
@@ -140,6 +142,7 @@ export async function exportWorksheetToPDF(worksheetText: string) {
       if (/תשובה:/.test(line) || /Answer:/.test(line)) {
         inVerticalMath = false;
         htmlParts.push(`<div class="answer-space"></div>`);
+        htmlParts.push('</div>');
         continue;
       }
       
@@ -147,6 +150,7 @@ export async function exportWorksheetToPDF(worksheetText: string) {
       if (!/^\d+$/.test(nextLine) && !/^[+\-×*÷]\s*\d+/.test(nextLine) && !/^-{2,}/.test(nextLine) && nextLine && !/^\(?\d+\)?\s*$/.test(nextLine)) {
         inVerticalMath = false;
         htmlParts.push(`<div class="answer-space"></div>`);
+        htmlParts.push('</div>');
       }
     }
     
