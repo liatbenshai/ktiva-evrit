@@ -94,6 +94,13 @@ const modules = [
     href: '/dashboard/idioms',
     color: 'bg-purple-600',
   },
+  {
+    title: '🤖 תיקון כתיבת AI',
+    description: 'תקן טקסטים מ-AI והמערכת תלמד מהתיקונים',
+    icon: Brain,
+    href: '/dashboard/ai-correction',
+    color: 'bg-gradient-to-r from-purple-600 to-pink-600',
+  },
 ];
 
 export default function DashboardPage() {

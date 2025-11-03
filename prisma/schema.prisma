@@ -96,3 +96,64 @@ model Synonym {
   
   @@index([primary])
 }
+
+// AI Text Corrections - תיקוני טקסטים שנוצרו ע"י AI
+model AICorrection {
+  id                String   @id @default(cuid())
+  userId            String   @default("default-user")
+  
+  // Original AI-generated text
+  originalText      String
+  
+  // User-corrected text
+  correctedText     String
+  
+  // Detected patterns
+  patterns          String?  // JSON array of detected patterns
+  
+  // Correction metadata
+  correctionType    String   @default("manual") // manual, suggested, auto
+  category          String?  // type of content (article, email, etc.)
+  confidence        Float    @default(1.0)
+  
+  // Learning data
+  forbiddenWords    String?  // JSON array of words to avoid
+  preferredWords    String?  // JSON object of word replacements
+  
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Translation Patterns - דפוסי תרגום נפוצים שצריך למנוע
+model TranslationPattern {
+  id                String   @id @default(cuid())
+  userId            String   @default("default-user")
+  
+  // The problematic pattern (e.g., "אני אהבה")
+  badPattern        String
+  
+  // The correct form (e.g., "אני אוהב/ת")
+  goodPattern       String
+  
+  // Context and examples
+  context           String?
+  examples          String?  // JSON array of examples
+  
+  // Pattern strength
+  occurrences       Int      @default(1)
+  confidence        Float    @default(0.5)
+  
+  // Pattern type
+  patternType       String   @default("translation") // translation, grammar, style
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([badPattern])
+  @@unique([userId, badPattern, goodPattern])
+}
