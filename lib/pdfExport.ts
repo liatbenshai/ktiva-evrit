@@ -74,6 +74,7 @@ export async function exportWorksheetToPDF(worksheetText: string) {
   // בניית HTML
   let htmlParts: string[] = [];
   let inVerticalMath = false;
+  let exerciseNumber = '';
   
   for (let i = 0; i < contentLines.length; i++) {
     const line = contentLines[i].trim();
@@ -82,9 +83,21 @@ export async function exportWorksheetToPDF(worksheetText: string) {
     if (!line) {
       if (inVerticalMath) {
         inVerticalMath = false;
+        htmlParts.push(`</div>`);
         htmlParts.push(`<div class="answer-space"></div>`);
       }
       htmlParts.push('<div style="height: 3px;"></div>');
+      continue;
+    }
+    
+    // בדיקה אם זה מספור בשורה נפרדת
+    if (/^\(?\d+\)?\s*$/.test(line)) {
+      if (/^\d+$/.test(nextLine)) {
+        inVerticalMath = true;
+        exerciseNumber = line.replace(/[()]/g, '').trim();
+        htmlParts.push(`<div class="exercise-container" style="page-break-inside: avoid; margin-bottom: 10px;">`);
+        htmlParts.push(`<div style="font-size: 16px; font-weight: bold; color: #667eea; margin-bottom: 4px; ${isHebrew ? 'text-align: right;' : 'text-align: left;'}">(${exerciseNumber})</div>`);
+      }
       continue;
     }
     
@@ -92,15 +105,9 @@ export async function exportWorksheetToPDF(worksheetText: string) {
     if (/^\d+$/.test(line) && !inVerticalMath) {
       if (/^[+\-×*÷]\s*\d+/.test(nextLine) || /^-{2,}/.test(nextLine)) {
         inVerticalMath = true;
+        exerciseNumber = '';
+        htmlParts.push(`<div class="exercise-container" style="page-break-inside: avoid; margin-bottom: 10px;">`);
       }
-    }
-    
-    // אם זה מספור בשורה נפרדת
-    if (/^\(?\d+\)?\s*$/.test(line)) {
-      if (/^\d+$/.test(nextLine)) {
-        inVerticalMath = true;
-      }
-      continue;
     }
     
     // אם זה חלק מתרגיל מאונך
@@ -131,12 +138,14 @@ export async function exportWorksheetToPDF(worksheetText: string) {
       
       if (/תשובה:/.test(line) || /Answer:/.test(line)) {
         inVerticalMath = false;
+        htmlParts.push(`</div>`);
         htmlParts.push(`<div class="answer-space"></div>`);
         continue;
       }
       
       if (!/^\d+$/.test(nextLine) && !/^[+\-×*÷]\s*\d+/.test(nextLine) && !/^-{2,}/.test(nextLine) && nextLine && !/^\(?\d+\)?\s*$/.test(nextLine)) {
         inVerticalMath = false;
+        htmlParts.push(`</div>`);
         htmlParts.push(`<div class="answer-space"></div>`);
       }
     }
@@ -149,7 +158,7 @@ export async function exportWorksheetToPDF(worksheetText: string) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
       
-      htmlParts.push(`<div style="margin-bottom: 8px;">
+      htmlParts.push(`<div class="question-container" style="margin-bottom: 8px; page-break-inside: avoid;">
         <div style="margin-bottom: 4px; font-size: 15px;">${escapedLine}</div>
         <div class="answer-space"></div>
       </div>`);
