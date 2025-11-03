@@ -83,31 +83,28 @@ export async function exportWorksheetToPDF(worksheetText: string) {
     if (!line) {
       if (inVerticalMath) {
         inVerticalMath = false;
-        htmlParts.push(`</div>`);
         htmlParts.push(`<div class="answer-space"></div>`);
       }
       htmlParts.push('<div style="height: 3px;"></div>');
       continue;
     }
     
-    // בדיקה אם זה מספור בשורה נפרדת
-    if (/^\(?\d+\)?\s*$/.test(line)) {
-      if (/^\d+$/.test(nextLine)) {
-        inVerticalMath = true;
-        exerciseNumber = line.replace(/[()]/g, '').trim();
-        htmlParts.push(`<div class="exercise-container" style="page-break-inside: avoid; margin-bottom: 10px;">`);
-        htmlParts.push(`<div style="font-size: 16px; font-weight: bold; color: #667eea; margin-bottom: 4px; ${isHebrew ? 'text-align: right;' : 'text-align: left;'}">(${exerciseNumber})</div>`);
-      }
-      continue;
-    }
-    
-    // בדיקה אם זה תרגיל מאונך
+    // בדיקה אם זה תרגיל מאונך - אם השורה היא מספר והשורה הקודמת לא הייתה חלק מתרגיל
     if (/^\d+$/.test(line) && !inVerticalMath) {
+      // בדיקה אם השורה הבאה היא סימן + מספר או קו הפרדה
       if (/^[+\-×*÷]\s*\d+/.test(nextLine) || /^-{2,}/.test(nextLine)) {
         inVerticalMath = true;
-        exerciseNumber = '';
-        htmlParts.push(`<div class="exercise-container" style="page-break-inside: avoid; margin-bottom: 10px;">`);
       }
+    }
+    
+    // אם זה מספור בשורה נפרדת כמו "(1)" או "(1) " - דילוג עליו
+    if (/^\(?\d+\)?\s*$/.test(line)) {
+      // דילוג על המספור - לא מציגים אותו
+      // בדיקה אם השורה הבאה היא מספר - אז זה תרגיל מאונך
+      if (/^\d+$/.test(nextLine)) {
+        inVerticalMath = true;
+      }
+      continue;
     }
     
     // אם זה חלק מתרגיל מאונך
@@ -118,11 +115,13 @@ export async function exportWorksheetToPDF(worksheetText: string) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
       
+      // אם זה מספר (שורה ראשונה של התרגיל) - מיושר ימינה (או שמאלה בעברית)
       if (/^\d+$/.test(line)) {
         htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: ${isHebrew ? 'right' : 'left'}; padding-${isHebrew ? 'right' : 'left'}: 40px;">${escapedLine}</div>`);
         continue;
       }
       
+      // אם זה סימן + מספר (שורה שנייה) - צריך ליישר עם המספר הראשון
       const signMatch = line.match(/^([+\-×*÷])\s*(\d+)$/);
       if (signMatch) {
         const sign = signMatch[1];
@@ -131,21 +130,22 @@ export async function exportWorksheetToPDF(worksheetText: string) {
         continue;
       }
       
+      // אם זה קו הפרדה - מיושר כמו המספרים
       if (/^-{2,}/.test(line)) {
         htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; border-bottom: 1px solid #333; width: 80px; ${isHebrew ? 'margin-right' : 'margin-left'}: 40px;"></div>`);
         continue;
       }
       
+      // אם זה "תשובה:" - סיום התרגיל
       if (/תשובה:/.test(line) || /Answer:/.test(line)) {
         inVerticalMath = false;
-        htmlParts.push(`</div>`);
         htmlParts.push(`<div class="answer-space"></div>`);
         continue;
       }
       
+      // אם השורה הבאה לא חלק מהתרגיל - סיום
       if (!/^\d+$/.test(nextLine) && !/^[+\-×*÷]\s*\d+/.test(nextLine) && !/^-{2,}/.test(nextLine) && nextLine && !/^\(?\d+\)?\s*$/.test(nextLine)) {
         inVerticalMath = false;
-        htmlParts.push(`</div>`);
         htmlParts.push(`<div class="answer-space"></div>`);
       }
     }
@@ -251,6 +251,9 @@ export async function exportWorksheetToPDF(worksheetText: string) {
               padding: 0;
               margin-top: 0;
             }
+            .answer-space {
+              page-break-inside: avoid;
+            }
           }
           .print-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -294,6 +297,9 @@ export async function exportWorksheetToPDF(worksheetText: string) {
             margin-top: 0;
             line-height: 1.4;
             padding: 0;
+          }
+          .question-container {
+            page-break-inside: avoid;
           }
           .answer-space {
             margin-top: 4px;
