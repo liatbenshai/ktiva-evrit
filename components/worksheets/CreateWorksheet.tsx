@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, Loader2, Printer, Copy, Check } from 'lucide-react';
+import { FileText, Loader2, Printer, Copy, Check, Download } from 'lucide-react';
+import { exportWorksheetToPDF } from '@/lib/pdfExport';
 
 export default function CreateWorksheet() {
   const [instruction, setInstruction] = useState('');
@@ -535,6 +536,24 @@ export default function CreateWorksheet() {
     }
   };
 
+  const handleExportPDF = async () => {
+    if (!result) {
+      alert('אין דף עבודה לייצוא');
+      return;
+    }
+
+    try {
+      // ניקוי markdown מהתוצאה
+      const cleanedResult = cleanMarkdown(result);
+      
+      // יצירת PDF
+      await exportWorksheetToPDF(cleanedResult);
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      alert('אירעה שגיאה ביצירת הקובץ PDF');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Input Form */}
@@ -658,6 +677,13 @@ export default function CreateWorksheet() {
                     העתק
                   </>
                 )}
+              </button>
+              <button
+                onClick={handleExportPDF}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm"
+              >
+                <Download className="w-4 h-4" />
+                ייצא PDF
               </button>
               <button
                 onClick={handlePrint}
