@@ -75,8 +75,14 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Error analyzing text:', error);
+    const errorDetails = error instanceof Error ? error.message : String(error);
+    console.error('Full error:', error);
     return NextResponse.json(
-      { error: 'Failed to analyze text', details: String(error) },
+      { 
+        error: 'Failed to analyze text', 
+        details: errorDetails,
+        stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
+      },
       { status: 500 }
     );
   }

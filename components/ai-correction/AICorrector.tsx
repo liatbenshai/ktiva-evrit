@@ -56,11 +56,16 @@ export default function AICorrector() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to analyze text');
-      }
-
       const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || data.details || `שגיאת שרת: ${response.status}`);
+      }
+      
+      if (!data.success) {
+        throw new Error(data.error || 'הניתוח נכשל');
+      }
+      
       setAnalysis(data.analysis);
       setLearnedPatterns(data.learnedPatterns || []);
       
@@ -72,7 +77,8 @@ export default function AICorrector() {
       }
     } catch (error) {
       console.error('Error analyzing text:', error);
-      alert('שגיאה בניתוח הטקסט');
+      const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
+      alert(`שגיאה בניתוח הטקסט: ${errorMessage}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -114,11 +120,7 @@ export default function AICorrector() {
         setLearnedPatterns(data.learnedPatterns);
       }
 
-      // איפוס הטקסט
-      setOriginalText('');
-      setCorrectedText('');
-      setAnalysis(null);
-      setAutoSuggestions(null);
+      // אין צורך לאפס - המשתמש יכול להמשיך לעבוד עם הטקסט הנוכחי או להכניס טקסט חדש
     } catch (error) {
       console.error('Error saving correction:', error);
       alert('שגיאה בשמירת התיקון');
@@ -128,13 +130,18 @@ export default function AICorrector() {
   };
 
   return (
-    <div className="space-y-6 p-6 max-w-7xl mx-auto" dir="rtl">
-      <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold">🤖 תיקון כתיבת AI</h1>
-        <p className="text-gray-600 text-lg">
-          הכנס טקסט שנכתב על ידי AI ותקן אותו - המערכת תלמד מהתיקונים שלך
-        </p>
-      </div>
+    <div className="space-y-6" dir="rtl">
+      {/* הוראות שימוש */}
+      <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+        <h3 className="text-lg font-bold mb-3">📖 איך זה עובד?</h3>
+        <ol className="list-decimal list-inside space-y-2 text-gray-700">
+          <li>הדבק טקסט שנוצר על ידי AI בתיבה "טקסט מקורי מ-AI"</li>
+          <li>לחץ על "🔍 נתח טקסט" כדי לקבל ניתוח מפורט</li>
+          <li>המערכת תזהה בעיות ותחיל תיקונים אוטומטיים (אם יש דפוסים שנלמדו)</li>
+          <li>ערוך את הטקסט בתיבה "טקסט מתוקן" אם צריך</li>
+          <li>לחץ על "💾 שמור תיקון ולמד" כדי שהמערכת תלמד מהתיקון שלך</li>
+        </ol>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* טקסט מקורי */}
@@ -158,18 +165,35 @@ export default function AICorrector() {
           <textarea
             value={originalText}
             onChange={(e) => setOriginalText(e.target.value)}
-            placeholder="הדבק כאן טקסט שנוצר על ידי AI..."
-            className="w-full h-96 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="הדבק כאן טקסט שנוצר על ידי AI...&#10;&#10;לדוגמה:&#10;זה מהווה את אחד הנושאים המשמעותיים ביותר בהתאם לנושא הזה."
+            className="w-full h-96 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
             dir="rtl"
           />
 
-          <Button
-            onClick={analyzeText}
-            disabled={isAnalyzing || !originalText.trim()}
-            className="w-full"
-          >
-            {isAnalyzing ? '🔍 מנתח...' : '🔍 נתח טקסט'}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={analyzeText}
+              disabled={isAnalyzing || !originalText.trim()}
+              className="flex-1"
+            >
+              {isAnalyzing ? '🔍 מנתח...' : '🔍 נתח טקסט'}
+            </Button>
+            {originalText && (
+              <Button
+                onClick={() => {
+                  setOriginalText('');
+                  setCorrectedText('');
+                  setAnalysis(null);
+                  setAutoSuggestions(null);
+                }}
+                variant="outline"
+                className="px-4"
+                title="נקה הכל"
+              >
+                🗑️ נקה
+              </Button>
+            )}
+          </div>
         </Card>
 
         {/* טקסט מתוקן */}
