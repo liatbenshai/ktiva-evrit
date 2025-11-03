@@ -158,7 +158,7 @@ export async function exportWorksheetToPDF(worksheetText: string) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
       
-      htmlParts.push(`<div class="question-container" style="margin-bottom: 8px; page-break-inside: avoid;">
+      htmlParts.push(`<div class="question-container" style="margin-bottom: 8px;">
         <div style="margin-bottom: 4px; font-size: 15px;">${escapedLine}</div>
         <div class="answer-space"></div>
       </div>`);
