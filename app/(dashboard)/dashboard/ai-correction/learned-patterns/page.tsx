@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Home, Trash2, TrendingUp, BookOpen } from 'lucide-react';
+import { Home, Trash2, TrendingUp, BookOpen, Plus, X } from 'lucide-react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 
@@ -20,6 +20,10 @@ export default function LearnedPatternsPage() {
   const [patterns, setPatterns] = useState<LearnedPattern[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'ai-style'>('all');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newBadPattern, setNewBadPattern] = useState('');
+  const [newGoodPattern, setNewGoodPattern] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     fetchPatterns();
@@ -45,12 +49,13 @@ export default function LearnedPatternsPage() {
       
       setPatterns(data.patterns || []);
       
-      // אם אין דפוסים, נציג הודעה
-      if (data.patterns && data.patterns.length === 0) {
-        console.log('No patterns found in database. This could mean:');
-        console.log('1. No patterns have been saved yet');
-        console.log('2. Database table does not exist');
-        console.log('3. Database connection issue');
+      // אם אין דפוסים, נציג הודעה ברורה
+      if (!data.patterns || data.patterns.length === 0) {
+        console.warn('⚠️ לא נמצאו דפוסים במסד הנתונים');
+        console.warn('אפשרויות:');
+        console.warn('1. עדיין לא שמרת דפוסים - נסי לבחור הצעה או לשנות טקסט');
+        console.warn('2. בעיה עם מסד הנתונים - SQLite לא מתאים ל-Vercel production');
+        console.warn('3. בדקי את הקונסולה של השרת (Vercel logs) לראות שגיאות');
       }
     } catch (error) {
       console.error('Error fetching patterns:', error);
@@ -153,8 +158,8 @@ export default function LearnedPatternsPage() {
           </Card>
         </div>
 
-        {/* פילטר */}
-        <div className="mb-6">
+        {/* פילטר והוספת דפוס */}
+        <div className="mb-6 flex items-center justify-between gap-4">
           <div className="flex gap-2">
             <button
               onClick={() => setFilter('all')}
@@ -177,7 +182,78 @@ export default function LearnedPatternsPage() {
               רק דפוסי AI
             </button>
           </div>
+          
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all font-medium"
+          >
+            <Plus className="w-5 h-5" />
+            {showAddForm ? 'ביטול' : 'הוסף דפוס חדש'}
+          </button>
         </div>
+
+        {/* טופס הוספת דפוס */}
+        {showAddForm && (
+          <Card className="p-6 mb-6 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-purple-900">📝 הוסף דפוס חדש</h3>
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="p-1 hover:bg-purple-100 rounded"
+              >
+                <X className="w-5 h-5 text-purple-600" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  דפוס בעייתי (AI-style) - מה שאת רוצה להימנע:
+                </label>
+                <textarea
+                  value={newBadPattern}
+                  onChange={(e) => setNewBadPattern(e.target.value)}
+                  placeholder="לדוגמה: להביא בחשבון, מהווה, בסוף היום..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  rows={2}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  דפוס נכון (עברית תקנית) - מה שאת רוצה במקום:
+                </label>
+                <textarea
+                  value={newGoodPattern}
+                  onChange={(e) => setNewGoodPattern(e.target.value)}
+                  placeholder="לדוגמה: לקחת בחשבון, הוא, בסופו של דבר..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  rows={2}
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAddPattern}
+                  disabled={isSaving || !newBadPattern.trim() || !newGoodPattern.trim()}
+                  className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSaving ? 'שומר...' : 'שמור דפוס'}
+                </button>
+                <button
+                  onClick={() => {
+                    setNewBadPattern('');
+                    setNewGoodPattern('');
+                    setShowAddForm(false);
+                  }}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
+                >
+                  ביטול
+                </button>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* רשימת דפוסים */}
         {loading ? (
