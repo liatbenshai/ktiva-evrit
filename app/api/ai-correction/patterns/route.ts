@@ -46,13 +46,44 @@ export async function GET(req: NextRequest) {
 
       console.log(`Retrieved ${patterns.length} patterns`);
 
-    console.log(`Found ${patterns.length} patterns`);
-
-    return NextResponse.json({
-      success: true,
-      patterns,
-      count: patterns.length,
-    });
+      return NextResponse.json({
+        success: true,
+        patterns,
+        count: patterns.length,
+      });
+    } catch (dbError: any) {
+      console.error('Database error:', dbError);
+      // אם זו שגיאת Prisma ספציפית, נחזיר מידע מפורט יותר
+      if (dbError.code === 'P2002') {
+        return NextResponse.json(
+          { 
+            error: 'Database constraint violation',
+            details: process.env.NODE_ENV === 'development' ? dbError.message : 'Unique constraint violation'
+          },
+          { status: 400 }
+        );
+      }
+      if (dbError.code === 'P2025') {
+        return NextResponse.json(
+          { 
+            error: 'Record not found',
+            details: process.env.NODE_ENV === 'development' ? dbError.message : 'Requested pattern not found'
+          },
+          { status: 404 }
+        );
+      }
+      // אם זו שגיאת חיבור למסד נתונים
+      if (dbError.message?.includes('connect') || dbError.message?.includes('SQLite')) {
+        return NextResponse.json(
+          { 
+            error: 'Database connection error',
+            details: process.env.NODE_ENV === 'development' ? dbError.message : 'Unable to connect to database'
+          },
+          { status: 500 }
+        );
+      }
+      throw dbError; // זרוק את השגיאה כדי שה-catch החיצוני יטען בה
+    }
   } catch (error: any) {
     console.error('Error fetching patterns:', error);
     const errorMessage = error instanceof Error ? error.message : String(error);
