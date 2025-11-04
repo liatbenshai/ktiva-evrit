@@ -71,7 +71,12 @@ export async function POST(req: NextRequest) {
     }
 
     // חילוץ דפוסים מהתיקון
-    let patterns = [];
+    let patterns: Array<{
+      from: string;
+      to: string;
+      type: string;
+      confidence: number;
+    }> = [];
     try {
       patterns = extractPatterns(originalText, correctedText);
     } catch (patternError: any) {
