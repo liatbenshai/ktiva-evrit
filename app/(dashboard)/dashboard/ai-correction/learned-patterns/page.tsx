@@ -85,6 +85,53 @@ export default function LearnedPatternsPage() {
     }
   };
 
+  const handleAddPattern = async () => {
+    if (!newBadPattern.trim() || !newGoodPattern.trim()) {
+      alert('אנא מלאי את שני השדות');
+      return;
+    }
+
+    if (newBadPattern.trim() === newGoodPattern.trim()) {
+      alert('הדפוס הרע והדפוס הטוב לא יכולים להיות זהים');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/ai-correction/save-pattern', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalText: newBadPattern.trim(),
+          correctedText: newGoodPattern.trim(),
+          userId: 'default-user',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || data.message || 'Failed to save pattern');
+      }
+
+      // ניקוי הטופס
+      setNewBadPattern('');
+      setNewGoodPattern('');
+      setShowAddForm(false);
+      
+      // רענון הרשימה
+      await fetchPatterns();
+      
+      alert('הדפוס נשמר בהצלחה!');
+    } catch (error) {
+      console.error('Error adding pattern:', error);
+      const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
+      alert(`שגיאה בשמירת הדפוס: ${errorMessage}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const stats = {
     total: patterns.length,
     aiStyle: patterns.filter(p => p.patternType === 'ai-style').length,
