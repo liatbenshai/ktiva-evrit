@@ -114,22 +114,72 @@ ${analysis.issues.map(issue => `- ${issue.original} → ${issue.suggestion} (${i
       const alternativesResponse = await generateText({
         prompt: alternativesPrompt,
         systemPrompt: alternativesSystemPrompt,
-        maxTokens: 2048,
+        maxTokens: 4096, // הגדלנו ל-4096 כדי שיהיה מספיק מקום
         temperature: 0.7,
       });
 
+      console.log('Alternatives response received, length:', alternativesResponse.length);
+      console.log('First 500 chars:', alternativesResponse.substring(0, 500));
+
       let cleanedResponse = alternativesResponse.trim();
-      if (cleanedResponse.startsWith('```json')) {
-        cleanedResponse = cleanedResponse.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+      
+      // ניקוי markdown code blocks
+      if (cleanedResponse.includes('```json')) {
+        const start = cleanedResponse.indexOf('```json') + 7;
+        const end = cleanedResponse.lastIndexOf('```');
+        if (end > start) {
+          cleanedResponse = cleanedResponse.substring(start, end).trim();
+        }
       } else if (cleanedResponse.startsWith('```')) {
-        cleanedResponse = cleanedResponse.replace(/^```\n?/, '').replace(/\n?```$/, '');
+        const start = cleanedResponse.indexOf('\n') + 1;
+        const end = cleanedResponse.lastIndexOf('```');
+        if (end > start) {
+          cleanedResponse = cleanedResponse.substring(start, end).trim();
+        }
       }
 
-      const alternativesData = JSON.parse(cleanedResponse);
+      // ניקוי backticks נוספים
+      cleanedResponse = cleanedResponse.replace(/^`+/, '').replace(/`+$/, '').trim();
+
+      console.log('Cleaned response length:', cleanedResponse.length);
+      console.log('First 300 chars of cleaned:', cleanedResponse.substring(0, 300));
+
+      // ניסיון לפרש JSON
+      let alternativesData;
+      try {
+        alternativesData = JSON.parse(cleanedResponse);
+      } catch (parseError) {
+        // אם לא הצלחנו, ננסה למצוא את ה-JSON בתוך הטקסט
+        const firstBrace = cleanedResponse.indexOf('{');
+        const lastBrace = cleanedResponse.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace > firstBrace) {
+          const extracted = cleanedResponse.substring(firstBrace, lastBrace + 1);
+          console.log('Trying to parse extracted JSON:', extracted.substring(0, 200));
+          alternativesData = JSON.parse(extracted);
+        } else {
+          throw parseError;
+        }
+      }
+
+      console.log('Parsed alternatives data:', {
+        hasMain: !!alternativesData.main,
+        alternativesCount: alternativesData.alternatives?.length || 0
+      });
+
       mainCorrectedText = alternativesData.main || text; // התיקון הראשי
       alternatives = alternativesData.alternatives || [];
+      
+      // אם אין alternatives אבל יש main, ניצור גרסה אחת מהתיקון הראשי
+      if (alternatives.length === 0 && mainCorrectedText !== text) {
+        alternatives = [{
+          text: mainCorrectedText,
+          explanation: 'התיקון הראשי המומלץ',
+          context: 'בינוני'
+        }];
+      }
     } catch (altError) {
       console.error('Error generating alternatives:', altError);
+      console.error('Error details:', altError instanceof Error ? altError.message : String(altError));
       // נמשיך עם הטקסט המקורי אם יש בעיה
       mainCorrectedText = text;
       alternatives = [];
