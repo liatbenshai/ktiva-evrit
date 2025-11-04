@@ -84,7 +84,7 @@ export default function AICorrector(): React.JSX.Element {
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || data.details || `שגיאת שרת: ${response.status}`);
       }
@@ -289,9 +289,22 @@ export default function AICorrector(): React.JSX.Element {
       }
 
       const data = await response.json();
-      console.log('Pattern saved successfully:', data);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      
+      // בדיקה אם השמירה הצליחה בפועל
+      if (data.success && data.message && data.message.includes('לא נשמר במסד הנתונים')) {
+        console.warn('Pattern was not saved to database:', data);
+        // לא נציג הודעה כי זה יכול להיות מפריע - אבל נרשום בקונסולה
+        return;
+      }
+      
+      if (data.success) {
+        console.log('Pattern saved successfully:', data);
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+      } else {
+        console.error('Pattern save failed:', data);
+        alert(`שגיאה בשמירת הדפוס: ${data.error || data.message || 'שגיאה לא ידועה'}`);
+      }
     } catch (error) {
       console.error('Error saving pattern automatically:', error);
       const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
@@ -484,7 +497,7 @@ export default function AICorrector(): React.JSX.Element {
           >
             צפייה בדפוסים
           </Link>
-        </div>
+      </div>
       </Card>
 
       {/* הוראות שימוש */}
@@ -528,9 +541,9 @@ export default function AICorrector(): React.JSX.Element {
           />
 
           <div className="flex gap-2">
-            <Button
-              onClick={analyzeText}
-              disabled={isAnalyzing || !originalText.trim()}
+          <Button
+            onClick={analyzeText}
+            disabled={isAnalyzing || !originalText.trim()}
               className="flex-1"
             >
               {isAnalyzing ? (
@@ -559,7 +572,7 @@ export default function AICorrector(): React.JSX.Element {
                 title="נקה הכל"
               >
                 🗑️ נקה
-              </Button>
+          </Button>
             )}
           </div>
         </Card>
@@ -616,13 +629,13 @@ export default function AICorrector(): React.JSX.Element {
               {isEditing ? (
                 <>
                   <div className="relative">
-                    <textarea
+          <textarea
                       value={editedText}
                       onChange={(e) => setEditedText(e.target.value)}
                       onMouseUp={handleTextSelection}
                       className="w-full h-96 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
-                      dir="rtl"
-                    />
+            dir="rtl"
+          />
                     {selectedText && isEditing && (
                       <div className="absolute top-2 right-2 bg-purple-500 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 shadow-lg z-10">
                         <span>טקסט נבחר: "{selectedText.substring(0, 30)}{selectedText.length > 30 ? '...' : ''}"</span>
@@ -689,8 +702,8 @@ export default function AICorrector(): React.JSX.Element {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <Button
-                      onClick={saveCorrection}
+          <Button
+            onClick={saveCorrection}
                       disabled={isSaving || originalText === editedText}
                       className="flex-1 bg-green-600 hover:bg-green-700"
                     >
@@ -712,7 +725,7 @@ export default function AICorrector(): React.JSX.Element {
                     >
                       <X className="w-4 h-4 mr-2" />
                       ביטול
-                    </Button>
+          </Button>
                   </div>
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-xs text-blue-800">
@@ -914,7 +927,7 @@ export default function AICorrector(): React.JSX.Element {
                                 </button>
                               </div>
                             )}
-                          </div>
+      </div>
 
                           {alt.explanation && (
                             <p className="text-xs text-gray-600 mb-2 mt-1">
@@ -1067,9 +1080,9 @@ export default function AICorrector(): React.JSX.Element {
                                   </button>
                                 ))}
                               </div>
-                            </div>
-                          ))}
-                        </div>
+              </div>
+            ))}
+          </div>
                       )}
                     </div>
                   )}

@@ -125,11 +125,13 @@ export async function POST(req: NextRequest) {
         });
       } catch (createError: any) {
         console.error('Error creating pattern:', createError);
-        // אם הטבלה לא קיימת או יש בעיה אחרת, נחזיר תשובה מוצלחת אבל לא נשמור
+        // אם הטבלה לא קיימת או יש בעיה אחרת, נחזיר תשובה עם success: false
+        // כדי שהקוד בצד הלקוח יידע שהשמירה נכשלה
         return NextResponse.json({
-          success: true,
-          message: 'הדפוס נרשם (לא נשמר במסד הנתונים)',
-          error: process.env.NODE_ENV === 'development' ? createError.message : undefined
+          success: false,
+          error: 'Failed to save pattern',
+          message: 'הדפוס לא נשמר במסד הנתונים - יש בעיה עם החיבור למסד הנתונים',
+          details: process.env.NODE_ENV === 'development' ? createError.message : undefined
         });
       }
     }
@@ -137,11 +139,12 @@ export async function POST(req: NextRequest) {
     console.error('Error saving pattern:', error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     
-    // במקום להחזיר שגיאה 500, נחזיר תשובה מוצלחת עם הודעה
+    // נחזיר תשובה עם success: false כדי שהקוד בצד הלקוח יידע שהשמירה נכשלה
     return NextResponse.json({
-      success: true,
-      message: 'הדפוס נרשם (לא נשמר במסד הנתונים)',
-      error: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      success: false,
+      error: 'Failed to save pattern',
+      message: 'הדפוס לא נשמר במסד הנתונים - יש בעיה עם החיבור למסד הנתונים',
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
     });
   }
 }

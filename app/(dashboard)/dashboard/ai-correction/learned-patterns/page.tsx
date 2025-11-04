@@ -44,6 +44,14 @@ export default function LearnedPatternsPage() {
       }
       
       setPatterns(data.patterns || []);
+      
+      // אם אין דפוסים, נציג הודעה
+      if (data.patterns && data.patterns.length === 0) {
+        console.log('No patterns found in database. This could mean:');
+        console.log('1. No patterns have been saved yet');
+        console.log('2. Database table does not exist');
+        console.log('3. Database connection issue');
+      }
     } catch (error) {
       console.error('Error fetching patterns:', error);
       const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';

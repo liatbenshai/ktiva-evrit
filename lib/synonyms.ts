@@ -46,13 +46,13 @@ export const HEBREW_SYNONYMS: SynonymGroup[] = [
   // Business Writing
   {
     primary: 'לקוח',
-    alternatives: ['מזמין', 'נצרך', 'מקבל שירות', 'משתמש'],
+    alternatives: ['מזמין', 'צרכן', 'מקבל שירות', 'משתמש'],
     category: 'business',
     context: ['מסחר', 'שירותים', 'מכירות']
   },
   {
     primary: 'מוצר',
-    alternatives: ['פריט', 'סחורה', 'שירות', 'פתרון'],
+    alternatives: ['פריט', 'סחורה', 'שירות', 'מצרך'],
     category: 'business',
     context: ['מכירות', 'שיווק', 'פיתוח']
   },

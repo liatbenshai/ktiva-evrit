@@ -1,4 +1,4 @@
-// File: C:\Users\liat\ktiva-evrit\app\page.tsx
+// File: C:\Users\liat\OneDrive - מ.י. לתמלול והקלטה בע מ\מסמכים\ktiva-evrit\app\page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

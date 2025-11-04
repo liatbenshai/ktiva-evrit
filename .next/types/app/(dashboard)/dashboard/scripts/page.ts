@@ -1,4 +1,4 @@
-// File: C:\Users\liat\ktiva-evrit\app\(dashboard)\dashboard\scripts\page.tsx
+// File: C:\Users\liat\OneDrive - מ.י. לתמלול והקלטה בע מ\מסמכים\ktiva-evrit\app\(dashboard)\dashboard\scripts\page.tsx
 import * as entry from '../../../../../../app/(dashboard)/dashboard/scripts/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
