@@ -29,7 +29,7 @@ interface Suggestion {
   whenToUse?: string;
 }
 
-export default function AICorrector() {
+export default function AICorrector(): JSX.Element {
   const [originalText, setOriginalText] = useState('');
   const [correctedText, setCorrectedText] = useState('');
   const [editedText, setEditedText] = useState('');
