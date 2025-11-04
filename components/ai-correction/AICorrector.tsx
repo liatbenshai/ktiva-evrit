@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -376,13 +376,20 @@ export default function AICorrector() {
           }),
         });
 
-        if (response.ok) {
-          console.log('Alternative pattern saved automatically');
-          // לא נציג הודעה כי זה יכול להיות מפריע אם יש הרבה שינויים
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          console.error('Failed to save alternative pattern:', errorData);
+          throw new Error(errorData.error || `HTTP ${response.status}: Failed to save pattern`);
         }
+
+        const data = await response.json();
+        console.log('Alternative pattern saved automatically:', data.message);
+        // לא נציג הודעה כי זה יכול להיות מפריע אם יש הרבה שינויים
       } catch (error) {
         console.error('Error saving alternative pattern:', error);
-        // לא נכשיל את התהליך אם השמירה נכשלה
+        const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
+        // לא נציג alert כאן כי זה יכול להיות מפריע אם יש הרבה שינויים
+        // אבל נרשם בקונסולה
       }
     }
   };
