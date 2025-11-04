@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Edit2, Save, X, Copy, Check, Loader2, Languages, ChevronDown, ChevronUp } from 'lucide-react';
+import { Edit2, Save, X, Copy, Check, Loader2, Languages, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
 
 interface TranslationIssue {
   type: string;
@@ -258,23 +259,43 @@ export default function AICorrector() {
 
   // שמירה נקודתית אוטומטית (helper function)
   const savePatternAutomatically = async (original: string, corrected: string) => {
+    // בדיקה בסיסית - אם אין שינוי, לא שומרים
+    if (!original || !corrected || original.trim() === corrected.trim()) {
+      console.warn('No change to save:', { original, corrected });
+      return;
+    }
+
+    // בדיקה שהטקסט לא ריק מדי
+    if (original.trim().length < 2 && corrected.trim().length < 2) {
+      console.warn('Text too short to save as pattern');
+      return;
+    }
+
     try {
       const response = await fetch('/api/ai-correction/save-pattern', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          originalText: original,
-          correctedText: corrected,
+          originalText: original.trim(),
+          correctedText: corrected.trim(),
           userId: 'default-user',
         }),
       });
 
-      if (response.ok) {
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Failed to save pattern:', errorData);
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to save pattern`);
       }
+
+      const data = await response.json();
+      console.log('Pattern saved successfully:', data);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
       console.error('Error saving pattern automatically:', error);
+      const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
+      alert(`שגיאה בשמירת הדפוס: ${errorMessage}`);
     }
   };
 
@@ -301,25 +322,34 @@ export default function AICorrector() {
 
     // שמירה נקודתית אוטומטית של השינוי הזה
     try {
+      if (!selectedText || !suggestionText || selectedText.trim() === suggestionText.trim()) {
+        return; // אין שינוי לשמור
+      }
+
       const response = await fetch('/api/ai-correction/save-pattern', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          originalText: selectedText,
+          originalText: selectedText.trim(),
           correctedText: suggestionText,
           userId: 'default-user',
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Pattern saved automatically:', data.message);
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Failed to save pattern:', errorData);
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to save pattern`);
       }
+
+      const data = await response.json();
+      console.log('Pattern saved automatically:', data.message);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
       console.error('Error saving pattern automatically:', error);
-      // לא נכשיל את התהליך אם השמירה נכשלה
+      const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
+      alert(`שגיאה בשמירת הדפוס: ${errorMessage}`);
     }
   };
 
@@ -434,6 +464,22 @@ export default function AICorrector() {
 
   return (
     <div className="space-y-6" dir="rtl">
+      {/* קישור לדפוסים שנלמדו */}
+      <Card className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-purple-900 mb-1">📚 רוצה לראות את כל הדפוסים שנלמדו?</h3>
+            <p className="text-sm text-purple-700">כל השינויים הנקודתיים ששמרת נשמרים ומשמשים את המערכת</p>
+          </div>
+          <Link
+            href="/dashboard/ai-correction/learned-patterns"
+            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
+          >
+            צפייה בדפוסים
+          </Link>
+        </div>
+      </Card>
+
       {/* הוראות שימוש */}
       <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
         <h3 className="text-lg font-bold mb-3">📖 איך זה עובד?</h3>
@@ -821,17 +867,20 @@ export default function AICorrector() {
                                           const startIndex = originalText.substring(0, originalFirstWordIndex).split(/\s+/).length;
                                           const originalPart = originalWords.slice(startIndex, startIndex + selectedWords.length).join(' ');
                                           
-                                          if (originalPart !== selectedPart) {
-                                            await savePatternAutomatically(originalPart, selectedPart);
-                                            alert(`החלק נשמר: "${originalPart}" → "${selectedPart}"`);
+                                          if (originalPart !== selectedPart && originalPart.trim().length > 0) {
+                                            try {
+                                              await savePatternAutomatically(originalPart, selectedPart);
+                                              alert(`החלק נשמר: "${originalPart}" → "${selectedPart}"`);
+                                            } catch (error) {
+                                              console.error('Error saving pattern part:', error);
+                                              // השגיאה כבר מוצגת ב-savePatternAutomatically
+                                            }
+                                          } else if (originalPart.trim().length === 0) {
+                                            // חלק חדש לחלוטין - לא נשמור דפוס עבור טקסט חדש
+                                            alert('זה טקסט חדש - לא נשמר כדפוס');
                                           } else {
                                             alert('החלק שנבחר זהה למקור');
                                           }
-                                        } else {
-                                          // חלק חדש לחלוטין
-                                          await savePatternAutomatically('', selectedPart);
-                                          alert(`החלק החדש נשמר: "${selectedPart}"`);
-                                        }
                                       }
                                     } else {
                                       // הטקסט קיים במקור - אין שינוי

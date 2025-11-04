@@ -300,7 +300,7 @@ export default function SynonymsPage() {
             <div className="flex gap-2">
               <input
                 type="file"
-                accept=".json"
+                accept=".json,application/json"
                 onChange={handleFileUpload}
                 className="hidden"
                 id="file-upload"
@@ -309,10 +309,16 @@ export default function SynonymsPage() {
               <label
                 htmlFor="file-upload"
                 className={`cursor-pointer bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title="לחצי כאן כדי להעלות קובץ JSON עם מילים נרדפות"
               >
                 <Upload className="w-5 h-5" />
-                ייבוא
+                {loading ? 'מייבא...' : 'ייבוא קובץ JSON'}
               </label>
+              <div className="text-xs text-gray-500 flex items-center">
+                <span className="border border-gray-300 rounded px-2 py-1 bg-gray-50">
+                  פורמט: [{'{'}"primary": "...", "alternatives": ["..."]{'}'}]
+                </span>
+              </div>
               
               <button
                 onClick={handleExport}
