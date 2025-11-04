@@ -5,10 +5,36 @@ import { analyzeHebrewText, extractPatterns } from '@/lib/ai/hebrew-analyzer';
  * GET - קבלת כל התיקונים של המשתמש
  */
 export async function GET(req: NextRequest) {
+  // נטפל בכל השגיאות, כולל אם Prisma לא מצליח להתחיל
+  let prisma;
+  try {
+    const { prisma: prismaClient } = await import('@/lib/prisma');
+    prisma = prismaClient;
+  } catch (importError: any) {
+    console.error('Error importing Prisma:', importError);
+    return NextResponse.json({
+      corrections: [],
+      stats: {
+        totalCorrections: 0,
+        averageConfidence: 0,
+      },
+    });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId') || 'default-user';
     const limit = parseInt(searchParams.get('limit') || '50');
+
+    if (!prisma) {
+      return NextResponse.json({
+        corrections: [],
+        stats: {
+          totalCorrections: 0,
+          averageConfidence: 0,
+        },
+      });
+    }
 
     const corrections = await prisma.aICorrection.findMany({
       where: { userId },
@@ -28,10 +54,13 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching AI corrections:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch corrections' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      corrections: [],
+      stats: {
+        totalCorrections: 0,
+        averageConfidence: 0,
+      },
+    });
   }
 }
 
@@ -224,6 +253,20 @@ export async function POST(req: NextRequest) {
  * DELETE - מחיקת תיקון
  */
 export async function DELETE(req: NextRequest) {
+  // נטפל בכל השגיאות, כולל אם Prisma לא מצליח להתחיל
+  let prisma;
+  try {
+    const { prisma: prismaClient } = await import('@/lib/prisma');
+    prisma = prismaClient;
+  } catch (importError: any) {
+    console.error('Error importing Prisma:', importError);
+    return NextResponse.json({
+      success: false,
+      error: 'Database not available',
+      message: 'לא ניתן להתחבר למסד הנתונים'
+    });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
@@ -233,6 +276,14 @@ export async function DELETE(req: NextRequest) {
         { error: 'Correction ID is required' },
         { status: 400 }
       );
+    }
+
+    if (!prisma) {
+      return NextResponse.json({
+        success: false,
+        error: 'Database not available',
+        message: 'לא ניתן להתחבר למסד הנתונים'
+      });
     }
 
     await prisma.aICorrection.delete({
@@ -245,10 +296,11 @@ export async function DELETE(req: NextRequest) {
     });
   } catch (error) {
     console.error('Error deleting AI correction:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete correction' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to delete correction',
+      message: 'לא ניתן למחוק את התיקון'
+    });
   }
 }
 
