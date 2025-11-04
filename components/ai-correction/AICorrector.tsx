@@ -115,9 +115,6 @@ export default function AICorrector() {
 
   // בחירת טקסט (בדיוק כמו בתכונת התרגום)
   const handleTextSelection = async () => {
-    // רק אם לא בעריכה
-    if (isEditing) return;
-    
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
       setSelectedText('');
@@ -128,12 +125,64 @@ export default function AICorrector() {
     const selected = selection.toString().trim();
     if (selected.length > 0 && selected.length < 500) {
       setSelectedText(selected);
-      // נקבל הצעות אוטומטית
-      await handleGetSuggestions(selected);
+      
+      // אם בעריכה - לא נביא הצעות, רק נשמור את הטקסט המסומן
+      if (isEditing) {
+        return; // נציג אפשרות לשמור שינוי נקודתי
+      } else {
+        // נקבל הצעות אוטומטית
+        await handleGetSuggestions(selected);
+      }
     } else {
       setSelectedText('');
       setShowSelectionSuggestions(false);
     }
+  };
+  
+  // שמירה נקודתית של שינוי מסומן בעריכה
+  const handleSaveSelectedChange = async () => {
+    if (!selectedText || !isEditing) return;
+    
+    // נמצא את הטקסט המסומן בטקסט המקורי
+    const originalIndex = originalText.indexOf(selectedText);
+    if (originalIndex === -1) {
+      // אם הטקסט המסומן לא קיים במקור, זה שינוי חדש
+      alert('הטקסט המסומן לא נמצא בטקסט המקורי - זה שינוי חדש. השתמשי במילים נרדפות או הצעות.');
+      return;
+    }
+    
+    // נמצא את הטקסט החדש במיקום הזה בטקסט המעודכן
+    const editedIndex = editedText.indexOf(selectedText);
+    if (editedIndex === -1) {
+      // הטקסט המסומן שונה - נמצא את המיקום בטקסט המעודכן
+      const textBefore = editedText.substring(0, originalIndex);
+      const textAfter = editedText.substring(originalIndex + selectedText.length);
+      // ננסה למצוא את הטקסט החדש
+      const words = editedText.split(/\s+/);
+      const originalWords = originalText.split(/\s+/);
+      
+      // נשמור את השינוי בין הטקסט המקורי לטקסט המעודכן
+      const originalTextSelected = selectedText;
+      const correctedTextSelected = editedText.substring(
+        Math.max(0, originalIndex - 10),
+        Math.min(editedText.length, originalIndex + selectedText.length + 10)
+      );
+      
+      // נשמור רק את החלק ששונה
+      await savePatternAutomatically(originalTextSelected, selectedText);
+    } else {
+      // הטקסט לא השתנה - אין מה לשמור
+      alert('הטקסט המסומן לא השתנה. סמני טקסט ששונה כדי לשמור אותו.');
+    }
+  };
+  
+  // שמירה נקודתית של שינוי בין מקור לתיקון
+  const handleSavePointChange = async (originalPart: string, correctedPart: string) => {
+    if (!originalPart || !correctedPart || originalPart === correctedPart) {
+      return;
+    }
+    
+    await savePatternAutomatically(originalPart, correctedPart);
   };
 
   // קבלת הצעות לטקסט נבחר
@@ -507,12 +556,52 @@ export default function AICorrector() {
             <div className="space-y-4">
               {isEditing ? (
                 <>
-                  <textarea
-                    value={editedText}
-                    onChange={(e) => setEditedText(e.target.value)}
-                    className="w-full h-96 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
-                    dir="rtl"
-                  />
+                  <div className="relative">
+                    <textarea
+                      value={editedText}
+                      onChange={(e) => setEditedText(e.target.value)}
+                      onMouseUp={handleTextSelection}
+                      className="w-full h-96 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+                      dir="rtl"
+                    />
+                    {selectedText && isEditing && (
+                      <div className="absolute top-2 right-2 bg-purple-500 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 shadow-lg z-10">
+                        <span>טקסט נבחר: "{selectedText.substring(0, 30)}{selectedText.length > 30 ? '...' : ''}"</span>
+                        <button
+                          onClick={async () => {
+                            // נמצא את הטקסט המסומן בטקסט המקורי
+                            const originalIndex = originalText.indexOf(selectedText);
+                            if (originalIndex !== -1) {
+                              // הטקסט קיים במקור - נשמור את השינוי
+                              await savePatternAutomatically(selectedText, selectedText);
+                              alert('השינוי הנקודתי נשמר!');
+                            } else {
+                              // הטקסט לא קיים במקור - נשמור את המילה/ביטוי החדש
+                              const contextBefore = originalText.substring(Math.max(0, originalText.length - 50));
+                              const contextAfter = editedText.substring(Math.max(0, editedText.indexOf(selectedText) - 50), Math.min(editedText.length, editedText.indexOf(selectedText) + selectedText.length + 50));
+                              // נשמור את הטקסט המסומן כשינוי
+                              await savePatternAutomatically('', selectedText);
+                              alert('השינוי החדש נשמר!');
+                            }
+                            setSelectedText('');
+                            window.getSelection()?.removeAllRanges();
+                          }}
+                          className="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-xs font-medium"
+                        >
+                          שמור שינוי זה
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedText('');
+                            window.getSelection()?.removeAllRanges();
+                          }}
+                          className="hover:bg-purple-600 rounded px-1"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <div className="flex gap-2">
                     <Button
                       onClick={saveCorrection}
@@ -527,7 +616,7 @@ export default function AICorrector() {
                       ) : (
                         <>
                           <Save className="w-4 h-4 mr-2" />
-                          שמור תיקון מלא (אופציונלי - כל שינוי נקודתי כבר נשמר)
+                          שמור תיקון מלא (אופציונלי)
                         </>
                       )}
                     </Button>
@@ -539,9 +628,11 @@ export default function AICorrector() {
                       ביטול
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    💡 שינויים נקודתיים נשמרים אוטומטית. לחצי כאן רק אם רוצה לשמור את כל התיקון המלא.
-                  </p>
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-800">
+                      💡 <strong>טיפ:</strong> סמני מילה או ביטוי בעריכה ולחצי על "שמור שינוי זה" כדי לשמור רק את השינוי המסומן, בלי לשמור את כל העריכה.
+                    </p>
+                  </div>
                 </>
               ) : (
                 <>
