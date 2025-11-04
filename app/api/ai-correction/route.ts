@@ -209,7 +209,14 @@ export async function POST(req: NextRequest) {
     }
 
     // קבלת דפוסים מעודכנים
-    let learnedPatterns = [];
+    let learnedPatterns: Array<{
+      id: string;
+      userId: string;
+      badPattern: string;
+      goodPattern: string;
+      confidence: number;
+      occurrences: number;
+    }> = [];
     try {
       learnedPatterns = await prisma.translationPattern.findMany({
         where: { userId },
