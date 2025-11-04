@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // עדכון או יצירת דפוסי תרגום
+    // עדכון או יצירת דפוסי תרגום / AI להימנעות
     for (const pattern of patterns) {
       if (pattern.type === 'word-replacement' || pattern.type === 'phrase-replacement') {
         // בדיקה אם הדפוס כבר קיים
@@ -98,13 +98,13 @@ export async function POST(req: NextRequest) {
             },
           });
         } else {
-          // יצירת דפוס חדש
+          // יצירת דפוס חדש - סימון כ-ai-style כדי שהמערכת תימנע מניסוחי AI
           await prisma.translationPattern.create({
             data: {
               userId,
               badPattern: pattern.from,
               goodPattern: pattern.to,
-              patternType: pattern.type,
+              patternType: 'ai-style', // דפוסים ספציפיים לניסוחי AI
               occurrences: 1,
               confidence: pattern.confidence,
             },

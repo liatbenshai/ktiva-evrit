@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Edit2, Save, X, Copy, Check, Loader2, Languages } from 'lucide-react';
 
 interface TranslationIssue {
   type: string;
@@ -20,22 +21,37 @@ interface AnalysisResult {
   suggestions: string[];
 }
 
+interface Suggestion {
+  text: string;
+  explanation?: string;
+  tone?: string;
+  whenToUse?: string;
+}
+
 export default function AICorrector() {
   const [originalText, setOriginalText] = useState('');
   const [correctedText, setCorrectedText] = useState('');
+  const [editedText, setEditedText] = useState('');
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [learnedPatterns, setLearnedPatterns] = useState<Array<{
-    from: string;
-    to: string;
-    confidence: number;
-    occurrences?: number;
+  const [isEditing, setIsEditing] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  
+  // הצעות לטקסט נבחר (בדיוק כמו בתכונת התרגום)
+  const [selectedText, setSelectedText] = useState<string>('');
+  const [selectionSuggestions, setSelectionSuggestions] = useState<Suggestion[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [showSelectionSuggestions, setShowSelectionSuggestions] = useState(false);
+  
+  // אפשרויות חלופיות לטקסט המלא (כמו בתכונת התרגום)
+  const [alternatives, setAlternatives] = useState<Array<{
+    text: string;
+    explanation?: string;
+    context?: string;
   }>>([]);
-  const [autoSuggestions, setAutoSuggestions] = useState<{
-    analyzedText: string;
-    appliedPatterns: Array<{ from: string; to: string }>;
-  } | null>(null);
+  const [selectedAlternative, setSelectedAlternative] = useState<string | null>(null);
 
   // ניתוח הטקסט
   const analyzeText = async () => {
@@ -52,7 +68,7 @@ export default function AICorrector() {
         body: JSON.stringify({
           text: originalText,
           userId: 'default-user',
-          applyPatterns: true,
+          applyPatterns: false, // לא נחיל תיקונים אוטומטיים
         }),
       });
 
@@ -67,14 +83,13 @@ export default function AICorrector() {
       }
       
       setAnalysis(data.analysis);
-      setLearnedPatterns(data.learnedPatterns || []);
+      setAlternatives(data.alternatives || []); // אפשרויות חלופיות לטקסט המלא
       
-      if (data.result?.appliedPatterns?.length > 0) {
-        setAutoSuggestions(data.result);
-        setCorrectedText(data.result.analyzedText);
-      } else {
-        setCorrectedText(originalText);
-      }
+      // הטקסט המתוקן מתחיל עם התיקון הראשי המומלץ (כמו בתכונת התרגום)
+      const mainCorrectedText = data.result?.analyzedText || originalText;
+      setCorrectedText(mainCorrectedText);
+      setEditedText(mainCorrectedText);
+      setSelectedAlternative(null);
     } catch (error) {
       console.error('Error analyzing text:', error);
       const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
@@ -84,14 +99,130 @@ export default function AICorrector() {
     }
   };
 
+  // בחירת טקסט (בדיוק כמו בתכונת התרגום)
+  const handleTextSelection = async () => {
+    // רק אם לא בעריכה
+    if (isEditing) return;
+    
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) {
+      setSelectedText('');
+      setShowSelectionSuggestions(false);
+      return;
+    }
+
+    const selected = selection.toString().trim();
+    if (selected.length > 0 && selected.length < 500) {
+      setSelectedText(selected);
+      // נקבל הצעות אוטומטית
+      await handleGetSuggestions(selected);
+    } else {
+      setSelectedText('');
+      setShowSelectionSuggestions(false);
+    }
+  };
+
+  // קבלת הצעות לטקסט נבחר
+  const handleGetSuggestions = async (text: string = selectedText) => {
+    if (!text || !correctedText) return;
+
+    setIsLoadingSuggestions(true);
+    setShowSelectionSuggestions(true);
+    try {
+      const response = await fetch('/api/ai-correction/suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          selectedText: text,
+          fullText: correctedText,
+          context: 'תיקון טקסט AI',
+          userId: 'default-user',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.details || `שגיאת שרת: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'הבקשה להצעות נכשלה');
+      }
+      
+      setSelectionSuggestions(data.suggestions || []);
+    } catch (error: any) {
+      console.error('Error getting suggestions:', error);
+      const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
+      console.error('Error details:', errorMessage);
+      
+      // הצגת הודעת שגיאה למשתמש
+      alert(`שגיאה בקבלת הצעות: ${errorMessage}`);
+      setSelectionSuggestions([]);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  // בחירת הצעה לטקסט נבחר
+  const handleSelectSuggestion = (suggestionText: string) => {
+    if (!correctedText || !selectedText) return;
+
+    const index = correctedText.indexOf(selectedText);
+    if (index === -1) return;
+
+    const newText = 
+      correctedText.substring(0, index) + 
+      suggestionText + 
+      correctedText.substring(index + selectedText.length);
+    
+    setEditedText(newText);
+    setCorrectedText(newText);
+    setSelectedText('');
+    setSelectionSuggestions([]);
+    setShowSelectionSuggestions(false);
+    setIsEditing(true);
+    
+    window.getSelection()?.removeAllRanges();
+  };
+
+  // בחירת אפשרות חלופית לטקסט המלא
+  const handleSelectAlternative = (alternativeText: string) => {
+    setEditedText(alternativeText);
+    setCorrectedText(alternativeText);
+    setSelectedAlternative(alternativeText);
+    setIsEditing(true);
+  };
+
+  // התחלת עריכה
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    setEditedText(correctedText);
+  };
+
+  // ביטול עריכה
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedText(correctedText);
+    setShowSuccess(false);
+  };
+
+  // העתקה
+  const handleCopy = () => {
+    navigator.clipboard.writeText(editedText || correctedText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   // שמירת התיקון
   const saveCorrection = async () => {
-    if (!originalText.trim() || !correctedText.trim()) {
+    if (!originalText.trim() || !editedText.trim()) {
       alert('אנא וודא שיש טקסט מקורי וטקסט מתוקן');
       return;
     }
 
-    if (originalText === correctedText) {
+    if (originalText === editedText) {
       alert('הטקסט המתוקן זהה למקורי - אין תיקון לשמור');
       return;
     }
@@ -103,7 +234,7 @@ export default function AICorrector() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           originalText,
-          correctedText,
+          correctedText: editedText,
           category: 'general',
           userId: 'default-user',
         }),
@@ -114,13 +245,12 @@ export default function AICorrector() {
       }
 
       const data = await response.json();
-      alert('התיקון נשמר בהצלחה! המערכת למדה מהתיקון שלך.');
-      
-      if (data.learnedPatterns) {
-        setLearnedPatterns(data.learnedPatterns);
-      }
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 5000);
 
-      // אין צורך לאפס - המשתמש יכול להמשיך לעבוד עם הטקסט הנוכחי או להכניס טקסט חדש
+      // עדכון הטקסט המתוקן
+      setCorrectedText(editedText);
+      setIsEditing(false);
     } catch (error) {
       console.error('Error saving correction:', error);
       alert('שגיאה בשמירת התיקון');
@@ -137,9 +267,10 @@ export default function AICorrector() {
         <ol className="list-decimal list-inside space-y-2 text-gray-700">
           <li>הדבק טקסט שנוצר על ידי AI בתיבה "טקסט מקורי מ-AI"</li>
           <li>לחץ על "🔍 נתח טקסט" כדי לקבל ניתוח מפורט</li>
-          <li>המערכת תזהה בעיות ותחיל תיקונים אוטומטיים (אם יש דפוסים שנלמדו)</li>
-          <li>ערוך את הטקסט בתיבה "טקסט מתוקן" אם צריך</li>
-          <li>לחץ על "💾 שמור תיקון ולמד" כדי שהמערכת תלמד מהתיקון שלך</li>
+          <li><strong>סמני מילה או משפט</strong> בטקסט המתוקן (עם העכבר) כדי לקבל 5-7 הצעות חלופיות</li>
+          <li>לחצי על הצעה כדי להחליף אותה</li>
+          <li>ערוכי את הטקסט ידנית במידת הצורך</li>
+          <li>לחצי על "💾 שמור תיקון ולמד" כדי שהמערכת תלמד מהתיקון ותימנע מניסוחי AI דומים בעתיד</li>
         </ol>
       </Card>
 
@@ -165,7 +296,7 @@ export default function AICorrector() {
           <textarea
             value={originalText}
             onChange={(e) => setOriginalText(e.target.value)}
-            placeholder="הדבק כאן טקסט שנוצר על ידי AI...&#10;&#10;לדוגמה:&#10;זה מהווה את אחד הנושאים המשמעותיים ביותר בהתאם לנושא הזה."
+            placeholder="הדבק כאן טקסט שנוצר על ידי AI..."
             className="w-full h-96 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
             dir="rtl"
           />
@@ -176,15 +307,26 @@ export default function AICorrector() {
               disabled={isAnalyzing || !originalText.trim()}
               className="flex-1"
             >
-              {isAnalyzing ? '🔍 מנתח...' : '🔍 נתח טקסט'}
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  מנתח...
+                </>
+              ) : (
+                '🔍 נתח טקסט'
+              )}
             </Button>
             {originalText && (
               <Button
                 onClick={() => {
                   setOriginalText('');
                   setCorrectedText('');
+                  setEditedText('');
                   setAnalysis(null);
-                  setAutoSuggestions(null);
+                  setIsEditing(false);
+                  setSelectedText('');
+                  setSelectionSuggestions([]);
+                  setShowSelectionSuggestions(false);
                 }}
                 variant="outline"
                 className="px-4"
@@ -200,51 +342,270 @@ export default function AICorrector() {
         <Card className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold">✅ טקסט מתוקן</h2>
-            {autoSuggestions && autoSuggestions.appliedPatterns.length > 0 && (
-              <span className="text-sm text-green-600 font-medium">
-                {autoSuggestions.appliedPatterns.length} תיקונים אוטומטיים הוחלו
-              </span>
-            )}
+            <div className="flex gap-2">
+              {correctedText && !isEditing && (
+                <Button
+                  onClick={handleStartEdit}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  ערוך
+                </Button>
+              )}
+              {correctedText && (
+                <Button
+                  onClick={handleCopy}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      הועתק!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      העתק
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
-          
-          <textarea
-            value={correctedText}
-            onChange={(e) => setCorrectedText(e.target.value)}
-            placeholder="ערוך ותקן את הטקסט כאן..."
-            className="w-full h-96 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            dir="rtl"
-          />
 
-          <Button
-            onClick={saveCorrection}
-            disabled={isSaving || !correctedText.trim() || originalText === correctedText}
-            className="w-full bg-green-600 hover:bg-green-700"
-          >
-            {isSaving ? '💾 שומר...' : '💾 שמור תיקון ולמד'}
-          </Button>
+          {showSuccess && (
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-800">
+                ✓ התיקון נשמר! המערכת תלמד מהתיקון ותימנע מניסוחי AI דומים בעתיד.
+              </p>
+            </div>
+          )}
+          
+          {correctedText ? (
+            <div className="space-y-4">
+              {isEditing ? (
+                <>
+                  <textarea
+                    value={editedText}
+                    onChange={(e) => setEditedText(e.target.value)}
+                    className="w-full h-96 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+                    dir="rtl"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={saveCorrection}
+                      disabled={isSaving || originalText === editedText}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          שומר...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          שמור תיקון ולמד
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      onClick={handleCancelEdit}
+                      variant="outline"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      ביטול
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    כשאת שומרת תיקון, המערכת תלמד ממנו ותימנע מניסוחי AI דומים בעתיד
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="p-4 border border-gray-300 rounded-lg bg-gray-50 min-h-[300px] relative">
+                    <p
+                      className="whitespace-pre-wrap select-text text-base"
+                      dir="rtl"
+                      onMouseUp={handleTextSelection}
+                    >
+                      {correctedText}
+                    </p>
+                    {selectedText && (
+                      <div className="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-2 shadow-lg z-10">
+                        <span>טקסט נבחר: "{selectedText.substring(0, 20)}{selectedText.length > 20 ? '...' : ''}"</span>
+                        <button
+                          onClick={() => {
+                            setSelectedText('');
+                            setShowSelectionSuggestions(false);
+                            window.getSelection()?.removeAllRanges();
+                          }}
+                          className="hover:bg-blue-600 rounded px-1"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <button
+                    onClick={handleStartEdit}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    ערוך תיקון ושמור כדי ללמד את המערכת
+                  </button>
+                  
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-xs text-yellow-800">
+                      💡 <strong>טיפ:</strong> סמני מילה או משפט בטקסט כדי לקבל הצעות חלופיות ספציפיות
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {/* אפשרויות חלופיות לטקסט המלא */}
+              {alternatives.length > 0 && (
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                    <Languages className="w-5 h-5" />
+                    אפשרויות חלופיות לטקסט המלא
+                  </h3>
+                  <div className="space-y-3">
+                    {alternatives.map((alt, index) => (
+                      <div
+                        key={index}
+                        className={`p-3 bg-white rounded-lg border-2 transition-all cursor-pointer ${
+                          selectedAlternative === alt.text
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-blue-200 hover:border-blue-300'
+                        }`}
+                        onClick={() => handleSelectAlternative(alt.text)}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <p
+                              className="font-medium mb-1"
+                              dir="rtl"
+                            >
+                              {alt.text}
+                            </p>
+                            {alt.explanation && (
+                              <p className="text-xs text-gray-600 mb-1">
+                                {alt.explanation}
+                              </p>
+                            )}
+                            {alt.context && (
+                              <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                                {alt.context}
+                              </span>
+                            )}
+                          </div>
+                          {selectedAlternative === alt.text && (
+                            <div className="text-blue-600">
+                              <Check className="w-5 h-5" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* הצעות לטקסט נבחר (בדיוק כמו בתכונת התרגום) */}
+              {showSelectionSuggestions && selectedText && (
+                <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-orange-900 flex items-center gap-2">
+                      <Languages className="w-5 h-5" />
+                      הצעות חלופיות ל-"{selectedText.length > 30 ? selectedText.substring(0, 30) + '...' : selectedText}"
+                    </h3>
+                    <button
+                      onClick={() => {
+                        setShowSelectionSuggestions(false);
+                        setSelectedText('');
+                        window.getSelection()?.removeAllRanges();
+                      }}
+                      className="text-orange-600 hover:text-orange-800"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  {isLoadingSuggestions ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-orange-600" />
+                      <span className="mr-2 text-orange-700">מביא הצעות...</span>
+                    </div>
+                  ) : selectionSuggestions.length > 0 ? (
+                    <div className="space-y-3">
+                      {selectionSuggestions.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="p-4 bg-white rounded-lg border-2 border-orange-200 hover:border-orange-400 transition-all cursor-pointer"
+                          onClick={() => handleSelectSuggestion(suggestion.text)}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p
+                                className="font-medium mb-2 text-lg"
+                                dir="rtl"
+                              >
+                                {suggestion.text}
+                              </p>
+                              {suggestion.explanation && (
+                                <p className="text-sm text-gray-600 mb-1">
+                                  {suggestion.explanation}
+                                </p>
+                              )}
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {suggestion.tone && (
+                                  <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">
+                                    טון: {suggestion.tone}
+                                  </span>
+                                )}
+                                {suggestion.whenToUse && (
+                                  <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                                    {suggestion.whenToUse}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-orange-600">
+                              <Check className="w-5 h-5" />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-orange-700 text-center py-4">
+                      לא נמצאו הצעות. נסי לסמן טקסט אחר.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="h-96 p-4 border rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
+              הניתוח יופיע כאן...
+            </div>
+          )}
         </Card>
       </div>
 
-      {/* תיקונים אוטומטיים שהוחלו */}
-      {autoSuggestions && autoSuggestions.appliedPatterns.length > 0 && (
-        <Card className="p-6 space-y-4">
-          <h3 className="text-lg font-bold">🔄 תיקונים אוטומטיים שהוחלו (לפי למידה קודמת):</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {autoSuggestions.appliedPatterns.map((pattern, idx) => (
-              <div key={idx} className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
-                <span className="text-red-600 line-through">{pattern.from}</span>
-                <span className="text-gray-400">→</span>
-                <span className="text-green-600 font-medium">{pattern.to}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* ניתוח ובעיות */}
+      {/* ניתוח ובעיות - רק הצגה, לא החלה אוטומטית */}
       {analysis && analysis.issues.length > 0 && (
         <Card className="p-6 space-y-4">
           <h3 className="text-lg font-bold">⚠️ בעיות שזוהו ({analysis.issues.length}):</h3>
+          <p className="text-sm text-gray-600 mb-3">
+            הבעיות הבאות זוהו בטקסט. סמני את הטקסט הבעייתי בטקסט המתוקן כדי לקבל הצעות חלופיות.
+          </p>
           <div className="space-y-3">
             {analysis.issues.map((issue, idx) => (
               <div key={idx} className="p-4 bg-yellow-50 border-r-4 border-yellow-400 rounded">
@@ -260,9 +621,12 @@ export default function AICorrector() {
                     </div>
                     <p className="text-sm mb-2">{issue.explanation}</p>
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="text-red-600 font-medium">"{issue.original}"</span>
+                      <span className="text-red-600 font-medium line-through">"{issue.original}"</span>
                       <span className="text-gray-400">→</span>
                       <span className="text-green-600 font-medium">"{issue.suggestion}"</span>
+                    </div>
+                    <div className="mt-2 text-xs text-blue-600">
+                      💡 סמני את הטקסט "{issue.original}" בטקסט המתוקן כדי לקבל הצעות נוספות
                     </div>
                   </div>
                 </div>
@@ -286,38 +650,6 @@ export default function AICorrector() {
           </ul>
         </Card>
       )}
-
-      {/* דפוסים שנלמדו */}
-      {learnedPatterns.length > 0 && (
-        <Card className="p-6 space-y-4">
-          <h3 className="text-lg font-bold">🧠 דפוסים שהמערכת למדה מהתיקונים שלך:</h3>
-          <p className="text-sm text-gray-600">
-            דפוסים אלו יוחלו אוטומטית בטקסטים עתידיים
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {learnedPatterns.slice(0, 9).map((pattern, idx) => (
-              <div key={idx} className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-purple-600 font-medium">
-                    ביטחון: {Math.round(pattern.confidence * 100)}%
-                  </span>
-                  {pattern.occurrences && (
-                    <span className="text-xs text-gray-500">
-                      {pattern.occurrences}× שימוש
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-red-600">{pattern.from}</span>
-                  <span className="text-gray-400">→</span>
-                  <span className="text-green-600 font-medium">{pattern.to}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
     </div>
   );
 }
-
