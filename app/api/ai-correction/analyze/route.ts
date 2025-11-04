@@ -63,8 +63,22 @@ export async function POST(req: NextRequest) {
       confidence: p.confidence,
     }));
 
+    // 🔥 החלת דפוסים שנלמדו על הטקסט - זה הפיצ'ר החסר!
+    let textAfterPatterns = text;
+    let appliedPatterns: Array<{ from: string; to: string }> = [];
+    
+    if (applyPatterns && patterns.length > 0) {
+      const patternResult = applyLearnedPatterns(text, patterns);
+      textAfterPatterns = patternResult.correctedText;
+      appliedPatterns = patternResult.appliedPatterns;
+      
+      console.log(`✅ Applied ${appliedPatterns.length} learned patterns automatically:`, 
+        appliedPatterns.map(p => `"${p.from}" → "${p.to}"`).join(', '));
+    }
+
     // יצירת תיקון ראשי ואפשרויות חלופיות (כמו בתכונת התרגום)
-    let mainCorrectedText = text; // ברירת מחדל - הטקסט המקורי
+    // נשתמש בטקסט אחרי החלת הדפוסים כנקודת התחלה
+    let mainCorrectedText = textAfterPatterns; // ברירת מחדל - הטקסט אחרי החלת דפוסים
     let alternatives: Array<{ text: string; explanation?: string; context?: string }> = [];
     
     try {
@@ -73,11 +87,22 @@ export async function POST(req: NextRequest) {
         ? analysis.issues.map(issue => `- ${issue.original} → ${issue.suggestion} (${issue.explanation})`).join('\n')
         : 'לא זוהו בעיות ספציפיות - הטקסט דורש שיפור כללי בעברית טבעית ותקנית';
       
+      const appliedPatternsNote = appliedPatterns.length > 0 
+        ? `\n<דפוסים_שכבר_הוחלו>
+המערכת כבר החילה ${appliedPatterns.length} דפוסי תיקון שנלמדו:
+${appliedPatterns.map(p => `- "${p.from}" → "${p.to}"`).join('\n')}
+</דפוסים_שכבר_הוחלו>\n`
+        : '';
+
       const alternativesPrompt = `אתה מומחה בעברית תקנית וטבעית. המשימה: ליצור 4 גרסאות שונות של הטקסט הבא - גרסה ראשית + 3 גרסאות חלופיות שונות מאוד זו מזו.
 
 <טקסט_מקורי>
 ${text}
 </טקסט_מקורי>
+${appliedPatternsNote}
+<טקסט_אחרי_החלת_דפוסים>
+${textAfterPatterns}
+</טקסט_אחרי_החלת_דפוסים>
 
 <בעיות_שזוהו>
 ${issuesList}
@@ -85,9 +110,11 @@ ${issuesList}
 
 **חשוב מאוד:** כל גרסה חייבת להיות שונה לחלוטין מהאחרות! אל תחזיר אותו טקסט 4 פעמים.
 
+**שים לב:** המערכת כבר החילה דפוסי תיקון שנלמדו מהמשתמש. התחל מ"טקסט_אחרי_החלת_דפוסים" ושפר אותו עוד יותר.
+
 צור:
-1. **main** - התיקון הראשי המומלץ (תיקון בינוני, מאוזן, שומר על המשמעות המקורית)
-2. **alternative1** - תיקון מינימלי בלבד - רק את הבעיות הקריטיות ביותר, שינוי מינימלי מהמקור
+1. **main** - התיקון הראשי המומלץ (תיקון בינוני, מאוזן, שומר על המשמעות המקורית) - התחל מהטקסט אחרי הדפוסים
+2. **alternative1** - תיקון מינימלי בלבד - רק את הבעיות הקריטיות ביותר, שינוי מינימלי מהטקסט אחרי הדפוסים
 3. **alternative2** - תיקון בינוני-מתקדם - שיפור נרחב יותר, החלפת ביטויים AI בניסוחים עבריים טבעיים
 4. **alternative3** - תיקון מקסימלי - שיפור מלא, כתיבה עברית טבעית לחלוטין, החלפת כל ביטוי AI אפשרי
 
@@ -201,13 +228,14 @@ ${issuesList}
     // התיקון הראשי יוצג מלכתחילה (כמו בתכונת התרגום)
     const result = {
       originalText: text,
-      analyzedText: mainCorrectedText, // התיקון הראשי המומלץ
-      appliedPatterns: [] as Array<{ from: string; to: string }>,
+      analyzedText: mainCorrectedText, // התיקון הראשי המומלץ (כולל דפוסים שהוחלו)
+      textAfterPatterns: textAfterPatterns, // הטקסט אחרי החלת דפוסים בלבד (לפני Claude)
+      appliedPatterns: appliedPatterns, // דפוסים שהוחלו אוטומטית ✅
       availablePatterns: patterns.map(p => ({
         from: p.from,
         to: p.to,
         confidence: p.confidence,
-      })), // דפוסים זמינים להחלה ידנית
+      })), // כל הדפוסים הזמינים (למידע בלבד)
     };
 
     return NextResponse.json({

@@ -35,7 +35,27 @@ export default function AICorrector(): React.JSX.Element {
   const [editedText, setEditedText] = useState('');
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  
+  // 🆕 דפוסים שהוחלו אוטומטית
+  const [appliedPatterns, setAppliedPatterns] = useState<Array<{ from: string; to: string }>>([]);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // 🆕 בקרת למידה אוטומטית
+  const [autoApplyPatterns, setAutoApplyPatterns] = useState(true);
+  const [stats, setStats] = useState<any>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  
+  // 🆕 Training Mode
+  const [showTrainingMode, setShowTrainingMode] = useState(false);
+  const [suggestedPatterns, setSuggestedPatterns] = useState<any[]>([]);
+  const [isLoadingTraining, setIsLoadingTraining] = useState(false);
+  
+  // 🆕 Batch Learning
+  const [showBatchMode, setShowBatchMode] = useState(false);
+  const [batchTexts, setBatchTexts] = useState('');
+  const [batchResults, setBatchResults] = useState<any>(null);
+  const [isProcessingBatch, setIsProcessingBatch] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -64,6 +84,256 @@ export default function AICorrector(): React.JSX.Element {
   // טקסט נבחר מתוך גרסה חלופית (לשמירה חלקית)
   const [selectedAlternativeText, setSelectedAlternativeText] = useState<{ text: string; index: number } | null>(null);
 
+  // טעינת סטטיסטיקות
+  const loadStats = async () => {
+    setIsLoadingStats(true);
+    try {
+      const response = await fetch('/api/ai-correction/stats?userId=default-user');
+      const data = await response.json();
+      if (data.success) {
+        setStats(data.stats);
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
+
+  // ייבוא דפוסים מוכנים
+  const importPrebuiltPatterns = async () => {
+    if (!confirm('האם ליבא 50+ דפוסי AI נפוצים למערכת? (דפוסים קיימים לא יוחלפו)')) {
+      return;
+    }
+
+    try {
+      // ייבוא הדפוסים מהקובץ
+      const { convertToDBFormat } = await import('@/lib/common-ai-patterns');
+      const patterns = convertToDBFormat('default-user');
+
+      const response = await fetch('/api/ai-correction/patterns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patterns,
+          userId: 'default-user',
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert(`✅ ${data.message}\n\nיובאו ${data.imported} דפוסים חדשים!`);
+        await loadStats(); // רענון סטטיסטיקות
+      } else {
+        throw new Error(data.error || 'Import failed');
+      }
+    } catch (error) {
+      console.error('Error importing patterns:', error);
+      alert('שגיאה בייבוא דפוסים: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    }
+  };
+
+  // מחיקת דפוס מההצגה
+  const removeAppliedPattern = async (pattern: { from: string; to: string }, index: number) => {
+    // הסרה מהרשימה המקומית
+    const newPatterns = appliedPatterns.filter((_, i) => i !== index);
+    setAppliedPatterns(newPatterns);
+
+    // החזרת הטקסט לפני החלת הדפוס הזה
+    const newText = editedText.replace(
+      new RegExp(pattern.to.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+      pattern.from
+    );
+    setEditedText(newText);
+    setCorrectedText(newText);
+  };
+
+  // מצב אימון - הצעת דפוסים
+  const startTrainingMode = async () => {
+    if (!originalText.trim()) {
+      alert('אנא הכנס טקסט תחילה');
+      return;
+    }
+
+    setIsLoadingTraining(true);
+    setShowTrainingMode(true);
+    
+    try {
+      const response = await fetch('/api/ai-correction/suggest-patterns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: originalText,
+          userId: 'default-user',
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSuggestedPatterns(data.suggestedPatterns || []);
+      } else {
+        throw new Error(data.error || 'Failed to get suggestions');
+      }
+    } catch (error) {
+      console.error('Error in training mode:', error);
+      alert('שגיאה בטעינת הצעות דפוסים');
+    } finally {
+      setIsLoadingTraining(false);
+    }
+  };
+
+  // אישור דפוס (Training Mode)
+  const approvePattern = async (pattern: any, index: number) => {
+    try {
+      const response = await fetch('/api/ai-correction/save-pattern', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalText: pattern.badPattern,
+          correctedText: pattern.goodPattern,
+          userId: 'default-user',
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        // הסרה מהרשימה
+        setSuggestedPatterns(prev => prev.filter((_, i) => i !== index));
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 2000);
+      }
+    } catch (error) {
+      console.error('Error approving pattern:', error);
+    }
+  };
+
+  // דחיית דפוס (Training Mode)
+  const rejectPattern = (index: number) => {
+    setSuggestedPatterns(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // ייצוא דפוסים
+  const exportPatterns = async () => {
+    try {
+      const response = await fetch('/api/ai-correction/patterns?userId=default-user');
+      const data = await response.json();
+      
+      if (data.success && data.patterns) {
+        const exportData = {
+          version: '1.0',
+          exportDate: new Date().toISOString(),
+          patterns: data.patterns.map((p: any) => ({
+            badPattern: p.badPattern,
+            goodPattern: p.goodPattern,
+            patternType: p.patternType,
+            confidence: p.confidence,
+            context: p.context,
+          })),
+        };
+
+        // יצירת קובץ JSON
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hebrew-patterns-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        alert(`✅ יוצאו ${exportData.patterns.length} דפוסים בהצלחה!`);
+      }
+    } catch (error) {
+      console.error('Error exporting patterns:', error);
+      alert('שגיאה בייצוא דפוסים');
+    }
+  };
+
+  // ייבוא דפוסים מקובץ
+  const importPatternsFromFile = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e: any) => {
+      try {
+        const file = e.target?.files?.[0];
+        if (!file) return;
+
+        const text = await file.text();
+        const importData = JSON.parse(text);
+
+        if (!importData.patterns || !Array.isArray(importData.patterns)) {
+          throw new Error('Invalid file format');
+        }
+
+        const response = await fetch('/api/ai-correction/patterns', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            patterns: importData.patterns,
+            userId: 'default-user',
+          }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          alert(`✅ ${data.message}`);
+          await loadStats();
+        }
+      } catch (error) {
+        console.error('Error importing patterns:', error);
+        alert('שגיאה בקריאת הקובץ - וודא שזה קובץ JSON תקין');
+      }
+    };
+    input.click();
+  };
+
+  // Batch Learning
+  const processBatchTexts = async () => {
+    if (!batchTexts.trim()) {
+      alert('אנא הכנס טקסטים לניתוח (אחד בכל שורה)');
+      return;
+    }
+
+    const lines = batchTexts.split('\n').filter(line => line.trim().length > 0);
+    if (lines.length === 0) {
+      alert('לא נמצאו טקסטים לניתוח');
+      return;
+    }
+
+    setIsProcessingBatch(true);
+    
+    try {
+      const response = await fetch('/api/ai-correction/batch-analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          texts: lines.map(line => ({ original: line })),
+          userId: 'default-user',
+          autoSavePatterns: true,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setBatchResults(data);
+        alert(`✅ ניתוח הושלם!\n\n` +
+          `טקסטים: ${data.totalTexts}\n` +
+          `דפוסים שנמצאו: ${data.totalPatternsFound}\n` +
+          `דפוסים שנשמרו: ${data.patternsSaved}\n` +
+          `ציון ממוצע: ${Math.round(data.averageScore)}/100`
+        );
+        await loadStats(); // רענון סטטיסטיקות
+      } else {
+        throw new Error(data.error || 'Batch analysis failed');
+      }
+    } catch (error) {
+      console.error('Error in batch learning:', error);
+      alert('שגיאה בניתוח batch: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setIsProcessingBatch(false);
+    }
+  };
+
   // ניתוח הטקסט
   const analyzeText = async () => {
     if (!originalText.trim()) {
@@ -79,7 +349,7 @@ export default function AICorrector(): React.JSX.Element {
         body: JSON.stringify({
           text: originalText,
           userId: 'default-user',
-          applyPatterns: false, // לא נחיל תיקונים אוטומטיים
+          applyPatterns: autoApplyPatterns, // 🆕 שימוש בהגדרת toggle
         }),
       });
 
@@ -95,6 +365,11 @@ export default function AICorrector(): React.JSX.Element {
       
       setAnalysis(data.analysis);
       
+      // 🆕 דפוסים שהוחלו אוטומטית
+      const patternsApplied = data.result?.appliedPatterns || [];
+      setAppliedPatterns(patternsApplied);
+      console.log(`✅ ${patternsApplied.length} patterns were applied automatically`, patternsApplied);
+      
       // אפשרויות חלופיות לטקסט המלא - לוודא שיש לפחות 3 גרסאות
       const receivedAlternatives = data.alternatives || [];
       if (receivedAlternatives.length === 0) {
@@ -102,7 +377,7 @@ export default function AICorrector(): React.JSX.Element {
       }
       setAlternatives(receivedAlternatives);
       
-      // הטקסט המתוקן מתחיל עם התיקון הראשי המומלץ (כמו בתכונת התרגום)
+      // הטקסט המתוקן מתחיל עם התיקון הראשי המומלץ (כולל דפוסים שהוחלו)
       const mainCorrectedText = data.result?.analyzedText || originalText;
       setCorrectedText(mainCorrectedText);
       setEditedText(mainCorrectedText);
@@ -486,34 +761,352 @@ export default function AICorrector(): React.JSX.Element {
 
   return (
     <div className="space-y-6" dir="rtl">
-      {/* קישור לדפוסים שנלמדו */}
-      <Card className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-purple-900 mb-1">📚 רוצה לראות את כל הדפוסים שנלמדו?</h3>
-            <p className="text-sm text-purple-700">כל השינויים הנקודתיים ששמרת נשמרים ומשמשים את המערכת</p>
+      {/* פאנל בקרה עליון */}
+      <Card className="p-4 bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            {/* Toggle להחלה אוטומטית */}
+            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-indigo-200">
+              <input
+                type="checkbox"
+                id="autoApply"
+                checked={autoApplyPatterns}
+                onChange={(e) => setAutoApplyPatterns(e.target.checked)}
+                className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+              />
+              <label htmlFor="autoApply" className="text-sm font-medium text-gray-700 cursor-pointer">
+                {autoApplyPatterns ? '✅ החלה אוטומטית מופעלת' : '⏸️ החלה אוטומטית מושבתת'}
+              </label>
+            </div>
+
+            {/* כפתור ייבוא דפוסים */}
+            <button
+              onClick={importPrebuiltPatterns}
+              className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-sm"
+            >
+              ⚡ ייבוא 50+ דפוסי AI נפוצים
+            </button>
+
+            {/* כפתור סטטיסטיקות */}
+            <button
+              onClick={() => {
+                loadStats();
+                setShowStatsModal(true);
+              }}
+              className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-sm"
+            >
+              📊 הצג סטטיסטיקות
+            </button>
+
+            {/* כפתור מצב אימון */}
+            <button
+              onClick={startTrainingMode}
+              disabled={!originalText.trim()}
+              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              🎓 מצב אימון
+            </button>
+
+            {/* כפתור Batch Learning */}
+            <button
+              onClick={() => setShowBatchMode(true)}
+              className="px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-sm"
+            >
+              🔄 למידה קבוצתית
+            </button>
           </div>
+
+          {/* קישור לדפוסים */}
           <Link
             href="/dashboard/ai-correction/learned-patterns"
-            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
+            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-sm"
           >
-            צפייה בדפוסים
+            📚 צפייה בכל הדפוסים
           </Link>
-      </div>
+        </div>
+
+        {/* שורה שנייה - ייצוא/ייבוא */}
+        <div className="flex flex-wrap items-center gap-3 mt-3 text-sm">
+          <span className="text-gray-600 font-medium">שיתוף דפוסים:</span>
+          <button
+            onClick={exportPatterns}
+            className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+          >
+            💾 ייצא דפוסים (JSON)
+          </button>
+          <button
+            onClick={importPatternsFromFile}
+            className="px-3 py-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+          >
+            📂 יבא דפוסים (JSON)
+          </button>
+        </div>
       </Card>
+      
+      {/* מודל סטטיסטיקות */}
+      {showStatsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">📊 סטטיסטיקות למידה</h2>
+              <button
+                onClick={() => setShowStatsModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            {isLoadingStats ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+                <span className="mr-3 text-gray-600">טוען סטטיסטיקות...</span>
+              </div>
+            ) : stats ? (
+              <div className="space-y-6">
+                {/* מספרים עיקריים */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                    <div className="text-3xl font-bold text-blue-600">{stats.totalPatterns}</div>
+                    <div className="text-sm text-blue-800">דפוסים שנלמדו</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                    <div className="text-3xl font-bold text-green-600">{stats.patternsAppliedCount}</div>
+                    <div className="text-sm text-green-800">תיקונים שהוחלו</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                    <div className="text-3xl font-bold text-purple-600">{stats.estimatedTimeSavedMinutes}</div>
+                    <div className="text-sm text-purple-800">דקות שנחסכו ⏱️</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
+                    <div className="text-3xl font-bold text-orange-600">{Math.round(stats.averageConfidence * 100)}%</div>
+                    <div className="text-sm text-orange-800">ביטחון ממוצע</div>
+                  </div>
+                </div>
+
+                {/* הדפוסים הפופולריים ביותר */}
+                {stats.topPatterns && stats.topPatterns.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-bold mb-3">🏆 הדפוסים הכי שימושיים</h3>
+                    <div className="space-y-2">
+                      {stats.topPatterns.slice(0, 5).map((pattern: any, idx: number) => (
+                        <div key={idx} className="p-3 bg-yellow-50 rounded-lg border border-yellow-200 flex items-center gap-3">
+                          <span className="text-2xl">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '⭐'}</span>
+                          <span className="text-sm font-medium text-red-600 line-through">"{pattern.badPattern}"</span>
+                          <span className="text-gray-400">→</span>
+                          <span className="text-sm font-medium text-green-600">"{pattern.goodPattern}"</span>
+                          <span className="mr-auto"></span>
+                          <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">
+                            {pattern.occurrences} פעמים
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* פילוח לפי קטגוריות */}
+                {stats.categoriesBreakdown && Object.keys(stats.categoriesBreakdown).length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-bold mb-3">📂 פילוח לפי קטגוריות</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {Object.entries(stats.categoriesBreakdown).map(([category, count]) => (
+                        <div key={category} className="p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                          <div className="text-xl font-bold text-indigo-600">{count as number}</div>
+                          <div className="text-sm text-indigo-800">{category}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                לא נמצאו סטטיסטיקות
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* 🎓 מודל מצב אימון (Training Mode) */}
+      {showTrainingMode && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">🎓 מצב אימון - אישור דפוסים</h2>
+              <button
+                onClick={() => setShowTrainingMode(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              המערכת מצאה {suggestedPatterns.length} דפוסים אפשריים בטקסט. אשר או דחה כל דפוס:
+            </p>
+
+            {isLoadingTraining ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+                <span className="mr-3 text-gray-600">מחפש דפוסים...</span>
+              </div>
+            ) : suggestedPatterns.length > 0 ? (
+              <div className="space-y-3">
+                {suggestedPatterns.map((pattern, idx) => (
+                  <div key={idx} className="p-4 bg-purple-50 rounded-lg border-2 border-purple-200">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-medium text-red-600 line-through">"{pattern.badPattern}"</span>
+                          <span className="text-gray-400">→</span>
+                          <span className="text-sm font-medium text-green-600">"{pattern.goodPattern}"</span>
+                        </div>
+                        <p className="text-xs text-gray-600 mb-1">{pattern.explanation}</p>
+                        <div className="flex gap-2">
+                          <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                            {pattern.context}
+                          </span>
+                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                            ביטחון: {Math.round(pattern.confidence * 100)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => approvePattern(pattern, idx)}
+                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        ✓ אשר ושמור
+                      </button>
+                      <button
+                        onClick={() => rejectPattern(idx)}
+                        className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                      >
+                        ✕ דחה
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                לא נמצאו דפוסים חדשים להצעה 🎉
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* 🔄 מודל למידה קבוצתית (Batch Learning) */}
+      {showBatchMode && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">🔄 למידה קבוצתית</h2>
+              <button
+                onClick={() => setShowBatchMode(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              הדבק מספר טקסטים (אחד בכל שורה) - המערכת תנתח את כולם ותחלץ דפוסים משותפים.
+            </p>
+
+            <textarea
+              value={batchTexts}
+              onChange={(e) => setBatchTexts(e.target.value)}
+              placeholder="הדבק טקסטים כאן... (אחד בכל שורה, עד 50 טקסטים)"
+              className="w-full h-64 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm mb-4"
+              dir="rtl"
+            />
+
+            <div className="flex gap-2">
+              <Button
+                onClick={processBatchTexts}
+                disabled={isProcessingBatch || !batchTexts.trim()}
+                className="flex-1 bg-pink-600 hover:bg-pink-700"
+              >
+                {isProcessingBatch ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    מעבד...
+                  </>
+                ) : (
+                  '🚀 נתח והפק דפוסים'
+                )}
+              </Button>
+            </div>
+
+            {batchResults && (
+              <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                <h3 className="font-bold text-green-800 mb-2">✅ תוצאות</h3>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>טקסטים שנותחו: <strong>{batchResults.totalTexts}</strong></div>
+                  <div>דפוסים שנמצאו: <strong>{batchResults.totalPatternsFound}</strong></div>
+                  <div>דפוסים שנשמרו: <strong>{batchResults.patternsSaved}</strong></div>
+                  <div>ציון ממוצע: <strong>{Math.round(batchResults.averageScore)}/100</strong></div>
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
 
       {/* הוראות שימוש */}
       <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
         <h3 className="text-lg font-bold mb-3">📖 איך זה עובד?</h3>
           <ol className="list-decimal list-inside space-y-2 text-gray-700">
           <li>הדבק טקסט שנוצר על ידי AI בתיבה "טקסט מקורי מ-AI"</li>
-          <li>לחץ על "🔍 נתח טקסט" כדי לקבל ניתוח מפורט - המערכת תזהה דפוסי AI ותתן ציון</li>
+          <li>לחץ על "🔍 נתח טקסט" - <strong className="text-green-600">המערכת תחיל אוטומטית דפוסים שנלמדו!</strong></li>
+          <li>המערכת תזהה דפוסי AI נוספים ותתן ציון + גרסאות חלופיות</li>
           <li><strong>סמני מילה או משפט</strong> בטקסט המתוקן (עם העכבר) כדי לקבל 5-7 הצעות חלופיות</li>
           <li>לחצי על הצעה כדי להחליף אותה - <strong>השינוי נשמר אוטומטית</strong> (שמירה נקודתית)</li>
           <li>ערוכי את הטקסט ידנית במידת הצורך</li>
           <li>לחצי על "💾 שמור תיקון מלא" רק אם רוצה לשמור את כל התיקון (אופציונלי)</li>
         </ol>
       </Card>
+      
+      {/* 🆕 הצגת דפוסים שהוחלו אוטומטית */}
+      {appliedPatterns.length > 0 && (
+        <Card className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-green-300">
+          <h3 className="text-lg font-bold mb-3 text-green-800">
+            ✨ הוחלו {appliedPatterns.length} דפוסי תיקון אוטומטית!
+          </h3>
+          <p className="text-sm text-green-700 mb-3">
+            המערכת למדה מהתיקונים הקודמים שלך והחילה אותם אוטומטית על הטקסט:
+          </p>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {appliedPatterns.map((pattern, idx) => (
+              <div key={idx} className="p-3 bg-white rounded-lg border border-green-200 flex items-center gap-3">
+                <span className="text-sm font-medium text-red-600 line-through">"{pattern.from}"</span>
+                <span className="text-gray-400">→</span>
+                <span className="text-sm font-medium text-green-600">"{pattern.to}"</span>
+                <span className="mr-auto"></span>
+                <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                  ✓ הוחל
+                </span>
+                {/* כפתור ביטול */}
+                <button
+                  onClick={() => removeAppliedPattern(pattern, idx)}
+                  className="text-xs text-red-600 hover:text-red-800 hover:bg-red-100 px-2 py-1 rounded transition-colors"
+                  title="בטל תיקון זה"
+                >
+                  ✕ בטל
+                </button>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-green-600 mt-3">
+            💡 <strong>טיפ:</strong> לחץ על "✕ בטל" כדי לבטל תיקון ספציפי ולהחזיר את הטקסט המקורי
+          </p>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* טקסט מקורי */}
@@ -568,6 +1161,7 @@ export default function AICorrector(): React.JSX.Element {
                   setSelectedText('');
                   setSelectionSuggestions([]);
                   setShowSelectionSuggestions(false);
+                  setAppliedPatterns([]);
                 }}
                 variant="outline"
                 className="px-4"
