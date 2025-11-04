@@ -12,21 +12,20 @@ export async function GET(req: NextRequest) {
 
     console.log('Fetching patterns with:', { userId, filter });
 
-    const where: any = { userId };
-    if (filter === 'ai-style') {
-      where.patternType = 'ai-style';
-    }
-
     // בדיקה אם Prisma מוכן
     if (!prisma) {
       console.error('Prisma client is not initialized');
-      return NextResponse.json(
-        { 
-          error: 'Database connection not available',
-          details: process.env.NODE_ENV === 'development' ? 'Prisma client not initialized' : 'Internal server error'
-        },
-        { status: 500 }
-      );
+      // במקרה של שגיאה, נחזיר רשימה ריקה במקום שגיאה
+      return NextResponse.json({
+        success: true,
+        patterns: [],
+        count: 0,
+      });
+    }
+
+    const where: any = { userId };
+    if (filter === 'ai-style') {
+      where.patternType = 'ai-style';
     }
 
     // נסיון לבדוק אם הטבלה קיימת
@@ -102,35 +101,33 @@ export async function GET(req: NextRequest) {
           { status: 404 }
         );
       }
-      // אם זו שגיאת חיבור למסד נתונים
-      if (dbError.message?.includes('connect') || dbError.message?.includes('SQLite')) {
-        return NextResponse.json(
-          { 
-            error: 'Database connection error',
-            details: process.env.NODE_ENV === 'development' ? dbError.message : 'Unable to connect to database'
-          },
-          { status: 500 }
-        );
-      }
-      throw dbError; // זרוק את השגיאה כדי שה-catch החיצוני יטען בה
+      // אם זו שגיאת חיבור למסד נתונים או כל שגיאה אחרת
+      // במקום להיכשל, נחזיר רשימה ריקה
+      console.error('Database error, returning empty array:', dbError.message || dbError);
+      return NextResponse.json({
+        success: true,
+        patterns: [],
+        count: 0,
+        error: process.env.NODE_ENV === 'development' ? dbError.message : undefined
+      });
     }
   } catch (error: any) {
     console.error('Error fetching patterns:', error);
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorDetails = process.env.NODE_ENV === 'development' 
-      ? {
-          message: errorMessage,
-          stack: error instanceof Error ? error.stack : undefined,
-          name: error instanceof Error ? error.name : undefined,
-        }
-      : 'Failed to fetch patterns';
     
-    return NextResponse.json(
-      { 
-        error: 'Failed to fetch patterns',
-        details: errorDetails
-      },
-      { status: 500 }
-    );
+    // במקום להחזיר שגיאה 500, נחזיר רשימה ריקה כדי לא לשבור את ה-UI
+    // אבל נשמור את השגיאה ללוגים
+    console.error('Full error details:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+    });
+    
+    return NextResponse.json({
+      success: true,
+      patterns: [],
+      count: 0,
+      error: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+    });
   }
 }
