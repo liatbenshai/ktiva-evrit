@@ -569,20 +569,47 @@ export default function AICorrector() {
                         <span>טקסט נבחר: "{selectedText.substring(0, 30)}{selectedText.length > 30 ? '...' : ''}"</span>
                         <button
                           onClick={async () => {
-                            // נמצא את הטקסט המסומן בטקסט המקורי
-                            const originalIndex = originalText.indexOf(selectedText);
-                            if (originalIndex !== -1) {
-                              // הטקסט קיים במקור - נשמור את השינוי
-                              await savePatternAutomatically(selectedText, selectedText);
-                              alert('השינוי הנקודתי נשמר!');
-                            } else {
-                              // הטקסט לא קיים במקור - נשמור את המילה/ביטוי החדש
-                              const contextBefore = originalText.substring(Math.max(0, originalText.length - 50));
-                              const contextAfter = editedText.substring(Math.max(0, editedText.indexOf(selectedText) - 50), Math.min(editedText.length, editedText.indexOf(selectedText) + selectedText.length + 50));
-                              // נשמור את הטקסט המסומן כשינוי
-                              await savePatternAutomatically('', selectedText);
-                              alert('השינוי החדש נשמר!');
+                            // הטקסט המסומן הוא מהטקסט המעודכן
+                            const selectedInEdited = selectedText;
+                            
+                            // נמצא את המיקום בטקסט המעודכן
+                            const editedIndex = editedText.indexOf(selectedInEdited);
+                            if (editedIndex === -1) {
+                              alert('לא ניתן למצוא את הטקסט במיקום הצפוי');
+                              return;
                             }
+                            
+                            // נמצא את החלק המתאים בטקסט המקורי
+                            // ננסה למצוא את הטקסט המקורי באותו אזור
+                            const wordsBefore = editedText.substring(0, editedIndex).split(/\s+/).length;
+                            const wordsAfter = editedText.substring(editedIndex + selectedInEdited.length).split(/\s+/).length;
+                            
+                            const originalWords = originalText.split(/\s+/);
+                            const editedWords = editedText.split(/\s+/);
+                            
+                            // נמצא את המילה/ביטוי המקורי במיקום הזה
+                            let originalPart = '';
+                            if (wordsBefore < originalWords.length) {
+                              const startWord = Math.max(0, wordsBefore);
+                              const endWord = Math.min(originalWords.length, wordsBefore + selectedInEdited.split(/\s+/).length);
+                              originalPart = originalWords.slice(startWord, endWord).join(' ');
+                            } else {
+                              // אם זה טקסט חדש, נשמור את הטקסט המסומן כשינוי
+                              originalPart = '';
+                            }
+                            
+                            // אם הטקסט המקורי והמעודכן שונים, נשמור את השינוי
+                            if (originalPart !== selectedInEdited && originalPart.length > 0) {
+                              await savePatternAutomatically(originalPart, selectedInEdited);
+                              alert(`השינוי נשמר: "${originalPart}" → "${selectedInEdited}"`);
+                            } else if (originalPart.length === 0) {
+                              // טקסט חדש - נשמור רק את הטקסט החדש
+                              await savePatternAutomatically(selectedInEdited, selectedInEdited);
+                              alert(`הטקסט החדש נשמר: "${selectedInEdited}"`);
+                            } else {
+                              alert('הטקסט המסומן לא השתנה מהמקור');
+                            }
+                            
                             setSelectedText('');
                             window.getSelection()?.removeAllRanges();
                           }}
