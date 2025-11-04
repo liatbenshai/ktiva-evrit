@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       ).join('\n');
 
       // יצירת wordAlternatives - מילים מהטקסט עם חלופות
-      const words = selectedText.split(/\s+/).filter(w => w.length > 2);
+      const words = selectedText.split(/\s+/).filter((w: string) => w.length > 2);
       words.forEach(word => {
         const cleanWord = word.replace(/[.,!?;:]/g, '');
         const synonyms = getSynonyms(cleanWord);
