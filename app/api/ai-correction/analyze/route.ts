@@ -32,7 +32,14 @@ export async function POST(req: NextRequest) {
     }
 
     // קבלת דפוסים שנלמדו מהמשתמש (כולל דפוסי AI להימנעות)
-    let learnedPatterns = [];
+    let learnedPatterns: Array<{
+      id: string;
+      userId: string;
+      badPattern: string;
+      goodPattern: string;
+      confidence: number;
+      occurrences: number;
+    }> = [];
     try {
       learnedPatterns = await prisma.translationPattern.findMany({
         where: { 
