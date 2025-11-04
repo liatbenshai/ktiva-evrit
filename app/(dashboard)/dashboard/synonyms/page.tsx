@@ -134,13 +134,30 @@ export default function SynonymsPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // בדיקת סוג קובץ
+    if (!file.name.endsWith('.json')) {
+      alert('ניתן להעלות רק קבצי JSON (.json)');
+      event.target.value = '';
+      return;
+    }
+
     setLoading(true);
     try {
       const text = await file.text();
-      const data = JSON.parse(text);
+      let data;
+      
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        throw new Error(`שגיאה בפענוח JSON: ${parseError instanceof Error ? parseError.message : 'שגיאה לא ידועה'}`);
+      }
       
       if (!Array.isArray(data)) {
-        throw new Error('הקובץ חייב להכיל מערך של מילים נרדפות');
+        throw new Error('הקובץ חייב להכיל מערך של מילים נרדפות. הפורמט הנדרש: [{"primary": "...", "alternatives": ["...", "..."], "category": "..."}]');
+      }
+      
+      if (data.length === 0) {
+        throw new Error('הקובץ ריק - אין מילים נרדפות להעלות');
       }
 
       let successCount = 0;
@@ -182,26 +199,41 @@ export default function SynonymsPage() {
             }
           }
 
-          if (item.primary && alternativesArray.length > 0) {
-            const response = await fetch('/api/synonyms', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                primary: item.primary,
-                alternatives: alternativesArray,
-                category: item.category || 'general',
-                context: contextArray
-              }),
-            });
-            
-            if (response.ok) {
-              successCount++;
-            } else {
-              errorCount++;
-              console.error('Failed to create synonym:', await response.text());
-            }
+          if (!item.primary || typeof item.primary !== 'string' || item.primary.trim().length === 0) {
+            console.warn('Missing or invalid primary:', item);
+            errorCount++;
+            continue;
+          }
+
+          if (alternativesArray.length === 0) {
+            console.warn('No alternatives for item:', item);
+            errorCount++;
+            continue;
+          }
+
+          const response = await fetch('/api/synonyms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              primary: item.primary.trim(),
+              alternatives: alternativesArray,
+              category: item.category || 'general',
+              context: contextArray
+            }),
+          });
+          
+          if (response.ok) {
+            successCount++;
           } else {
             errorCount++;
+            const errorText = await response.text();
+            console.error(`Failed to create synonym "${item.primary}":`, errorText);
+            try {
+              const errorData = JSON.parse(errorText);
+              console.error('Error details:', errorData);
+            } catch {
+              // אם לא ניתן לפרש את השגיאה, נמשיך
+            }
           }
         } catch (itemError) {
           console.error('Error processing item:', itemError);
@@ -212,13 +244,15 @@ export default function SynonymsPage() {
       await fetchSynonyms();
       
       if (errorCount > 0) {
-        alert(`הושלם עם שגיאות:\n✓ ${successCount} נוצרו בהצלחה\n✗ ${errorCount} נכשלו`);
+        const message = `הושלם עם שגיאות:\n✓ ${successCount} נוצרו בהצלחה\n✗ ${errorCount} נכשלו\n\nפרטי השגיאות מופיעים בקונסולה (F12)`;
+        alert(message);
       } else {
-        alert(`${successCount} קבוצות מילים נרדפות נטענו בהצלחה!`);
+        alert(`✅ ${successCount} קבוצות מילים נרדפות נטענו בהצלחה!`);
       }
     } catch (error) {
       console.error('Error uploading file:', error);
-      alert('שגיאה בטעינת הקובץ: ' + (error instanceof Error ? error.message : 'שגיאה לא ידועה'));
+      const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
+      alert(`❌ שגיאה בטעינת הקובץ:\n\n${errorMessage}\n\nאנא ודאי שהקובץ בפורמט JSON תקין וכולל מערך של אובייקטים עם השדות: primary, alternatives`);
     } finally {
       setLoading(false);
       event.target.value = '';
