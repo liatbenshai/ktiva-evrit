@@ -32,19 +32,49 @@ export async function GET(req: NextRequest) {
     // נסיון לבדוק אם הטבלה קיימת
     try {
       // בדיקה ראשונית - ננסה לספור את הרשומות
-      const count = await prisma.translationPattern.count({ where });
-      console.log(`Found ${count} patterns matching filter`);
+      let count = 0;
+      let patterns: any[] = [];
       
-      const patterns = await prisma.translationPattern.findMany({
-        where,
-        orderBy: [
-          { confidence: 'desc' },
-          { occurrences: 'desc' },
-          { createdAt: 'desc' }
-        ],
-      });
-
-      console.log(`Retrieved ${patterns.length} patterns`);
+      try {
+        count = await prisma.translationPattern.count({ where });
+        console.log(`Found ${count} patterns matching filter`);
+      } catch (countError: any) {
+        console.error('Error counting patterns:', countError);
+        // אם הטבלה לא קיימת, נחזיר רשימה ריקה
+        if (countError.message?.includes('does not exist') || countError.message?.includes('no such table')) {
+          console.log('TranslationPattern table does not exist yet, returning empty array');
+          return NextResponse.json({
+            success: true,
+            patterns: [],
+            count: 0,
+          });
+        }
+        throw countError;
+      }
+      
+      try {
+        patterns = await prisma.translationPattern.findMany({
+          where,
+          orderBy: [
+            { confidence: 'desc' },
+            { occurrences: 'desc' },
+            { createdAt: 'desc' }
+          ],
+        });
+        console.log(`Retrieved ${patterns.length} patterns`);
+      } catch (findError: any) {
+        console.error('Error finding patterns:', findError);
+        // אם יש שגיאה, נחזיר רשימה ריקה במקום להיכשל
+        if (findError.message?.includes('does not exist') || findError.message?.includes('no such table')) {
+          console.log('TranslationPattern table does not exist, returning empty array');
+          return NextResponse.json({
+            success: true,
+            patterns: [],
+            count: 0,
+          });
+        }
+        throw findError;
+      }
 
       return NextResponse.json({
         success: true,

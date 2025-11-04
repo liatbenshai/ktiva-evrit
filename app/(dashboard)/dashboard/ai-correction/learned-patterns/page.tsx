@@ -29,12 +29,27 @@ export default function LearnedPatternsPage() {
     setLoading(true);
     try {
       const response = await fetch(`/api/ai-correction/patterns?filter=${filter}`);
-      if (!response.ok) throw new Error('Failed to fetch');
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        const errorMessage = errorData.details || errorData.error || `HTTP ${response.status}`;
+        console.error('Error fetching patterns:', errorMessage);
+        throw new Error(errorMessage);
+      }
+      
       const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch patterns');
+      }
+      
       setPatterns(data.patterns || []);
     } catch (error) {
       console.error('Error fetching patterns:', error);
-      alert('שגיאה בטעינת הדפוסים');
+      const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
+      alert(`שגיאה בטעינת הדפוסים: ${errorMessage}`);
+      // במקרה של שגיאה, נציג רשימה ריקה כדי שלא נשבור את ה-UI
+      setPatterns([]);
     } finally {
       setLoading(false);
     }
