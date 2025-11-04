@@ -1,6 +1,6 @@
 'use client';
 
-import { Home } from 'lucide-react';
+import { Home, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import AICorrector from '@/components/ai-correction/AICorrector';
 
@@ -19,13 +19,22 @@ export default function AICorrectPage() {
                 תיקון וניתוח טקסטים שנוצרו על ידי AI - המערכת לומדת מהתיקונים שלך
               </p>
             </div>
-            <Link
-              href="/dashboard"
-              className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
-            >
-              <Home className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              חזרה לדשבורד
-            </Link>
+                    <div className="flex gap-3">
+                      <Link
+                        href="/dashboard/ai-correction/learned-patterns"
+                        className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
+                      >
+                        <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        דפוסים שנלמדו
+                      </Link>
+                      <Link
+                        href="/dashboard"
+                        className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
+                      >
+                        <Home className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        חזרה לדשבורד
+                      </Link>
+                    </div>
           </div>
         </div>
       </div>
