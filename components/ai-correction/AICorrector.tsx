@@ -268,13 +268,38 @@ export default function AICorrector() {
     }
   };
 
-  // בחירת אפשרות חלופית לטקסט המלא - לא שומרים אוטומטית, רק כשמשנים ידנית
-  const handleSelectAlternative = (alternativeText: string) => {
+  // בחירת אפשרות חלופית לטקסט המלא - שומרים אוטומטית את ההחלפה
+  const handleSelectAlternative = async (alternativeText: string) => {
+    const previousText = correctedText || originalText;
+    
     setEditedText(alternativeText);
     setCorrectedText(alternativeText);
     setSelectedAlternative(alternativeText);
     setIsEditing(true);
-    // לא שומרים אוטומטית - המשתמש יבחר מה לשמור
+    
+    // שמירה אוטומטית של השינוי - אם יש שינוי משמעותי
+    if (previousText !== alternativeText && previousText.length > 0) {
+      // שמירת הדפוס בין הגרסה הקודמת לנוכחית
+      try {
+        const response = await fetch('/api/ai-correction/save-pattern', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            originalText: previousText,
+            correctedText: alternativeText,
+            userId: 'default-user',
+          }),
+        });
+
+        if (response.ok) {
+          console.log('Alternative pattern saved automatically');
+          // לא נציג הודעה כי זה יכול להיות מפריע אם יש הרבה שינויים
+        }
+      } catch (error) {
+        console.error('Error saving alternative pattern:', error);
+        // לא נכשיל את התהליך אם השמירה נכשלה
+      }
+    }
   };
 
   // התחלת עריכה
@@ -297,7 +322,7 @@ export default function AICorrector() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // שמירת התיקון
+  // שמירת התיקון המלא (אופציונלי - לא חובה)
   const saveCorrection = async () => {
     const textToSave = editedText || correctedText;
     
@@ -502,7 +527,7 @@ export default function AICorrector() {
                       ) : (
                         <>
                           <Save className="w-4 h-4 mr-2" />
-                          שמור תיקון מלא
+                          שמור תיקון מלא (אופציונלי - כל שינוי נקודתי כבר נשמר)
                         </>
                       )}
                     </Button>
@@ -550,7 +575,7 @@ export default function AICorrector() {
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <Edit2 className="w-4 h-4" />
-                    ערוך תיקון ושמור כדי ללמד את המערכת
+                    ערוך את התיקון (כל שינוי נקודתי נשמר אוטומטית)
                   </button>
                   
                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
