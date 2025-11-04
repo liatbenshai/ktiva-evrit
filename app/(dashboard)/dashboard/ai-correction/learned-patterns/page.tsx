@@ -110,8 +110,17 @@ export default function LearnedPatternsPage() {
 
       const data = await response.json();
 
+      console.log('Add pattern response:', {
+        success: data.success,
+        message: data.message,
+        error: data.error,
+        details: data.details,
+      });
+
       if (!response.ok || !data.success) {
-        throw new Error(data.error || data.message || 'Failed to save pattern');
+        const errorMsg = data.message || data.error || 'Failed to save pattern';
+        const details = data.details ? `\n\nפרטים: ${JSON.stringify(data.details)}` : '';
+        throw new Error(`${errorMsg}${details}`);
       }
 
       // ניקוי הטופס
@@ -122,7 +131,7 @@ export default function LearnedPatternsPage() {
       // רענון הרשימה
       await fetchPatterns();
       
-      alert('הדפוס נשמר בהצלחה!');
+      alert('✅ הדפוס נשמר בהצלחה!');
     } catch (error) {
       console.error('Error adding pattern:', error);
       const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';

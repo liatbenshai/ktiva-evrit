@@ -53,6 +53,12 @@ export async function POST(req: NextRequest) {
     // בדיקה אם הדפוס כבר קיים
     let existingPattern;
     try {
+      console.log('Checking for existing pattern:', {
+        userId,
+        badPattern: originalText.substring(0, 50),
+        goodPattern: correctedText.substring(0, 50),
+      });
+      
       existingPattern = await prisma.translationPattern.findFirst({
         where: {
           userId,
@@ -60,10 +66,22 @@ export async function POST(req: NextRequest) {
           goodPattern: correctedText,
         },
       });
+      
+      if (existingPattern) {
+        console.log('Found existing pattern:', existingPattern.id);
+      } else {
+        console.log('No existing pattern found, will create new one');
+      }
     } catch (findError: any) {
-      console.error('Error finding existing pattern:', findError);
+      console.error('❌ Error finding existing pattern:', {
+        error: findError.message,
+        code: findError.code,
+        meta: findError.meta,
+      });
+      
       // אם הטבלה לא קיימת, נשמור דפוס חדש
       if (findError.message?.includes('does not exist') || findError.message?.includes('no such table')) {
+        console.warn('⚠️ TranslationPattern table does not exist, will try to create it');
         existingPattern = null;
       } else {
         throw findError;
@@ -102,6 +120,12 @@ export async function POST(req: NextRequest) {
     if (!existingPattern) {
       // יצירת דפוס חדש
       try {
+        console.log('Attempting to create new pattern:', {
+          userId,
+          badPattern: originalText.substring(0, 50),
+          goodPattern: correctedText.substring(0, 50),
+        });
+        
         const newPattern = await prisma.translationPattern.create({
           data: {
             userId,
@@ -111,6 +135,12 @@ export async function POST(req: NextRequest) {
             occurrences: 1,
             confidence: 0.8, // ביטחון התחלתי גבוה כי המשתמש בחר את זה במפורש
           },
+        });
+
+        console.log('Pattern created successfully:', {
+          id: newPattern.id,
+          badPattern: newPattern.badPattern.substring(0, 50),
+          goodPattern: newPattern.goodPattern.substring(0, 50),
         });
 
         return NextResponse.json({
@@ -124,14 +154,24 @@ export async function POST(req: NextRequest) {
           message: 'דפוס נשמר בהצלחה',
         });
       } catch (createError: any) {
-        console.error('Error creating pattern:', createError);
+        console.error('❌ Error creating pattern:', {
+          error: createError.message,
+          code: createError.code,
+          meta: createError.meta,
+          stack: createError.stack,
+        });
+        
         // אם הטבלה לא קיימת או יש בעיה אחרת, נחזיר תשובה עם success: false
         // כדי שהקוד בצד הלקוח יידע שהשמירה נכשלה
         return NextResponse.json({
           success: false,
           error: 'Failed to save pattern',
           message: 'הדפוס לא נשמר במסד הנתונים - יש בעיה עם החיבור למסד הנתונים',
-          details: process.env.NODE_ENV === 'development' ? createError.message : undefined
+          details: process.env.NODE_ENV === 'development' ? {
+            message: createError.message,
+            code: createError.code,
+            meta: createError.meta,
+          } : undefined
         });
       }
     }

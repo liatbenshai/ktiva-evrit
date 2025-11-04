@@ -290,20 +290,22 @@ export default function AICorrector(): React.JSX.Element {
 
       const data = await response.json();
       
-      // בדיקה אם השמירה הצליחה בפועל
-      if (data.success && data.message && data.message.includes('לא נשמר במסד הנתונים')) {
-        console.warn('Pattern was not saved to database:', data);
-        // לא נציג הודעה כי זה יכול להיות מפריע - אבל נרשום בקונסולה
-        return;
-      }
+      console.log('Save pattern response:', {
+        success: data.success,
+        message: data.message,
+        error: data.error,
+        details: data.details,
+      });
       
       if (data.success) {
-        console.log('Pattern saved successfully:', data);
+        console.log('✅ Pattern saved successfully:', data);
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
       } else {
-        console.error('Pattern save failed:', data);
-        alert(`שגיאה בשמירת הדפוס: ${data.error || data.message || 'שגיאה לא ידועה'}`);
+        console.error('❌ Pattern save failed:', data);
+        const errorMsg = data.message || data.error || 'שגיאה לא ידועה';
+        const details = data.details ? `\n\nפרטים: ${JSON.stringify(data.details)}` : '';
+        alert(`❌ שגיאה בשמירת הדפוס:\n${errorMsg}${details}\n\nבדקי את הקונסולה (F12) לפרטים נוספים.`);
       }
     } catch (error) {
       console.error('Error saving pattern automatically:', error);
