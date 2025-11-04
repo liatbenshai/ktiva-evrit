@@ -53,6 +53,10 @@ export default function AICorrector() {
   }>>([]);
   const [selectedAlternative, setSelectedAlternative] = useState<string | null>(null);
 
+  // מילים נרדפות למילים בודדות (כמו בתכונת התרגום)
+  const [wordAlternatives, setWordAlternatives] = useState<{ [key: string]: string[] }>({});
+  const [showWordAlternatives, setShowWordAlternatives] = useState(false);
+
   // ניתוח הטקסט
   const analyzeText = async () => {
     if (!originalText.trim()) {
@@ -152,6 +156,7 @@ export default function AICorrector() {
       }
       
       setSelectionSuggestions(data.suggestions || []);
+      setWordAlternatives(data.wordAlternatives || {}); // מילים נרדפות
     } catch (error: any) {
       console.error('Error getting suggestions:', error);
       const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
@@ -162,6 +167,49 @@ export default function AICorrector() {
       setSelectionSuggestions([]);
     } finally {
       setIsLoadingSuggestions(false);
+    }
+  };
+
+  // בחירת מילה נרדפת (כמו בתכונת התרגום)
+  const handleSelectWordAlternative = (originalWord: string, alternativeWord: string) => {
+    const currentText = editedText || correctedText;
+    // החלפת המילה הראשונה בלבד
+    const escapedWord = originalWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+    const newTranslation = currentText.replace(regex, (match, offset) => {
+      // החלף רק את ההופעה הראשונה
+      if (offset === currentText.toLowerCase().search(new RegExp(`\\b${escapedWord}\\b`, 'gi'))) {
+        return alternativeWord;
+      }
+      return match;
+    });
+    setEditedText(newTranslation);
+    setCorrectedText(newTranslation);
+    setIsEditing(true);
+    
+    // שמירה נקודתית אוטומטית
+    savePatternAutomatically(originalWord, alternativeWord);
+  };
+
+  // שמירה נקודתית אוטומטית (helper function)
+  const savePatternAutomatically = async (original: string, corrected: string) => {
+    try {
+      const response = await fetch('/api/ai-correction/save-pattern', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalText: original,
+          correctedText: corrected,
+          userId: 'default-user',
+        }),
+      });
+
+      if (response.ok) {
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+      }
+    } catch (error) {
+      console.error('Error saving pattern automatically:', error);
     }
   };
 
@@ -201,7 +249,6 @@ export default function AICorrector() {
       if (response.ok) {
         const data = await response.json();
         console.log('Pattern saved automatically:', data.message);
-        // אפשר להציג הודעה קצרה למשתמש
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
       }
@@ -242,12 +289,14 @@ export default function AICorrector() {
 
   // שמירת התיקון
   const saveCorrection = async () => {
-    if (!originalText.trim() || !editedText.trim()) {
+    const textToSave = editedText || correctedText;
+    
+    if (!originalText.trim() || !textToSave.trim()) {
       alert('אנא וודא שיש טקסט מקורי וטקסט מתוקן');
       return;
     }
 
-    if (originalText === editedText) {
+    if (originalText === textToSave) {
       alert('הטקסט המתוקן זהה למקורי - אין תיקון לשמור');
       return;
     }
@@ -259,26 +308,35 @@ export default function AICorrector() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           originalText,
-          correctedText: editedText,
+          correctedText: textToSave,
           category: 'general',
           userId: 'default-user',
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save correction');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || errorData.details || `שגיאת שרת: ${response.status}`;
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'השמירה נכשלה');
+      }
+      
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 5000);
 
       // עדכון הטקסט המתוקן
-      setCorrectedText(editedText);
+      setCorrectedText(textToSave);
+      setEditedText(textToSave);
       setIsEditing(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving correction:', error);
-      alert('שגיאה בשמירת התיקון');
+      const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
+      alert(`שגיאה בשמירת התיקון: ${errorMessage}`);
     } finally {
       setIsSaving(false);
     }
@@ -612,6 +670,46 @@ export default function AICorrector() {
                     <p className="text-sm text-orange-700 text-center py-4">
                       לא נמצאו הצעות. נסי לסמן טקסט אחר.
                     </p>
+                  )}
+
+                  {/* אפשרויות חלופיות למילים בודדות (מילים נרדפות) */}
+                  {Object.keys(wordAlternatives).length > 0 && (
+                    <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-semibold text-purple-900 flex items-center gap-2">
+                          <Languages className="w-5 h-5" />
+                          אפשרויות חלופיות למילים בודדות
+                        </h3>
+                        <button
+                          onClick={() => setShowWordAlternatives(!showWordAlternatives)}
+                          className="text-sm text-purple-600 hover:text-purple-800"
+                        >
+                          {showWordAlternatives ? 'הסתר' : 'הצג'}
+                        </button>
+                      </div>
+                      {showWordAlternatives && (
+                        <div className="space-y-3">
+                          {Object.entries(wordAlternatives).map(([word, alternatives]) => (
+                            <div key={word} className="p-3 bg-white rounded-lg border border-purple-200">
+                              <p className="font-medium text-purple-900 mb-2">
+                                &quot;{word}&quot; →
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {alternatives.map((alt, idx) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() => handleSelectWordAlternative(word, alt)}
+                                    className="px-3 py-1 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-lg text-sm transition-colors"
+                                  >
+                                    {alt}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               )}

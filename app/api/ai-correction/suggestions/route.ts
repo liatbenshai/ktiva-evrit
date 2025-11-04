@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateText } from '@/lib/ai/claude';
 import { prisma } from '@/lib/prisma';
 import { learningSystem } from '@/lib/learning-system';
+import { getSynonyms } from '@/lib/synonyms';
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,12 +71,52 @@ export async function POST(req: NextRequest) {
       // המשך בלי העדפות - לא קריטי
     }
 
+    // טעינת מילים נרדפות מהמאגר
+    let synonymsDict = '';
+    let wordAlternatives: { [key: string]: string[] } = {};
+    try {
+      const synonyms = await prisma.synonym.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 100, // נטען עד 100 קבוצות מילים נרדפות
+      });
+
+      const parsedSynonyms = synonyms.map(syn => ({
+        primary: syn.primary,
+        alternatives: JSON.parse(syn.alternatives),
+        context: syn.context ? JSON.parse(syn.context) : []
+      }));
+
+      // יצירת מילון מילים נרדפות
+      synonymsDict = parsedSynonyms.map(s => 
+        `"${s.primary}" (מועדף) ← [${s.alternatives.join(', ')}]`
+      ).join('\n');
+
+      // יצירת wordAlternatives - מילים מהטקסט עם חלופות
+      const words = selectedText.split(/\s+/).filter(w => w.length > 2);
+      words.forEach(word => {
+        const cleanWord = word.replace(/[.,!?;:]/g, '');
+        const synonyms = getSynonyms(cleanWord);
+        if (synonyms.length > 0) {
+          wordAlternatives[cleanWord] = synonyms.slice(0, 5); // עד 5 חלופות
+        }
+      });
+    } catch (synError: any) {
+      console.error('Error loading synonyms:', synError);
+      // המשך בלי מילים נרדפות - לא קריטי
+    }
+
     // בניית prompt להצעות חלופיות
     const forbiddenSection = forbiddenPatterns.length > 0 ? `
 **ניסוחי AI להימנעות (למדתי מהתיקונים שלך):**
 ${forbiddenPatterns.map(p => {
   return `- ❌ "${p.badPattern}" → ✅ "${p.goodPattern}"`;
 }).join('\n')}` : '';
+
+    const synonymsSection = synonymsDict ? `
+**מילון מילים נרדפות (המילה המועדפת ראשונה, אחריה חלופות):**
+${synonymsDict}
+
+**חשוב:** אם הטקסט הנבחר מכיל מילים מהמילון, השתמש במילה המועדפת (הראשונה) במקום חלופות.` : '';
 
     const prompt = `אתה עוזר לשיפור טקסטים בעברית שנוצרו על ידי AI. אני מבקש הצעות חלופיות לניסוח של טקסט ספציפי.
 
@@ -86,6 +127,8 @@ ${fullText}
 "${selectedText}"
 
 ${forbiddenSection}
+
+${synonymsSection}
 
 ${userPreferences.forbiddenWords && userPreferences.forbiddenWords.length > 0 ? `
 **מילים להימנעות:**
@@ -214,6 +257,7 @@ ${context ? `**הקשר:** ${context}` : ''}
       success: true,
       selectedText,
       suggestions: suggestionsData.suggestions || [],
+      wordAlternatives, // מילים נרדפות למילים בודדות בטקסט הנבחר
     });
   } catch (error) {
     console.error('Suggestions error:', error);
