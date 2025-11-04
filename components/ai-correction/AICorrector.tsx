@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Edit2, Save, X, Copy, Check, Loader2, Languages } from 'lucide-react';
+import { Edit2, Save, X, Copy, Check, Loader2, Languages, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface TranslationIssue {
   type: string;
@@ -56,6 +56,12 @@ export default function AICorrector() {
   // מילים נרדפות למילים בודדות (כמו בתכונת התרגום)
   const [wordAlternatives, setWordAlternatives] = useState<{ [key: string]: string[] }>({});
   const [showWordAlternatives, setShowWordAlternatives] = useState(false);
+
+  // מצב הרחבה/צמצום של הגרסאות החלופיות
+  const [expandedAlternatives, setExpandedAlternatives] = useState<{ [key: number]: boolean }>({});
+  
+  // טקסט נבחר מתוך גרסה חלופית (לשמירה חלקית)
+  const [selectedAlternativeText, setSelectedAlternativeText] = useState<{ text: string; index: number } | null>(null);
 
   // ניתוח הטקסט
   const analyzeText = async () => {
@@ -707,51 +713,161 @@ export default function AICorrector() {
               {/* אפשרויות חלופיות לטקסט המלא - 3 גרסאות שונות */}
               {alternatives.length > 0 ? (
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                    <Languages className="w-5 h-5" />
-                    אפשרויות חלופיות לטקסט המלא ({alternatives.length} גרסאות)
-                  </h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-blue-900 flex items-center gap-2">
+                      <Languages className="w-5 h-5" />
+                      אפשרויות חלופיות לטקסט המלא ({alternatives.length} גרסאות)
+                    </h3>
+                  </div>
                   <p className="text-sm text-blue-700 mb-3">
                     בחרי אחת מהגרסאות הבאות לשיפור הטקסט:
                   </p>
                   <div className="space-y-3">
-                    {alternatives.map((alt, index) => (
-                      <div
-                        key={index}
-                        className={`p-3 bg-white rounded-lg border-2 transition-all cursor-pointer ${
-                          selectedAlternative === alt.text
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-blue-200 hover:border-blue-300'
-                        }`}
-                        onClick={() => handleSelectAlternative(alt.text)}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
+                    {alternatives.map((alt, index) => {
+                      const isExpanded = expandedAlternatives[index] ?? false;
+                      const isSelected = selectedAlternative === alt.text;
+                      const displayText = isExpanded ? alt.text : alt.text.substring(0, 150) + (alt.text.length > 150 ? '...' : '');
+                      
+                      return (
+                        <div
+                          key={index}
+                          className={`p-3 bg-white rounded-lg border-2 transition-all ${
+                            isSelected
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-blue-200 hover:border-blue-300'
+                          }`}
+                        >
+                          {/* כותרת הגרסה עם כפתורי הרחבה/צמצם */}
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                                גרסה {index + 1}
+                              </span>
+                              {alt.context && (
+                                <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                                  {alt.context}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedAlternatives(prev => ({
+                                    ...prev,
+                                    [index]: !prev[index]
+                                  }));
+                                }}
+                                className="text-blue-600 hover:text-blue-800 p-1"
+                                title={isExpanded ? 'צמצם' : 'הרחב'}
+                              >
+                                {isExpanded ? (
+                                  <ChevronUp className="w-4 h-4" />
+                                ) : (
+                                  <ChevronDown className="w-4 h-4" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* טקסט הגרסה */}
+                          <div 
+                            className="relative"
+                            onMouseUp={(e) => {
+                              // רק אם לא לוחצים על כפתור
+                              if ((e.target as HTMLElement).tagName === 'BUTTON') return;
+                              
+                              const selection = window.getSelection();
+                              if (selection && selection.toString().trim().length > 0) {
+                                const selected = selection.toString().trim();
+                                if (selected.length > 0 && selected.length < alt.text.length) {
+                                  setSelectedAlternativeText({ text: selected, index });
+                                }
+                              }
+                            }}
+                          >
                             <p
-                              className="font-medium mb-1"
+                              className={`font-medium mb-1 cursor-pointer select-text ${isExpanded ? '' : 'line-clamp-2'}`}
                               dir="rtl"
                             >
-                              {alt.text}
+                              {displayText}
                             </p>
-                            {alt.explanation && (
-                              <p className="text-xs text-gray-600 mb-1">
-                                {alt.explanation}
-                              </p>
-                            )}
-                            {alt.context && (
-                              <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                                {alt.context}
-                              </span>
+                            
+                            {/* תיבה לשמירה חלקית */}
+                            {selectedAlternativeText && selectedAlternativeText.index === index && (
+                              <div className="absolute top-0 right-0 bg-purple-500 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 shadow-lg z-20">
+                                <span>טקסט נבחר: "{selectedAlternativeText.text.substring(0, 30)}{selectedAlternativeText.text.length > 30 ? '...' : ''}"</span>
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    // נמצא את הטקסט המקורי במיקום הזה
+                                    const originalIndex = originalText.indexOf(selectedAlternativeText.text);
+                                    if (originalIndex === -1) {
+                                      // הטקסט לא קיים במקור - נשמור את הטקסט החדש
+                                      await savePatternAutomatically('', selectedAlternativeText.text);
+                                      alert(`החלק שנבחר נשמר: "${selectedAlternativeText.text}"`);
+                                    } else {
+                                      // הטקסט קיים - נשמור את השינוי
+                                      await savePatternAutomatically(selectedAlternativeText.text, selectedAlternativeText.text);
+                                      alert(`החלק שנבחר נשמר: "${selectedAlternativeText.text}"`);
+                                    }
+                                    setSelectedAlternativeText(null);
+                                    window.getSelection()?.removeAllRanges();
+                                  }}
+                                  className="bg-purple-600 hover:bg-purple-700 px-2 py-1 rounded text-xs"
+                                >
+                                  שמור חלק זה
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedAlternativeText(null);
+                                    window.getSelection()?.removeAllRanges();
+                                  }}
+                                  className="hover:bg-purple-600 rounded px-1"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
                             )}
                           </div>
-                          {selectedAlternative === alt.text && (
-                            <div className="text-blue-600">
-                              <Check className="w-5 h-5" />
-                            </div>
+
+                          {alt.explanation && (
+                            <p className="text-xs text-gray-600 mb-2 mt-1">
+                              {alt.explanation}
+                            </p>
                           )}
+
+                          {/* כפתורי פעולה */}
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectAlternative(alt.text);
+                              }}
+                              className={`flex-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
+                                isSelected
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                              }`}
+                            >
+                              {isSelected ? '✓ נבחרה' : 'אשר גרסה זו'}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // העתקה ללוח
+                                navigator.clipboard.writeText(alt.text);
+                                alert('הגרסה הועתקה ללוח');
+                              }}
+                              className="px-3 py-2 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors"
+                            >
+                              העתק
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ) : (
