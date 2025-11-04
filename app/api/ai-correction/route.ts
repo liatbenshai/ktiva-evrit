@@ -57,10 +57,28 @@ export async function POST(req: NextRequest) {
     }
 
     // ניתוח הטקסט המקורי
-    const analysis = analyzeHebrewText(originalText);
+    let analysis;
+    try {
+      analysis = analyzeHebrewText(originalText);
+    } catch (analysisError: any) {
+      console.error('Error analyzing text:', analysisError);
+      // ניצור ניתוח בסיסי במקום להיכשל
+      analysis = {
+        issues: [],
+        score: 50,
+        suggestions: ['הניתוח נכשל - התיקון נשמר בכל זאת']
+      };
+    }
 
     // חילוץ דפוסים מהתיקון
-    const patterns = extractPatterns(originalText, correctedText);
+    let patterns = [];
+    try {
+      patterns = extractPatterns(originalText, correctedText);
+    } catch (patternError: any) {
+      console.error('Error extracting patterns:', patternError);
+      // נמשיך בלי דפוסים במקום להיכשל
+      patterns = [];
+    }
 
     // שמירת התיקון
     const correction = await prisma.aICorrection.create({
@@ -135,10 +153,22 @@ export async function POST(req: NextRequest) {
         occurrences: p.occurrences,
       })),
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving AI correction:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorDetails = process.env.NODE_ENV === 'development' 
+      ? {
+          message: errorMessage,
+          stack: error instanceof Error ? error.stack : undefined,
+          type: error?.constructor?.name
+        }
+      : 'An error occurred while saving the correction';
+    
     return NextResponse.json(
-      { error: 'Failed to save correction', details: String(error) },
+      { 
+        error: 'Failed to save correction',
+        details: errorDetails
+      },
       { status: 500 }
     );
   }

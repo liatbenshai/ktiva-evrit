@@ -165,8 +165,8 @@ export default function AICorrector() {
     }
   };
 
-  // בחירת הצעה לטקסט נבחר
-  const handleSelectSuggestion = (suggestionText: string) => {
+  // בחירת הצעה לטקסט נבחר - עם שמירה נקודתית אוטומטית
+  const handleSelectSuggestion = async (suggestionText: string) => {
     if (!correctedText || !selectedText) return;
 
     const index = correctedText.indexOf(selectedText);
@@ -185,14 +185,39 @@ export default function AICorrector() {
     setIsEditing(true);
     
     window.getSelection()?.removeAllRanges();
+
+    // שמירה נקודתית אוטומטית של השינוי הזה
+    try {
+      const response = await fetch('/api/ai-correction/save-pattern', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalText: selectedText,
+          correctedText: suggestionText,
+          userId: 'default-user',
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Pattern saved automatically:', data.message);
+        // אפשר להציג הודעה קצרה למשתמש
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+      }
+    } catch (error) {
+      console.error('Error saving pattern automatically:', error);
+      // לא נכשיל את התהליך אם השמירה נכשלה
+    }
   };
 
-  // בחירת אפשרות חלופית לטקסט המלא
+  // בחירת אפשרות חלופית לטקסט המלא - לא שומרים אוטומטית, רק כשמשנים ידנית
   const handleSelectAlternative = (alternativeText: string) => {
     setEditedText(alternativeText);
     setCorrectedText(alternativeText);
     setSelectedAlternative(alternativeText);
     setIsEditing(true);
+    // לא שומרים אוטומטית - המשתמש יבחר מה לשמור
   };
 
   // התחלת עריכה
@@ -264,13 +289,13 @@ export default function AICorrector() {
       {/* הוראות שימוש */}
       <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
         <h3 className="text-lg font-bold mb-3">📖 איך זה עובד?</h3>
-        <ol className="list-decimal list-inside space-y-2 text-gray-700">
+          <ol className="list-decimal list-inside space-y-2 text-gray-700">
           <li>הדבק טקסט שנוצר על ידי AI בתיבה "טקסט מקורי מ-AI"</li>
-          <li>לחץ על "🔍 נתח טקסט" כדי לקבל ניתוח מפורט</li>
+          <li>לחץ על "🔍 נתח טקסט" כדי לקבל ניתוח מפורט - המערכת תזהה דפוסי AI ותתן ציון</li>
           <li><strong>סמני מילה או משפט</strong> בטקסט המתוקן (עם העכבר) כדי לקבל 5-7 הצעות חלופיות</li>
-          <li>לחצי על הצעה כדי להחליף אותה</li>
+          <li>לחצי על הצעה כדי להחליף אותה - <strong>השינוי נשמר אוטומטית</strong> (שמירה נקודתית)</li>
           <li>ערוכי את הטקסט ידנית במידת הצורך</li>
-          <li>לחצי על "💾 שמור תיקון ולמד" כדי שהמערכת תלמד מהתיקון ותימנע מניסוחי AI דומים בעתיד</li>
+          <li>לחצי על "💾 שמור תיקון מלא" רק אם רוצה לשמור את כל התיקון (אופציונלי)</li>
         </ol>
       </Card>
 
@@ -409,7 +434,7 @@ export default function AICorrector() {
                       ) : (
                         <>
                           <Save className="w-4 h-4 mr-2" />
-                          שמור תיקון ולמד
+                          שמור תיקון מלא
                         </>
                       )}
                     </Button>
@@ -422,7 +447,7 @@ export default function AICorrector() {
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500">
-                    כשאת שומרת תיקון, המערכת תלמד ממנו ותימנע מניסוחי AI דומים בעתיד
+                    💡 שינויים נקודתיים נשמרים אוטומטית. לחצי כאן רק אם רוצה לשמור את כל התיקון המלא.
                   </p>
                 </>
               ) : (
@@ -625,8 +650,48 @@ export default function AICorrector() {
                       <span className="text-gray-400">→</span>
                       <span className="text-green-600 font-medium">"{issue.suggestion}"</span>
                     </div>
-                    <div className="mt-2 text-xs text-blue-600">
-                      💡 סמני את הטקסט "{issue.original}" בטקסט המתוקן כדי לקבל הצעות נוספות
+                    <div className="mt-2 flex items-center gap-2">
+                      <button
+                        onClick={async () => {
+                          // החלפת הבעיה בטקסט
+                          if (correctedText.includes(issue.original)) {
+                            const index = correctedText.indexOf(issue.original);
+                            const newText = 
+                              correctedText.substring(0, index) + 
+                              issue.suggestion + 
+                              correctedText.substring(index + issue.original.length);
+                            setEditedText(newText);
+                            setCorrectedText(newText);
+                            setIsEditing(true);
+
+                            // שמירה נקודתית אוטומטית
+                            try {
+                              const response = await fetch('/api/ai-correction/save-pattern', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  originalText: issue.original,
+                                  correctedText: issue.suggestion,
+                                  userId: 'default-user',
+                                }),
+                              });
+
+                              if (response.ok) {
+                                setShowSuccess(true);
+                                setTimeout(() => setShowSuccess(false), 3000);
+                              }
+                            } catch (error) {
+                              console.error('Error saving pattern automatically:', error);
+                            }
+                          }
+                        }}
+                        className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                      >
+                        ✓ החל תיקון ושמור
+                      </button>
+                      <span className="text-xs text-blue-600">
+                        או סמני את הטקסט בטקסט המתוקן כדי לקבל הצעות נוספות
+                      </span>
                     </div>
                   </div>
                 </div>

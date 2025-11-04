@@ -20,21 +20,47 @@ export interface AnalysisResult {
 }
 
 /**
+ * מאגר מילים וביטויים להימנעות - דפוסי AI נפוצים
+ * מילים וביטויים שצריך להימנע מהם כי הם לא עברית טבעית
+ */
+export const FORBIDDEN_AI_PATTERNS = [
+  // ביטויים מתורגמים מאנגלית
+  { pattern: /\bלהביא בחשבון\b/g, suggestion: 'לקחת בחשבון', explanation: '"להביא בחשבון" הוא תרגום ישיר מאנגלית - השתמש ב"לקחת בחשבון"' },
+  { pattern: /\bמהווה\b/g, suggestion: 'הוא/היא/זה', explanation: '"מהווה" הוא תרגום ישיר - נסה להימנע ממנו' },
+  { pattern: /\bבמטרה\b/g, suggestion: 'כדי', explanation: '"במטרה" הוא פורמלי מדי - השתמש ב"כדי"' },
+  { pattern: /\bבהתאם ל\b/g, suggestion: 'לפי', explanation: '"בהתאם ל" הוא פורמלי מדי - השתמש ב"לפי"' },
+  { pattern: /\bעל מנת\b/g, suggestion: 'כדי', explanation: '"על מנת" הוא פורמלי מדי - השתמש ב"כדי"' },
+  { pattern: /\bבסוף היום\b/g, suggestion: 'בסופו של דבר', explanation: '"בסוף היום" הוא תרגום ישיר מאנגלית' },
+  { pattern: /\bלקחת את זה לשלב הבא\b/g, suggestion: 'להתקדם/להמשיך', explanation: '"לקחת את זה לשלב הבא" הוא תרגום ישיר מאנגלית' },
+  { pattern: /\bלתת ערך\b/g, suggestion: 'להעניק/להועיל', explanation: '"לתת ערך" הוא תרגום ישיר מאנגלית' },
+  { pattern: /\bלהשפיע על\b\s+\w+\s+\bבאופן\b/g, suggestion: 'להשפיע על', explanation: '"באופן" הוא מיותר - פשוט "להשפיע על"' },
+  { pattern: /\bמשמעותי\b/g, suggestion: 'חשוב', explanation: '"משמעותי" הוא פורמלי מדי - נסה "חשוב"' },
+  { pattern: /\bבאופן\b/g, suggestion: 'כך/ככה', explanation: '"באופן" הוא פורמלי מדי - נסה "כך" או "ככה"' },
+  { pattern: /\bבדרך\b\s+\w+\s+\bשל\b/g, suggestion: 'בצורה של', explanation: '"בדרך של" הוא לא טבעי - נסה "בצורה של"' },
+  
+  // ביטויי AI נפוצים
+  { pattern: /\bאני רוצה להודות\b/g, suggestion: 'תודה', explanation: 'במקום "אני רוצה להודות" פשוט "תודה"' },
+  { pattern: /\bאני מבקש ממך בבקשה\b/g, suggestion: 'אני מבקש', explanation: 'מיותר לכתוב "מבקש" ו"בקשה" יחד' },
+  { pattern: /\bאני אשמח מאוד\b/g, suggestion: 'אשמח', explanation: '"מאוד" הוא מיותר כאן' },
+  { pattern: /\bבהתאם לבקשתך\b/g, suggestion: 'כפי שביקשת', explanation: '"בהתאם לבקשתך" הוא פורמלי מדי' },
+  { pattern: /\bאני פונה אליכם\b/g, suggestion: 'אני פונה אליך/אליך', explanation: '"אליכם" יכול להיות "אליך" אם מדובר באדם אחד' },
+  
+  // אנגליציזמים
+  { pattern: /\bאקטואלי\b/g, suggestion: 'נוכחי/עדכני', explanation: '"אקטואלי" הוא אנגליזם' },
+  { pattern: /\bפוטנציאלי\b/g, suggestion: 'אפשרי/עתידי', explanation: '"פוטנציאלי" הוא אנגליזם' },
+  { pattern: /\bקריטי\b/g, suggestion: 'חיוני/חשוב', explanation: '"קריטי" הוא אנגליזם' },
+  { pattern: /\bאופטימלי\b/g, suggestion: 'מיטבי/מושלם', explanation: '"אופטימלי" הוא אנגליזם' },
+  { pattern: /\bריאליסטי\b/g, suggestion: 'מציאותי', explanation: '"ריאליסטי" הוא אנגליזם' },
+  { pattern: /\bפרקטי\b/g, suggestion: 'מעשי', explanation: '"פרקטי" הוא אנגליזם' },
+  { pattern: /\bאופרטיבי\b/g, suggestion: 'מבצעי', explanation: '"אופרטיבי" הוא אנגליזם' },
+  { pattern: /\bאפקטיבי\b/g, suggestion: 'יעיל', explanation: '"אפקטיבי" הוא אנגליזם' },
+];
+
+/**
  * דפוסים נפוצים של עברית מתורגמת מאנגלית
  */
 const COMMON_TRANSLATION_PATTERNS = [
-  // Literal translations
-  { pattern: /\bמהווה\b/g, suggestion: 'הוא/היא', explanation: 'שימוש מיותר במילה "מהווה"' },
-  { pattern: /\bבמטרה\b/g, suggestion: 'כדי', explanation: 'במקום "במטרה" השתמש ב"כדי"' },
-  { pattern: /\bבהתאם ל\b/g, suggestion: 'לפי', explanation: 'במקום "בהתאם ל" השתמש ב"לפי"' },
-  { pattern: /\bמשמעותי\b/g, suggestion: 'חשוב/משמעותי', explanation: 'שימוש יתר במילה "משמעותי"' },
-  { pattern: /\bעל מנת\b/g, suggestion: 'כדי', explanation: 'במקום "על מנת" השתמש ב"כדי"' },
-  
-  // Anglicisms
-  { pattern: /\bאקטואלי\b/g, suggestion: 'נוכחי/עדכני', explanation: 'אקטואלי הוא אנגליזם' },
-  { pattern: /\bרלוונטי\b/g, suggestion: 'רלוונטי/משמעותי', explanation: 'רלוונטי בסדר, אבל נסה גם חלופות' },
-  { pattern: /\bפוטנציאלי\b/g, suggestion: 'אפשרי/עתידי', explanation: 'נסה להשתמש במילים עבריות' },
-  { pattern: /\bקריטי\b/g, suggestion: 'חיוני/חשוב', explanation: 'קריטי הוא אנגליזם' },
+  ...FORBIDDEN_AI_PATTERNS,
   
   // Unnatural constructions
   { pattern: /\bיש לי\s+\w+\s+(ש|ה|מ)\b/g, suggestion: 'אני...', explanation: 'במקום "יש לי X ש..." נסה "אני X..."' },
@@ -43,13 +69,14 @@ const COMMON_TRANSLATION_PATTERNS = [
 ];
 
 /**
- * מילים שמעידות על תרגום מאנגלית
+ * מילים שמעידות על תרגום מאנגלית או טקסט AI
  */
 const ANGLICISM_INDICATORS = [
   'אקטואלי', 'קונקרטי', 'פוטנציאלי', 'קריטי', 'אופטימלי',
   'ריאליסטי', 'פרקטי', 'תיאורטי', 'אופרטיבי', 'אפקטיבי',
   'מהווה', 'בהתאם', 'במטרה', 'על מנת', 'באופן', 'בדרך',
-  'משמעותי באופן', 'חשוב באופן', 'גדול באופן'
+  'משמעותי באופן', 'חשוב באופן', 'גדול באופן',
+  'להביא בחשבון', 'בסוף היום', 'לתת ערך', 'לקחת לשלב הבא'
 ];
 
 /**
@@ -58,11 +85,14 @@ const ANGLICISM_INDICATORS = [
 export function analyzeHebrewText(text: string): AnalysisResult {
   const issues: TranslationIssue[] = [];
   let score = 100;
+  let aiPatternCount = 0; // ספירת דפוסי AI
 
-  // בדיקת דפוסים נפוצים
+  // בדיקת דפוסים נפוצים (כולל דפוסי AI)
   for (const pattern of COMMON_TRANSLATION_PATTERNS) {
     let match;
-    while ((match = pattern.pattern.exec(text)) !== null) {
+    // איפוס regex לפני כל שימוש (כי regex.global שומר מצב)
+    const regex = new RegExp(pattern.pattern.source, pattern.pattern.flags);
+    while ((match = regex.exec(text)) !== null) {
       issues.push({
         type: 'literal-translation',
         original: match[0],
@@ -72,8 +102,23 @@ export function analyzeHebrewText(text: string): AnalysisResult {
         startIndex: match.index,
         endIndex: match.index + match[0].length
       });
-      score -= 5;
+      score -= 8; // הורדת ציון יותר משמעותית
+      aiPatternCount++;
     }
+  }
+  
+  // אם יש יותר מ-3 דפוסי AI - זה טקסט AI מובהק
+  if (aiPatternCount >= 3) {
+    score -= 20; // הורדה נוספת משמעותית
+    issues.push({
+      type: 'unnatural-phrasing',
+      original: '',
+      suggestion: 'הטקסט מכיל דפוסי AI רבים - נדרש שיפור משמעותי',
+      confidence: 0.9,
+      explanation: `זוהו ${aiPatternCount} דפוסי AI בטקסט - הטקסט נראה כמו תרגום או כתיבה של AI`,
+      startIndex: 0,
+      endIndex: 0
+    });
   }
 
   // בדיקת אנגליציזמים
