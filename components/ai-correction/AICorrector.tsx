@@ -800,17 +800,44 @@ export default function AICorrector() {
                                 <button
                                   onClick={async (e) => {
                                     e.stopPropagation();
-                                    // נמצא את הטקסט המקורי במיקום הזה
-                                    const originalIndex = originalText.indexOf(selectedAlternativeText.text);
+                                    const selectedPart = selectedAlternativeText.text;
+                                    
+                                    // נמצא את הטקסט המקורי במיקום הזה - נחפש את החלק הזה בטקסט המקורי
+                                    const originalIndex = originalText.indexOf(selectedPart);
+                                    
                                     if (originalIndex === -1) {
-                                      // הטקסט לא קיים במקור - נשמור את הטקסט החדש
-                                      await savePatternAutomatically('', selectedAlternativeText.text);
-                                      alert(`החלק שנבחר נשמר: "${selectedAlternativeText.text}"`);
+                                      // הטקסט לא קיים במקור - זה חלק חדש מהגרסה החלופית
+                                      // נשמור את החלק הזה כשינוי חדש
+                                      // ננסה למצוא את החלק הקרוב ביותר בטקסט המקורי
+                                      const words = selectedPart.split(/\s+/);
+                                      if (words.length > 0) {
+                                        // נחפש את המילה הראשונה בטקסט המקורי
+                                        const firstWord = words[0];
+                                        const originalFirstWordIndex = originalText.indexOf(firstWord);
+                                        if (originalFirstWordIndex !== -1) {
+                                          // נמצא את החלק המקורי המתאים
+                                          const originalWords = originalText.split(/\s+/);
+                                          const selectedWords = selectedPart.split(/\s+/);
+                                          const startIndex = originalText.substring(0, originalFirstWordIndex).split(/\s+/).length;
+                                          const originalPart = originalWords.slice(startIndex, startIndex + selectedWords.length).join(' ');
+                                          
+                                          if (originalPart !== selectedPart) {
+                                            await savePatternAutomatically(originalPart, selectedPart);
+                                            alert(`החלק נשמר: "${originalPart}" → "${selectedPart}"`);
+                                          } else {
+                                            alert('החלק שנבחר זהה למקור');
+                                          }
+                                        } else {
+                                          // חלק חדש לחלוטין
+                                          await savePatternAutomatically('', selectedPart);
+                                          alert(`החלק החדש נשמר: "${selectedPart}"`);
+                                        }
+                                      }
                                     } else {
-                                      // הטקסט קיים - נשמור את השינוי
-                                      await savePatternAutomatically(selectedAlternativeText.text, selectedAlternativeText.text);
-                                      alert(`החלק שנבחר נשמר: "${selectedAlternativeText.text}"`);
+                                      // הטקסט קיים במקור - אין שינוי
+                                      alert('החלק שנבחר זהה למקור - אין שינוי לשמור');
                                     }
+                                    
                                     setSelectedAlternativeText(null);
                                     window.getSelection()?.removeAllRanges();
                                   }}
