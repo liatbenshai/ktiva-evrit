@@ -29,7 +29,7 @@ interface Suggestion {
   whenToUse?: string;
 }
 
-export default function AICorrector(): JSX.Element {
+export default function AICorrector(): React.JSX.Element {
   const [originalText, setOriginalText] = useState('');
   const [correctedText, setCorrectedText] = useState('');
   const [editedText, setEditedText] = useState('');
@@ -888,6 +888,7 @@ export default function AICorrector(): JSX.Element {
                                           } else {
                                             alert('החלק שנבחר זהה למקור');
                                           }
+                                        }
                                       }
                                     } else {
                                       // הטקסט קיים במקור - אין שינוי
