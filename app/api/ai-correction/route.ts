@@ -99,41 +99,51 @@ export async function POST(req: NextRequest) {
     });
 
     // עדכון או יצירת דפוסי תרגום / AI להימנעות
-    for (const pattern of patterns) {
-      if (pattern.type === 'word-replacement' || pattern.type === 'phrase-replacement') {
-        // בדיקה אם הדפוס כבר קיים
-        const existingPattern = await prisma.translationPattern.findFirst({
-          where: {
-            userId,
-            badPattern: pattern.from,
-            goodPattern: pattern.to,
-          },
-        });
+    try {
+      for (const pattern of patterns) {
+        if (pattern.type === 'word-replacement' || pattern.type === 'phrase-replacement') {
+          try {
+            // בדיקה אם הדפוס כבר קיים
+            const existingPattern = await prisma.translationPattern.findFirst({
+              where: {
+                userId,
+                badPattern: pattern.from,
+                goodPattern: pattern.to,
+              },
+            });
 
-        if (existingPattern) {
-          // עדכון דפוס קיים
-          await prisma.translationPattern.update({
-            where: { id: existingPattern.id },
-            data: {
-              occurrences: existingPattern.occurrences + 1,
-              confidence: Math.min(1.0, existingPattern.confidence + 0.1),
-              updatedAt: new Date(),
-            },
-          });
-        } else {
-          // יצירת דפוס חדש - סימון כ-ai-style כדי שהמערכת תימנע מניסוחי AI
-          await prisma.translationPattern.create({
-            data: {
-              userId,
-              badPattern: pattern.from,
-              goodPattern: pattern.to,
-              patternType: 'ai-style', // דפוסים ספציפיים לניסוחי AI
-              occurrences: 1,
-              confidence: pattern.confidence,
-            },
-          });
+            if (existingPattern) {
+              // עדכון דפוס קיים
+              await prisma.translationPattern.update({
+                where: { id: existingPattern.id },
+                data: {
+                  occurrences: existingPattern.occurrences + 1,
+                  confidence: Math.min(1.0, existingPattern.confidence + 0.1),
+                  updatedAt: new Date(),
+                },
+              });
+            } else {
+              // יצירת דפוס חדש - סימון כ-ai-style כדי שהמערכת תימנע מניסוחי AI
+              await prisma.translationPattern.create({
+                data: {
+                  userId,
+                  badPattern: pattern.from,
+                  goodPattern: pattern.to,
+                  patternType: 'ai-style', // דפוסים ספציפיים לניסוחי AI
+                  occurrences: 1,
+                  confidence: pattern.confidence || 0.5,
+                },
+              });
+            }
+          } catch (patternError: any) {
+            console.error('Error saving pattern:', patternError);
+            // נמשיך עם הדפוס הבא במקום להיכשל
+          }
         }
       }
+    } catch (patternsError: any) {
+      console.error('Error processing patterns:', patternsError);
+      // נמשיך בלי שמירת דפוסים - התיקון נשמר בכל זאת
     }
 
     // קבלת דפוסים מעודכנים

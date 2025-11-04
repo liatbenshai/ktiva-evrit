@@ -87,13 +87,23 @@ export default function AICorrector() {
       }
       
       setAnalysis(data.analysis);
-      setAlternatives(data.alternatives || []); // אפשרויות חלופיות לטקסט המלא
+      
+      // אפשרויות חלופיות לטקסט המלא - לוודא שיש לפחות 3 גרסאות
+      const receivedAlternatives = data.alternatives || [];
+      if (receivedAlternatives.length === 0) {
+        console.warn('No alternatives received from API');
+      }
+      setAlternatives(receivedAlternatives);
       
       // הטקסט המתוקן מתחיל עם התיקון הראשי המומלץ (כמו בתכונת התרגום)
       const mainCorrectedText = data.result?.analyzedText || originalText;
       setCorrectedText(mainCorrectedText);
       setEditedText(mainCorrectedText);
       setSelectedAlternative(null);
+      
+      // איפוס מילים נרדפות - נטען מחדש כשמסמנים טקסט
+      setWordAlternatives({});
+      setShowWordAlternatives(true); // הצג מיד כשהן זמינות
     } catch (error) {
       console.error('Error analyzing text:', error);
       const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
@@ -551,13 +561,16 @@ export default function AICorrector() {
                 </>
               )}
 
-              {/* אפשרויות חלופיות לטקסט המלא */}
-              {alternatives.length > 0 && (
+              {/* אפשרויות חלופיות לטקסט המלא - 3 גרסאות שונות */}
+              {alternatives.length > 0 ? (
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
                     <Languages className="w-5 h-5" />
-                    אפשרויות חלופיות לטקסט המלא
+                    אפשרויות חלופיות לטקסט המלא ({alternatives.length} גרסאות)
                   </h3>
+                  <p className="text-sm text-blue-700 mb-3">
+                    בחרי אחת מהגרסאות הבאות לשיפור הטקסט:
+                  </p>
                   <div className="space-y-3">
                     {alternatives.map((alt, index) => (
                       <div
@@ -597,6 +610,12 @@ export default function AICorrector() {
                       </div>
                     ))}
                   </div>
+                </div>
+              ) : (
+                <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    ⏳ המערכת עדיין יוצרת גרסאות חלופיות... אם זה לוקח זמן רב, נסי לסמן טקסט ספציפי כדי לקבל הצעות.
+                  </p>
                 </div>
               )}
 
