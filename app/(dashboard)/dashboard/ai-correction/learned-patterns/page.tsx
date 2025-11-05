@@ -80,16 +80,21 @@ export default function LearnedPatternsPage() {
     if (!confirm('האם את בטוחה שברצונך למחוק את הדפוס הזה?')) return;
 
     try {
-      const response = await fetch(`/api/ai-correction/patterns/${id}`, {
+      const response = await fetch(`/api/ai-correction/patterns?id=${id}&userId=default-user`, {
         method: 'DELETE',
       });
 
-      if (!response.ok) throw new Error('Failed to delete');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Failed to delete');
+      }
       
+      alert('✅ הדפוס נמחק בהצלחה!');
       await fetchPatterns();
     } catch (error) {
       console.error('Error deleting pattern:', error);
-      alert('שגיאה במחיקת הדפוס');
+      const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
+      alert(`שגיאה במחיקת הדפוס: ${errorMessage}`);
     }
   };
 
