@@ -80,9 +80,10 @@ export async function POST(req: NextRequest) {
     }
   } catch (importError: any) {
     console.error('❌ Error importing Prisma:', importError);
-    const hasDbUrl = !!process.env.DATABASE_URL;
-    const dbUrlPreview = hasDbUrl 
-      ? process.env.DATABASE_URL.substring(0, 30) + '...' 
+    const dbUrl = process.env.DATABASE_URL;
+    const hasDbUrl = !!dbUrl;
+    const dbUrlPreview = hasDbUrl && dbUrl
+      ? dbUrl.substring(0, 30) + '...' 
       : 'NOT SET';
     
     return NextResponse.json({
