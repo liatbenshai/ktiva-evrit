@@ -258,16 +258,32 @@ export async function POST(req: NextRequest) {
       }
     }
   } catch (error: any) {
-    console.error('Error saving pattern:', error);
+    console.error('❌ Error saving pattern:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      name: error.name,
+    });
+    
     const errorMessage = error instanceof Error ? error.message : String(error);
+    const hasDbUrl = !!process.env.DATABASE_URL;
     
     // נחזיר תשובה עם success: false כדי שהקוד בצד הלקוח יידע שהשמירה נכשלה
+    // אבל נחזיר status 200 כדי שהקוד בצד הלקוח יוכל לקרוא את ה-response
     return NextResponse.json({
       success: false,
       error: 'Failed to save pattern',
       message: 'הדפוס לא נשמר במסד הנתונים - יש בעיה עם החיבור למסד הנתונים',
-      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
-    });
+      details: {
+        hasDatabaseUrl: hasDbUrl,
+        error: errorMessage,
+        code: error.code,
+        suggestion: hasDbUrl 
+          ? 'DATABASE_URL is set but save failed. Check Vercel function logs for more details.'
+          : 'DATABASE_URL is not set. Please add it to Vercel Environment Variables.',
+        environment: process.env.NODE_ENV,
+      }
+    }, { status: 200 }); // נחזיר 200 במקום 500 כדי שהקוד בצד הלקוח יוכל לקרוא את ה-response
   }
 }
 

@@ -108,19 +108,45 @@ export default function LearnedPatternsPage() {
         }),
       });
 
-      const data = await response.json();
+      // בדיקה אם ה-response תקין לפני קריאת JSON
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('Failed to parse response JSON:', jsonError);
+        throw new Error(`שגיאת שרת (${response.status}): ${response.statusText}`);
+      }
 
       console.log('Add pattern response:', {
         success: data.success,
         message: data.message,
         error: data.error,
         details: data.details,
+        status: response.status,
       });
 
       if (!response.ok || !data.success) {
         const errorMsg = data.message || data.error || 'Failed to save pattern';
-        const details = data.details ? `\n\nפרטים: ${JSON.stringify(data.details)}` : '';
-        throw new Error(`${errorMsg}${details}`);
+        let detailsMsg = '';
+        
+        if (data.details) {
+          if (typeof data.details === 'object') {
+            detailsMsg = `\n\nפרטים:\n${JSON.stringify(data.details, null, 2)}`;
+          } else {
+            detailsMsg = `\n\nפרטים: ${data.details}`;
+          }
+        }
+        
+        // אם יש פרטים מפורטים, נציג אותם
+        if (data.details?.hasDatabaseUrl === false) {
+          throw new Error(`${errorMsg}\n\n⚠️ DATABASE_URL לא מוגדר ב-Vercel!\n\nנא להגדיר אותו ב:\nVercel Dashboard → Settings → Environment Variables → Add DATABASE_URL${detailsMsg}`);
+        }
+        
+        if (data.details?.suggestion) {
+          throw new Error(`${errorMsg}\n\nהצעה: ${data.details.suggestion}${detailsMsg}`);
+        }
+        
+        throw new Error(`${errorMsg}${detailsMsg}`);
       }
 
       // ניקוי הטופס
