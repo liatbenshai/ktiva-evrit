@@ -34,16 +34,28 @@
 
 ## שלב 4: יצירת הטבלאות במסד הנתונים
 
-### ל-Vercel (אוטומטי):
-**לא צריך לעשות כלום!** Vercel יבנה את הטבלאות אוטומטית בזמן ה-build דרך ה-`postinstall` script.
+### חשוב: Vercel לא יכול להריץ `prisma db push` בזמן ה-build!
 
-### למקומי (אופציונלי):
-אם את רוצה לבדוק מקומית, הרצי:
-```bash
-npm run db:push
-```
+**צריך להריץ `prisma db push` פעם אחת מקומית** כדי ליצור את הטבלאות ב-Supabase.
 
-**לא צריך להריץ `npm run db:generate`** - זה קורה אוטומטית ב-`postinstall` וב-`build`.
+### איך לעשות את זה:
+
+1. **ודאי שיש לך `.env.local` עם ה-DATABASE_URL מ-Supabase:**
+   ```env
+   DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
+   ```
+
+2. **הרצי את הפקודה הבאה מקומית:**
+   ```bash
+   npm run db:push
+   ```
+
+3. **אם הכל עובד, תראי:**
+   ```
+   ✅ Database is now in sync with your Prisma schema
+   ```
+
+**למה זה לא קורה אוטומטית?** Vercel build environment לא יכול להתחבר למסד נתונים חיצוני (Supabase) מסיבות אבטחה. צריך להריץ את זה פעם אחת מקומית, ואחרי זה הטבלאות כבר קיימות ב-Supabase.
 
 ## שלב 5: הגדרת DATABASE_URL ב-Vercel (חשוב מאוד!)
 
@@ -100,9 +112,15 @@ npm run db:push
 
 ### שגיאה: "relation does not exist" ב-Vercel
 **פתרון**: 
+- ודאי שהרצת `npm run db:push` מקומית (פעם אחת) כדי ליצור את הטבלאות
 - ודאי שה-`DATABASE_URL` מוגדר ב-Vercel Environment Variables
 - ודאי שביצעת Redeploy אחרי הוספת `DATABASE_URL`
-- בדקי את ה-build logs - אמור לראות "prisma db push" רץ בהצלחה
+
+### שגיאה: "Can't reach database server" ב-Vercel build
+**פתרון**: 
+- זה נורמלי! Vercel לא יכול להתחבר ל-Supabase בזמן ה-build
+- ה-`postinstall` script כבר עודכן כדי לא להריץ `prisma db push` ב-build
+- פשוט הרצי `npm run db:push` מקומית פעם אחת כדי ליצור את הטבלאות
 
 ### שגיאה: "connection refused"
 **פתרון**: 
