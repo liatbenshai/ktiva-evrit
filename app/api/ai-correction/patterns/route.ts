@@ -220,17 +220,39 @@ export async function POST(req: NextRequest) {
  * GET - קבלת כל הדפוסים שנלמדו
  */
 export async function GET(req: NextRequest) {
+  // בדיקה ראשונית - האם DATABASE_URL מוגדר?
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) {
+    console.error('❌ DATABASE_URL is not set in Vercel Environment Variables!');
+    return NextResponse.json({
+      success: false,
+      error: 'DATABASE_URL not configured',
+      patterns: [],
+      count: 0,
+      message: 'DATABASE_URL לא מוגדר ב-Vercel. נא להגדיר אותו ב-Environment Variables.',
+    });
+  }
+
+  console.log('🔍 DATABASE_URL is set:', dbUrl.substring(0, 50) + '...');
+  console.log('🔍 Using Connection Pooling:', dbUrl.includes('6543') || dbUrl.includes('pooler'));
+  
   // נטפל בכל השגיאות, כולל אם Prisma לא מצליח להתחיל
   let prisma;
   try {
     const { prisma: prismaClient } = await import('@/lib/prisma');
     prisma = prismaClient;
+    console.log('✅ Prisma client imported successfully');
   } catch (importError: any) {
-    console.error('Error importing Prisma:', importError);
+    console.error('❌ Error importing Prisma:', importError);
     return NextResponse.json({
-      success: true,
+      success: false,
+      error: 'Failed to import Prisma',
       patterns: [],
       count: 0,
+      details: {
+        error: importError.message,
+        suggestion: 'Check if DATABASE_URL is correct in Vercel Environment Variables'
+      }
     });
   }
 
@@ -263,13 +285,42 @@ export async function GET(req: NextRequest) {
       let patterns: any[] = [];
       
       try {
+        // בדיקה שהחיבור עובד
+        await prisma.$connect();
+        console.log('✅ Connected to database');
+        
         count = await prisma.translationPattern.count({ where });
-        console.log(`Found ${count} patterns matching filter`);
+        console.log(`✅ Found ${count} patterns matching filter`);
       } catch (countError: any) {
-        console.error('Error counting patterns:', countError);
+        console.error('❌ Error counting patterns:', {
+          message: countError.message,
+          code: countError.code,
+          meta: countError.meta,
+        });
+        
+        // אם זו שגיאת חיבור
+        if (countError.message?.includes('Can\'t reach database server') || 
+            countError.message?.includes('connect') ||
+            countError.code === 'P1001') {
+          console.error('❌ Cannot connect to Supabase!');
+          return NextResponse.json({
+            success: false,
+            error: 'Connection failed',
+            patterns: [],
+            count: 0,
+            message: 'לא ניתן להתחבר ל-Supabase. נא לבדוק את ה-DATABASE_URL ב-Vercel - צריך להשתמש ב-Connection Pooling (פורט 6543).',
+            details: {
+              error: countError.message,
+              code: countError.code,
+              suggestion: 'Use Connection Pooling URL from Supabase (port 6543) instead of direct connection (port 5432)',
+              databaseUrlPreview: dbUrl.substring(0, 50) + '...',
+            }
+          });
+        }
+        
         // אם הטבלה לא קיימת, נחזיר רשימה ריקה
         if (countError.message?.includes('does not exist') || countError.message?.includes('no such table')) {
-          console.log('TranslationPattern table does not exist yet, returning empty array');
+          console.log('⚠️ TranslationPattern table does not exist yet, returning empty array');
           return NextResponse.json({
             success: true,
             patterns: [],

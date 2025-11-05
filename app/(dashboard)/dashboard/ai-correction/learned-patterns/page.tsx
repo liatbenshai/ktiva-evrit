@@ -51,11 +51,19 @@ export default function LearnedPatternsPage() {
       
       // אם אין דפוסים, נציג הודעה ברורה
       if (!data.patterns || data.patterns.length === 0) {
-        console.warn('⚠️ לא נמצאו דפוסים במסד הנתונים');
-        console.warn('אפשרויות:');
-        console.warn('1. עדיין לא שמרת דפוסים - נסי לבחור הצעה או לשנות טקסט');
-        console.warn('2. בעיה עם מסד הנתונים - SQLite לא מתאים ל-Vercel production');
-        console.warn('3. בדקי את הקונסולה של השרת (Vercel logs) לראות שגיאות');
+        if (data.error) {
+          console.error('❌ Error fetching patterns:', data.error);
+          console.error('Details:', data.details);
+          if (data.details?.suggestion) {
+            console.error('Suggestion:', data.details.suggestion);
+          }
+        } else {
+          console.warn('⚠️ לא נמצאו דפוסים במסד הנתונים');
+          console.warn('אפשרויות:');
+          console.warn('1. עדיין לא שמרת דפוסים - נסי לבחור הצעה או לשנות טקסט');
+          console.warn('2. בעיה עם חיבור למסד הנתונים - בדקי את Vercel logs');
+          console.warn('3. ודאי שה-DATABASE_URL ב-Vercel משתמש ב-Connection Pooling (פורט 6543)');
+        }
       }
     } catch (error) {
       console.error('Error fetching patterns:', error);
