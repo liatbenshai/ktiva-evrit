@@ -5,6 +5,23 @@ import { NextRequest, NextResponse } from 'next/server';
  * זה נקרא כשמשנים דבר אחד (מילה, ביטוי) ולא כל הטקסט
  */
 export async function POST(req: NextRequest) {
+  // בדיקה ראשונית - האם DATABASE_URL מוגדר?
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) {
+    console.error('❌ DATABASE_URL is not set!');
+    return NextResponse.json({
+      success: false,
+      error: 'DATABASE_URL not configured',
+      message: 'DATABASE_URL לא מוגדר. נא להגדיר אותו ב-Vercel Environment Variables.',
+      details: {
+        suggestion: 'Go to Vercel Dashboard → Settings → Environment Variables → Add DATABASE_URL',
+        environment: process.env.NODE_ENV,
+      }
+    });
+  }
+
+  console.log('🔍 DATABASE_URL is set:', dbUrl.substring(0, 30) + '...');
+  
   // נטפל בכל השגיאות, כולל אם Prisma לא מצליח להתחיל
   let prisma;
   try {
@@ -13,49 +30,74 @@ export async function POST(req: NextRequest) {
     
     // בדיקה שהמסד נתונים זמין - ננסה לספור דפוסים
     try {
+      await prisma.$connect();
+      console.log('✅ Prisma client connected');
+      
       await prisma.translationPattern.count();
-      console.log('✅ Database connection successful');
+      console.log('✅ Database connection successful - table exists');
     } catch (dbCheckError: any) {
-      console.error('❌ Database check failed:', dbCheckError);
-      // אם הטבלה לא קיימת, ננסה ליצור אותה
-      if (dbCheckError.message?.includes('does not exist') || dbCheckError.message?.includes('no such table')) {
-        console.log('⚠️ TranslationPattern table does not exist, attempting to create it...');
-        try {
-          // ננסה ליצור רשומה ריקה ואז למחוק אותה כדי לוודא שהטבלה קיימת
-          // אבל זה לא יעבוד, אז פשוט נחזיר שגיאה ברורה
-          return NextResponse.json({
-            success: false,
-            error: 'Table does not exist',
-            message: 'טבלת הדפוסים לא קיימת במסד הנתונים. נא להריץ: npx prisma db push',
-            details: process.env.NODE_ENV === 'development' ? {
-              error: dbCheckError.message,
-              suggestion: 'Run: npx prisma db push'
-            } : undefined
-          });
-        } catch (createTableError) {
-          return NextResponse.json({
-            success: false,
-            error: 'Database table missing',
-            message: 'טבלת הדפוסים לא קיימת במסד הנתונים',
-            details: process.env.NODE_ENV === 'development' ? {
-              error: dbCheckError.message,
-              suggestion: 'Run: npx prisma db push'
-            } : undefined
-          });
-        }
+      console.error('❌ Database check failed:', {
+        message: dbCheckError.message,
+        code: dbCheckError.code,
+        meta: dbCheckError.meta,
+      });
+      
+      // אם הטבלה לא קיימת, נחזיר שגיאה ברורה
+      if (dbCheckError.message?.includes('does not exist') || 
+          dbCheckError.message?.includes('no such table') ||
+          dbCheckError.code === 'P2021') {
+        return NextResponse.json({
+          success: false,
+          error: 'Table does not exist',
+          message: 'טבלת הדפוסים לא קיימת במסד הנתונים. Vercel צריך להריץ "prisma db push" בזמן ה-build.',
+          details: {
+            error: dbCheckError.message,
+            code: dbCheckError.code,
+            suggestion: 'Check Vercel build logs - should see "prisma db push" running. If not, tables were not created.',
+            checkBuildLogs: true,
+          }
+        });
       }
+      
+      // אם זו שגיאת חיבור
+      if (dbCheckError.message?.includes('connect') || 
+          dbCheckError.message?.includes('connection') ||
+          dbCheckError.code === 'P1001') {
+        return NextResponse.json({
+          success: false,
+          error: 'Connection failed',
+          message: 'לא ניתן להתחבר למסד הנתונים. נא לבדוק את ה-DATABASE_URL ב-Vercel.',
+          details: {
+            error: dbCheckError.message,
+            code: dbCheckError.code,
+            suggestion: '1. Check DATABASE_URL in Vercel Environment Variables\n2. Verify Supabase project is active\n3. Check if password is correct',
+            databaseUrlPreview: dbUrl.substring(0, 30) + '...',
+          }
+        });
+      }
+      
       throw dbCheckError;
     }
   } catch (importError: any) {
     console.error('❌ Error importing Prisma:', importError);
+    const hasDbUrl = !!process.env.DATABASE_URL;
+    const dbUrlPreview = hasDbUrl 
+      ? process.env.DATABASE_URL.substring(0, 30) + '...' 
+      : 'NOT SET';
+    
     return NextResponse.json({
       success: false,
       error: 'Database not available',
       message: 'לא ניתן להתחבר למסד הנתונים',
-      details: process.env.NODE_ENV === 'development' ? {
+      details: {
+        hasDatabaseUrl: hasDbUrl,
+        databaseUrlPreview: dbUrlPreview,
         error: importError.message,
-        suggestion: 'Check DATABASE_URL in .env.local'
-      } : undefined
+        suggestion: hasDbUrl 
+          ? 'DATABASE_URL is set but connection failed. Check if the URL is correct and Supabase is accessible.'
+          : 'DATABASE_URL is not set. Please add it to Vercel Environment Variables.',
+        environment: process.env.NODE_ENV,
+      }
     });
   }
 
