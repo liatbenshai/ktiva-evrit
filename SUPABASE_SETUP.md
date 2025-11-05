@@ -34,22 +34,20 @@
 
 ## שלב 4: יצירת הטבלאות במסד הנתונים
 
-הרצי את הפקודות הבאות בטרמינל:
+### ל-Vercel (אוטומטי):
+**לא צריך לעשות כלום!** Vercel יבנה את הטבלאות אוטומטית בזמן ה-build דרך ה-`postinstall` script.
 
+### למקומי (אופציונלי):
+אם את רוצה לבדוק מקומית, הרצי:
 ```bash
-# 1. יצירת Prisma Client עם PostgreSQL
-npm run db:generate
-
-# 2. העלאת הטבלאות למסד הנתונים
 npm run db:push
 ```
 
-אם הכל עובד, תראי הודעה:
-```
-✅ Database is now in sync with your Prisma schema
-```
+**לא צריך להריץ `npm run db:generate`** - זה קורה אוטומטית ב-`postinstall` וב-`build`.
 
-## שלב 5: הגדרת DATABASE_URL ב-Vercel
+## שלב 5: הגדרת DATABASE_URL ב-Vercel (חשוב מאוד!)
+
+**זה השלב החשוב ביותר!** בלי זה, Vercel לא יוכל להתחבר למסד הנתונים.
 
 1. לך ל-[Vercel Dashboard](https://vercel.com/dashboard)
 2. בחרי את הפרויקט `ktiva-evrit`
@@ -57,32 +55,54 @@ npm run db:push
 4. לחצי על **"Add New"**
 5. הוסיפי:
    - **Name**: `DATABASE_URL`
-   - **Value**: אותו `DATABASE_URL` מה-`.env.local`
-   - **Environment**: בחרי **Production**, **Preview**, ו-**Development**
+   - **Value**: העתקי את ה-`DATABASE_URL` מ-Supabase (החלפי `[YOUR-PASSWORD]` בסיסמה)
+   - **Environment**: בחרי **Production**, **Preview**, ו-**Development** (כל שלושת האפשרויות!)
 6. לחצי על **"Save"**
 
-## שלב 6: בדיקה
+**⚠️ חשוב:** אחרי שהוספת את `DATABASE_URL`, צריך לבצע **Redeploy**:
+- לך ל-**Deployments**
+- לחצי על ה-3 נקודות (⋯) ליד ה-deployment האחרון
+- בחרי **"Redeploy"**
+- או פשוט דחופי commit חדש ל-GitHub
 
-### בדיקה מקומית:
-1. הפעילי את השרת: `npm run dev`
-2. נסי לשמור דפוס חדש
-3. לך לדף "דפוסים שנלמדו" - אמור להופיע הדפוס
+## שלב 6: דחיפת השינויים ל-GitHub ו-Vercel
 
-### בדיקה ב-Vercel:
-1. דחוף את השינויים ל-GitHub:
+1. דחופי את השינויים ל-GitHub:
    ```bash
    git add .
    git commit -m "Switch to Supabase PostgreSQL"
    git push origin master
    ```
 2. Vercel יבנה את הפרויקט אוטומטית
-3. אחרי שהבנייה מסתיימת, נסי לשמור דפוס באתר
+3. בדקי את ה-build logs ב-Vercel - אמור לראות:
+   ```
+   Running "prisma generate"
+   Running "prisma db push"
+   ✅ Database is now in sync with your Prisma schema
+   ```
+
+## שלב 7: בדיקה
+
+### בדיקה ב-Vercel (Production):
+1. אחרי שהבנייה מסתיימת, לך לאתר ב-Vercel
+2. נסי לשמור דפוס חדש (מהדף "תיקון AI")
+3. לך לדף "דפוסים שנלמדו" - אמור להופיע הדפוס
+4. אם הדפוס מופיע, הכל עובד! 🎉
+
+### בדיקה מקומית (אופציונלי):
+אם את רוצה לבדוק מקומית גם:
+1. עדכני את `.env.local` עם ה-`DATABASE_URL` מ-Supabase
+2. הפעילי את השרת: `npm run dev`
+3. נסי לשמור דפוס חדש
 4. לך לדף "דפוסים שנלמדו" - אמור להופיע הדפוס
 
 ## פתרון בעיות
 
-### שגיאה: "relation does not exist"
-**פתרון**: הרצי `npm run db:push` שוב
+### שגיאה: "relation does not exist" ב-Vercel
+**פתרון**: 
+- ודאי שה-`DATABASE_URL` מוגדר ב-Vercel Environment Variables
+- ודאי שביצעת Redeploy אחרי הוספת `DATABASE_URL`
+- בדקי את ה-build logs - אמור לראות "prisma db push" רץ בהצלחה
 
 ### שגיאה: "connection refused"
 **פתרון**: 
