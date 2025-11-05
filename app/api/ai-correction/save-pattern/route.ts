@@ -10,12 +10,52 @@ export async function POST(req: NextRequest) {
   try {
     const { prisma: prismaClient } = await import('@/lib/prisma');
     prisma = prismaClient;
+    
+    // בדיקה שהמסד נתונים זמין - ננסה לספור דפוסים
+    try {
+      await prisma.translationPattern.count();
+      console.log('✅ Database connection successful');
+    } catch (dbCheckError: any) {
+      console.error('❌ Database check failed:', dbCheckError);
+      // אם הטבלה לא קיימת, ננסה ליצור אותה
+      if (dbCheckError.message?.includes('does not exist') || dbCheckError.message?.includes('no such table')) {
+        console.log('⚠️ TranslationPattern table does not exist, attempting to create it...');
+        try {
+          // ננסה ליצור רשומה ריקה ואז למחוק אותה כדי לוודא שהטבלה קיימת
+          // אבל זה לא יעבוד, אז פשוט נחזיר שגיאה ברורה
+          return NextResponse.json({
+            success: false,
+            error: 'Table does not exist',
+            message: 'טבלת הדפוסים לא קיימת במסד הנתונים. נא להריץ: npx prisma db push',
+            details: process.env.NODE_ENV === 'development' ? {
+              error: dbCheckError.message,
+              suggestion: 'Run: npx prisma db push'
+            } : undefined
+          });
+        } catch (createTableError) {
+          return NextResponse.json({
+            success: false,
+            error: 'Database table missing',
+            message: 'טבלת הדפוסים לא קיימת במסד הנתונים',
+            details: process.env.NODE_ENV === 'development' ? {
+              error: dbCheckError.message,
+              suggestion: 'Run: npx prisma db push'
+            } : undefined
+          });
+        }
+      }
+      throw dbCheckError;
+    }
   } catch (importError: any) {
-    console.error('Error importing Prisma:', importError);
+    console.error('❌ Error importing Prisma:', importError);
     return NextResponse.json({
       success: false,
       error: 'Database not available',
-      message: 'לא ניתן להתחבר למסד הנתונים'
+      message: 'לא ניתן להתחבר למסד הנתונים',
+      details: process.env.NODE_ENV === 'development' ? {
+        error: importError.message,
+        suggestion: 'Check DATABASE_URL in .env.local'
+      } : undefined
     });
   }
 
