@@ -128,10 +128,24 @@
 - ודאי שהסיסמה נכונה
 - ודאי שה-IP של Supabase מאפשר חיבורים (ב-Supabase: Settings → Database → Connection Pooling)
 
+### שגיאה: "Can't reach database server" ב-Vercel production
+**פתרון**: 
+- Vercel צריך להשתמש ב-**Connection Pooling** של Supabase (פורט 6543) במקום פורט 5432
+- לך ל-Supabase Dashboard → Settings → Database → Connection Pooling
+- העתקי את ה-URL מ-**"Connection string"** → **"Session mode"** או **"Transaction mode"**
+- זה נראה כך:
+  ```
+  postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
+  ```
+- או אם יש לך את ה-URL הישן, החלפי:
+  - פורט `5432` → `6543`
+  - הוסף `?pgbouncer=true` בסוף
+  - החלף את ה-host ל-`aws-0-[REGION].pooler.supabase.com` (אם יש)
+
 ### שגיאה: "too many connections"
 **פתרון**: 
 - Supabase חינמי מוגבל ל-60 חיבורים
-- השתמשי ב-Connection Pooling: `postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:6543/postgres?pgbouncer=true`
+- השתמשי ב-Connection Pooling (פורט 6543) - זה עוזר למנוע בעיות
 
 ## טיפים
 
