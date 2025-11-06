@@ -33,6 +33,7 @@ export const FORBIDDEN_AI_PATTERNS = [
   { pattern: /\bבסוף היום\b/g, suggestion: 'בסופו של דבר', explanation: '"בסוף היום" הוא תרגום ישיר מאנגלית' },
   { pattern: /\bבסוף של היום\b/g, suggestion: 'בסופו של דבר', explanation: '"בסוף של היום" הוא תרגום ישיר מאנגלית' },
   { pattern: /\bלקחת את זה לשלב הבא\b/g, suggestion: 'להתקדם/להמשיך', explanation: '"לקחת את זה לשלב הבא" הוא תרגום ישיר מאנגלית' },
+  { pattern: /\bלעבור לשלב הבא\b/g, suggestion: 'להתקדם', explanation: '"לעבור לשלב הבא" הוא תרגום ישיר מאנגלית - השתמש ב"להתקדם"' },
   { pattern: /\bלתת ערך\b/g, suggestion: 'להעניק/להועיל', explanation: '"לתת ערך" הוא תרגום ישיר מאנגלית' },
   { pattern: /\bלהשפיע על\b\s+\w+\s+\bבאופן\b/g, suggestion: 'להשפיע על', explanation: '"באופן" הוא מיותר - פשוט "להשפיע על"' },
   { pattern: /\bמשמעותי\b/g, suggestion: 'חשוב', explanation: '"משמעותי" הוא פורמלי מדי - נסה "חשוב"' },
