@@ -38,7 +38,6 @@ export default function AICorrector(): React.JSX.Element {
   
   // 🆕 דפוסים שהוחלו אוטומטית
   const [appliedPatterns, setAppliedPatterns] = useState<Array<{ from: string; to: string }>>([]);
-  const [isSaving, setIsSaving] = useState(false);
   
   // 🆕 בקרת למידה אוטומטית
   const [autoApplyPatterns, setAutoApplyPatterns] = useState(true);
@@ -704,60 +703,6 @@ export default function AICorrector(): React.JSX.Element {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // שמירת התיקון המלא (אופציונלי - לא חובה)
-  const saveCorrection = async () => {
-    const textToSave = editedText || correctedText;
-    
-    if (!originalText.trim() || !textToSave.trim()) {
-      alert('אנא וודא שיש טקסט מקורי וטקסט מתוקן');
-      return;
-    }
-
-    if (originalText === textToSave) {
-      alert('הטקסט המתוקן זהה למקורי - אין תיקון לשמור');
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const response = await fetch('/api/ai-correction', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          originalText,
-          correctedText: textToSave,
-          category: 'general',
-          userId: 'default-user',
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || errorData.details || `שגיאת שרת: ${response.status}`;
-        throw new Error(errorMessage);
-      }
-
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.error || 'השמירה נכשלה');
-      }
-      
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 5000);
-
-      // עדכון הטקסט המתוקן
-      setCorrectedText(textToSave);
-      setEditedText(textToSave);
-      setIsEditing(false);
-    } catch (error: any) {
-      console.error('Error saving correction:', error);
-      const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
-      alert(`שגיאה בשמירת התיקון: ${errorMessage}`);
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -1068,7 +1013,6 @@ export default function AICorrector(): React.JSX.Element {
           <li><strong>סמני מילה או משפט</strong> בטקסט המתוקן (עם העכבר) כדי לקבל 5-7 הצעות חלופיות</li>
           <li>לחצי על הצעה כדי להחליף אותה - <strong>השינוי נשמר אוטומטית</strong> (שמירה נקודתית)</li>
           <li>ערוכי את הטקסט ידנית במידת הצורך</li>
-          <li>לחצי על "💾 שמור תיקון מלא" רק אם רוצה לשמור את כל התיקון (אופציונלי)</li>
         </ol>
       </Card>
       
@@ -1298,30 +1242,14 @@ export default function AICorrector(): React.JSX.Element {
                     )}
                   </div>
                   <div className="flex gap-2">
-          <Button
-            onClick={saveCorrection}
-                      disabled={isSaving || originalText === editedText}
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                    >
-                      {isSaving ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          שומר...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4 mr-2" />
-                          שמור תיקון מלא (אופציונלי)
-                        </>
-                      )}
-                    </Button>
                     <Button
                       onClick={handleCancelEdit}
                       variant="outline"
+                      className="flex-1"
                     >
                       <X className="w-4 h-4 mr-2" />
                       ביטול
-          </Button>
+                    </Button>
                   </div>
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-xs text-blue-800">
