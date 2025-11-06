@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FileText, Upload, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
+import { SynonymButton } from '@/components/SynonymButton';
 
 type InputMode = 'text' | 'file';
 
@@ -238,11 +239,22 @@ export default function CreateSummary() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               🤖 שיפור אוטומטי
             </h3>
-            <ImprovementButtons
-              content={result}
-              documentType="summary"
-              onImprove={(improved) => setResult(improved)}
-            />
+            <div className="space-y-4">
+              <ImprovementButtons
+                content={result}
+                documentType="summary"
+                onImprove={(improved) => setResult(improved)}
+              />
+              <div className="flex justify-center">
+                <SynonymButton
+                  text={result}
+                  context="סיכום"
+                  category="summaries"
+                  userId="default-user"
+                  onVersionSelect={(version) => setResult(version)}
+                />
+              </div>
+            </div>
           </div>
         </>
       )}

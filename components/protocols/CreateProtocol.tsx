@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FileText, Users, ListChecks, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
+import { SynonymButton } from '@/components/SynonymButton';
 
 type ProtocolType = 'summary' | 'topical';
 
@@ -251,11 +252,22 @@ ${transcript}`;
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               🤖 שיפור אוטומטי
             </h3>
-            <ImprovementButtons
-              content={result}
-              documentType="protocol"
-              onImprove={(improved) => setResult(improved)}
-            />
+            <div className="space-y-4">
+              <ImprovementButtons
+                content={result}
+                documentType="protocol"
+                onImprove={(improved) => setResult(improved)}
+              />
+              <div className="flex justify-center">
+                <SynonymButton
+                  text={result}
+                  context={`פרוטוקול ${protocolType === 'summary' ? 'מסכם' : 'נושאי'}`}
+                  category="protocols"
+                  userId="default-user"
+                  onVersionSelect={(version) => setResult(version)}
+                />
+              </div>
+            </div>
             <p className="mt-3 text-sm text-gray-500">
               המערכת לומדת מהשיפורים שלך ומשתפרת עם הזמן
             </p>

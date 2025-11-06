@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
+import { SynonymButton } from '@/components/SynonymButton';
 
 export default function ImproveEmail() {
   const [email, setEmail] = useState('');
@@ -28,11 +29,22 @@ export default function ImproveEmail() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             🤖 שיפור אוטומטי
           </h3>
-          <ImprovementButtons
-            content={email}
-            documentType="email"
-            onImprove={(improved) => setEmail(improved)}
-          />
+          <div className="space-y-4">
+            <ImprovementButtons
+              content={email}
+              documentType="email"
+              onImprove={(improved) => setEmail(improved)}
+            />
+            <div className="flex justify-center">
+              <SynonymButton
+                text={email}
+                context="שיפור מייל"
+                category="emails"
+                userId="default-user"
+                onVersionSelect={(version) => setEmail(version)}
+              />
+            </div>
+          </div>
           <p className="mt-3 text-sm text-gray-500">
             בחר את סוג השיפור המבוקש - המערכת תשפר את המייל ותלמד מהעריכות שלך
           </p>

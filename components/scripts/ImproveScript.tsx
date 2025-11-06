@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Sparkles, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
+import { SynonymButton } from '@/components/SynonymButton';
 
 export default function ImproveScript() {
   const [originalScript, setOriginalScript] = useState('');
@@ -131,11 +132,22 @@ export default function ImproveScript() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               🤖 שיפורים נוספים
             </h3>
-            <ImprovementButtons
-              content={result}
-              documentType="script"
-              onImprove={(improved) => setResult(improved)}
-            />
+            <div className="space-y-4">
+              <ImprovementButtons
+                content={result}
+                documentType="script"
+                onImprove={(improved) => setResult(improved)}
+              />
+              <div className="flex justify-center">
+                <SynonymButton
+                  text={result}
+                  context="שיפור תסריט"
+                  category="scripts"
+                  userId="default-user"
+                  onVersionSelect={(version) => setResult(version)}
+                />
+              </div>
+            </div>
           </div>
         </>
       )}

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { BookOpen, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
+import { SynonymButton } from '@/components/SynonymButton';
 
 export default function CreateStory() {
   const [genre, setGenre] = useState('');
@@ -223,11 +224,22 @@ export default function CreateStory() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               🤖 שיפורים נוספים
             </h3>
-            <ImprovementButtons
-              content={result}
-              documentType="story"
-              onImprove={(improved) => setResult(improved)}
-            />
+            <div className="space-y-4">
+              <ImprovementButtons
+                content={result}
+                documentType="story"
+                onImprove={(improved) => setResult(improved)}
+              />
+              <div className="flex justify-center">
+                <SynonymButton
+                  text={result}
+                  context={`סיפור: ${genre || 'סיפור'}`}
+                  category="stories"
+                  userId="default-user"
+                  onVersionSelect={(version) => setResult(version)}
+                />
+              </div>
+            </div>
           </div>
         </>
       )}
