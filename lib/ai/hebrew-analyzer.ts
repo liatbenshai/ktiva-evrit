@@ -31,6 +31,7 @@ export const FORBIDDEN_AI_PATTERNS = [
   { pattern: /\bבהתאם ל\b/g, suggestion: 'לפי', explanation: '"בהתאם ל" הוא פורמלי מדי - השתמש ב"לפי"' },
   { pattern: /\bעל מנת\b/g, suggestion: 'כדי', explanation: '"על מנת" הוא פורמלי מדי - השתמש ב"כדי"' },
   { pattern: /\bבסוף היום\b/g, suggestion: 'בסופו של דבר', explanation: '"בסוף היום" הוא תרגום ישיר מאנגלית' },
+  { pattern: /\bבסוף של היום\b/g, suggestion: 'בסופו של דבר', explanation: '"בסוף של היום" הוא תרגום ישיר מאנגלית' },
   { pattern: /\bלקחת את זה לשלב הבא\b/g, suggestion: 'להתקדם/להמשיך', explanation: '"לקחת את זה לשלב הבא" הוא תרגום ישיר מאנגלית' },
   { pattern: /\bלתת ערך\b/g, suggestion: 'להעניק/להועיל', explanation: '"לתת ערך" הוא תרגום ישיר מאנגלית' },
   { pattern: /\bלהשפיע על\b\s+\w+\s+\bבאופן\b/g, suggestion: 'להשפיע על', explanation: '"באופן" הוא מיותר - פשוט "להשפיע על"' },
@@ -40,10 +41,27 @@ export const FORBIDDEN_AI_PATTERNS = [
   
   // ביטויי AI נפוצים
   { pattern: /\bאני רוצה להודות\b/g, suggestion: 'תודה', explanation: 'במקום "אני רוצה להודות" פשוט "תודה"' },
+  { pattern: /\bאני רוצה להודות לך\b/g, suggestion: 'תודה', explanation: 'במקום "אני רוצה להודות לך" פשוט "תודה"' },
   { pattern: /\bאני מבקש ממך בבקשה\b/g, suggestion: 'אני מבקש', explanation: 'מיותר לכתוב "מבקש" ו"בקשה" יחד' },
   { pattern: /\bאני אשמח מאוד\b/g, suggestion: 'אשמח', explanation: '"מאוד" הוא מיותר כאן' },
   { pattern: /\bבהתאם לבקשתך\b/g, suggestion: 'כפי שביקשת', explanation: '"בהתאם לבקשתך" הוא פורמלי מדי' },
   { pattern: /\bאני פונה אליכם\b/g, suggestion: 'אני פונה אליך/אליך', explanation: '"אליכם" יכול להיות "אליך" אם מדובר באדם אחד' },
+  
+  // דפוסים חדשים מהטקסטים ששתמשת נתנה
+  { pattern: /\bבמקום של\b/g, suggestion: 'במקום', explanation: '"במקום של" הוא תרגום ישיר מאנגלית - השתמש ב"במקום"' },
+  { pattern: /\bזה חשוב מאוד מאוד מאוד\b/g, suggestion: 'זה חשוב מאוד', explanation: 'חזרה מיותרת על "מאוד" - מספיק פעם אחת' },
+  { pattern: /\bזה חשוב מאוד מאוד\b/g, suggestion: 'זה חשוב מאוד', explanation: 'חזרה מיותרת על "מאוד" - מספיק פעם אחת' },
+  { pattern: /\bאני אהבה\b/g, suggestion: 'אני אוהב/ת', explanation: '"אני אהבה" הוא שגיאת דקדוק - צריך "אני אוהב" או "אני אוהבת"' },
+  { pattern: /\bבנוסף לכך, אני רוצה להוסיף\b/g, suggestion: 'בנוסף', explanation: '"בנוסף לכך, אני רוצה להוסיף" הוא מסורבל מדי - פשוט "בנוסף"' },
+  { pattern: /\bזה טוב רעיון\b/g, suggestion: 'זה רעיון טוב', explanation: 'סדר מילים לא נכון - צריך "זה רעיון טוב"' },
+  { pattern: /\bביחס ל-?\b/g, suggestion: 'לגבי', explanation: '"ביחס ל" הוא פורמלי מדי - נסה "לגבי"' },
+  { pattern: /\bזה יכול להיות שזה\b/g, suggestion: 'זה יכול להיות', explanation: '"זה יכול להיות שזה" הוא מסורבל - פשוט "זה יכול להיות"' },
+  { pattern: /\bאני רוצה לומר\b/g, suggestion: 'אני אומר', explanation: '"אני רוצה לומר" הוא מסורבל - פשוט "אני אומר"' },
+  { pattern: /\bאני רוצה להוסיף\b/g, suggestion: 'אני מוסיף', explanation: '"אני רוצה להוסיף" הוא מסורבל - פשוט "אני מוסיף"' },
+  { pattern: /\bהמטרה שלי היא לעשות\b/g, suggestion: 'אני רוצה לעשות', explanation: '"המטרה שלי היא לעשות" הוא מסורבל - פשוט "אני רוצה לעשות"' },
+  { pattern: /\bאני מסכים איתך לגמרי על\b/g, suggestion: 'אני מסכים איתך על', explanation: '"לגמרי" הוא מיותר כאן' },
+  { pattern: /\bאם זה אפשרי\b/g, suggestion: 'אם אפשר', explanation: '"אם זה אפשרי" הוא מסורבל - פשוט "אם אפשר"' },
+  { pattern: /\bלפני שאני עושה החלטה\b/g, suggestion: 'לפני שאני מחליט', explanation: '"עושה החלטה" הוא לא נכון - צריך "מחליט"' },
   
   // אנגליציזמים
   { pattern: /\bאקטואלי\b/g, suggestion: 'נוכחי/עדכני', explanation: '"אקטואלי" הוא אנגליזם' },
