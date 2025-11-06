@@ -782,7 +782,7 @@ export default function AICorrector(): React.JSX.Element {
           </button>
           <button
             onClick={importPatternsFromFile}
-            className="px-3 py-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+            className="px-3 py-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors text-xs sm:text-sm"
           >
             📂 יבא דפוסים (JSON)
           </button>
