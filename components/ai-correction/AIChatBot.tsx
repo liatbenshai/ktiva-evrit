@@ -68,8 +68,9 @@ export default function AIChatBot({ text, context, userId = 'default-user' }: AI
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-110 z-50"
+        className="fixed bottom-6 left-6 bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-110 z-[9999]"
         title="פתח בוט AI לעזרה"
+        aria-label="פתח בוט AI לעזרה"
       >
         <Bot className="w-6 h-6" />
       </button>
@@ -77,7 +78,7 @@ export default function AIChatBot({ text, context, userId = 'default-user' }: AI
   }
 
   return (
-    <div className="fixed bottom-6 left-6 w-96 max-h-[600px] bg-white rounded-lg shadow-2xl border border-gray-200 z-50 flex flex-col" dir="rtl">
+    <div className="fixed bottom-6 left-6 w-96 max-h-[600px] bg-white rounded-lg shadow-2xl border border-gray-200 z-[9999] flex flex-col" dir="rtl">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-4 rounded-t-lg flex items-center justify-between">
         <div className="flex items-center gap-2">

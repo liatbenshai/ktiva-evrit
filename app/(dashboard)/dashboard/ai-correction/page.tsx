@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { Home, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import AICorrector from '@/components/ai-correction/AICorrector';
+import AIChatBot from '@/components/ai-correction/AIChatBot';
 
 export default function AICorrectPage() {
+  const [currentText, setCurrentText] = useState('');
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50" dir="rtl">
       {/* Header with back button */}
@@ -45,6 +48,13 @@ export default function AICorrectPage() {
       
       {/* Footer decoration */}
       <div className="h-20 bg-gradient-to-t from-violet-100 via-transparent to-transparent mt-12 opacity-30"></div>
+
+      {/* בוט AI לעזרה - מחוץ ל-div הראשי כדי שיהיה fixed נכון */}
+      <AIChatBot 
+        text=""
+        context="תיקון AI"
+        userId="default-user"
+      />
     </div>
   );
 }

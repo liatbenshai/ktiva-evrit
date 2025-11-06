@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Edit2, Save, X, Copy, Check, Loader2, Languages, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
+import AIChatBot from './AIChatBot';
 
 interface TranslationIssue {
   type: string;
@@ -1712,6 +1713,7 @@ export default function AICorrector(): React.JSX.Element {
           </ul>
         </Card>
       )}
+
     </div>
   );
 }
