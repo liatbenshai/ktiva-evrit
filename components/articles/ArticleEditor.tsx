@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import { SynonymButton } from '@/components/SynonymButton';
+import AIChatBot from '@/components/ai-correction/AIChatBot';
 
 interface ArticleEditorProps {
   initialContent: string;
@@ -322,6 +323,13 @@ export default function ArticleEditor({
           </div>
         )}
       </div>
+
+      {/* בוט AI לעזרה */}
+      <AIChatBot 
+        text={content}
+        context={`מאמר: ${title}`}
+        userId="default-user"
+      />
     </div>
   );
 }

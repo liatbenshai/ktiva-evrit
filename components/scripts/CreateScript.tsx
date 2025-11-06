@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Film, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
+import AIChatBot from '@/components/ai-correction/AIChatBot';
 
 export default function CreateScript() {
   const [topic, setTopic] = useState('');
@@ -37,7 +38,13 @@ export default function CreateScript() {
       });
 
       if (!response.ok) throw new Error('Failed');
-      const { result: generatedScript } = await response.json();
+      const { result: generatedScript, appliedPatterns } = await response.json();
+      
+      // הצגת הודעה אם הוחלו דפוסים
+      if (appliedPatterns && appliedPatterns.length > 0) {
+        console.log(`✅ הוחלו ${appliedPatterns.length} דפוסים שנלמדו על התסריט`);
+      }
+      
       setResult(generatedScript);
     } catch (error) {
       alert('אירעה שגיאה ביצירת התסריט');
@@ -219,6 +226,15 @@ export default function CreateScript() {
             </ul>
           </div>
         </>
+      )}
+
+      {/* בוט AI לעזרה */}
+      {result && (
+        <AIChatBot 
+          text={result}
+          context={`תסריט: ${topic}`}
+          userId="default-user"
+        />
       )}
     </div>
   );

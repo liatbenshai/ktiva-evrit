@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateText } from '@/lib/ai/claude';
+import { applyLearnedPatterns } from '@/lib/ai/hebrew-analyzer';
 import {
   articlePrompt,
   emailPrompt,
@@ -103,14 +104,51 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    const result = await generateText({
+    let result = await generateText({
       prompt,
       systemPrompt,
       maxTokens: type === 'article' ? 8192 : (data.maxTokens || 4096), // Double for articles
       temperature: data.temperature || 0.7,
     });
 
-    return NextResponse.json({ result });
+    // 🔥 החלת דפוסים שנלמדו על הטקסט שנוצר
+    const userId = data.userId || 'default-user';
+    let appliedPatterns: Array<{ from: string; to: string }> = [];
+    
+    try {
+      const { prisma } = await import('@/lib/prisma');
+      const learnedPatterns = await prisma.translationPattern.findMany({
+        where: { 
+          userId,
+          confidence: { gte: 0.7 }, // רק דפוסים בטוחים
+        },
+        orderBy: { confidence: 'desc' },
+        take: 50,
+      });
+
+      if (learnedPatterns.length > 0) {
+        const patterns = learnedPatterns.map(p => ({
+          from: p.badPattern,
+          to: p.goodPattern,
+          confidence: p.confidence,
+        }));
+
+        const patternResult = applyLearnedPatterns(result, patterns);
+        result = patternResult.correctedText;
+        appliedPatterns = patternResult.appliedPatterns;
+        
+        console.log(`✅ Applied ${appliedPatterns.length} learned patterns to ${type}:`, 
+          appliedPatterns.map(p => `"${p.from}" → "${p.to}"`).join(', '));
+      }
+    } catch (dbError) {
+      console.error('Error applying learned patterns:', dbError);
+      // המשך בלי דפוסים במקום להיכשל
+    }
+
+    return NextResponse.json({ 
+      result,
+      appliedPatterns: appliedPatterns.length > 0 ? appliedPatterns : undefined,
+    });
   } catch (error) {
     console.error('Error in Claude API:', error);
     

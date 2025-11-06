@@ -49,7 +49,13 @@ export default function CreateArticle() {
 
       if (!response.ok) throw new Error('Failed to generate');
 
-      const { result } = await response.json();
+      const { result, appliedPatterns } = await response.json();
+      
+      // הצגת הודעה אם הוחלו דפוסים
+      if (appliedPatterns && appliedPatterns.length > 0) {
+        console.log(`✅ הוחלו ${appliedPatterns.length} דפוסים שנלמדו על המאמר`);
+      }
+      
       setGeneratedContent(result);
     } catch (error) {
       console.error('Error:', error);
