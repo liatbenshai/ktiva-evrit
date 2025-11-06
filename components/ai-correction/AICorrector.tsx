@@ -708,19 +708,19 @@ export default function AICorrector(): React.JSX.Element {
   return (
     <div className="space-y-6" dir="rtl">
       {/* פאנל בקרה עליון */}
-      <Card className="p-4 bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+      <Card className="p-3 sm:p-4 bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200">
+        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
             {/* Toggle להחלה אוטומטית */}
-            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-indigo-200">
+            <div className="flex items-center gap-2 bg-white px-3 sm:px-4 py-2 rounded-lg border border-indigo-200 w-full sm:w-auto">
               <input
                 type="checkbox"
                 id="autoApply"
                 checked={autoApplyPatterns}
                 onChange={(e) => setAutoApplyPatterns(e.target.checked)}
-                className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
               />
-              <label htmlFor="autoApply" className="text-sm font-medium text-gray-700 cursor-pointer">
+              <label htmlFor="autoApply" className="text-xs sm:text-sm font-medium text-gray-700 cursor-pointer">
                 {autoApplyPatterns ? '✅ החלה אוטומטית מופעלת' : '⏸️ החלה אוטומטית מושבתת'}
               </label>
             </div>
@@ -728,7 +728,7 @@ export default function AICorrector(): React.JSX.Element {
             {/* כפתור ייבוא דפוסים */}
             <button
               onClick={importPrebuiltPatterns}
-              className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-sm"
+              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-xs sm:text-sm w-full sm:w-auto"
             >
               ⚡ ייבוא 50+ דפוסי AI נפוצים
             </button>
@@ -739,7 +739,7 @@ export default function AICorrector(): React.JSX.Element {
                 loadStats();
                 setShowStatsModal(true);
               }}
-              className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-sm"
+              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-xs sm:text-sm w-full sm:w-auto"
             >
               📊 הצג סטטיסטיקות
             </button>
@@ -748,7 +748,7 @@ export default function AICorrector(): React.JSX.Element {
             <button
               onClick={startTrainingMode}
               disabled={!originalText.trim()}
-              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
             >
               🎓 מצב אימון
             </button>
@@ -756,7 +756,7 @@ export default function AICorrector(): React.JSX.Element {
             {/* כפתור Batch Learning */}
             <button
               onClick={() => setShowBatchMode(true)}
-              className="px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-sm"
+              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-xs sm:text-sm w-full sm:w-auto"
             >
               🔄 למידה קבוצתית
             </button>
@@ -765,18 +765,18 @@ export default function AICorrector(): React.JSX.Element {
           {/* קישור לדפוסים */}
           <Link
             href="/dashboard/ai-correction/learned-patterns"
-            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-sm"
+            className="px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-xs sm:text-sm w-full sm:w-auto text-center"
           >
             📚 צפייה בכל הדפוסים
           </Link>
         </div>
 
         {/* שורה שנייה - ייצוא/ייבוא */}
-        <div className="flex flex-wrap items-center gap-3 mt-3 text-sm">
-          <span className="text-gray-600 font-medium">שיתוף דפוסים:</span>
+        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-2 sm:gap-3 mt-3 text-xs sm:text-sm">
+          <span className="text-gray-600 font-medium w-full sm:w-auto">שיתוף דפוסים:</span>
           <button
             onClick={exportPatterns}
-            className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+            className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-xs sm:text-sm"
           >
             💾 ייצא דפוסים (JSON)
           </button>
