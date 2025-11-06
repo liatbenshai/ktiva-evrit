@@ -4,13 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3002",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && prisma db push --skip-generate && next build",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
+    "db:check": "tsx scripts/check-database.ts",
+    "db:convert": "tsx scripts/convert-to-pooling-url.ts",
     "postinstall": "prisma generate",
     "deploy": "vercel --prod"
   },
@@ -34,6 +36,7 @@
   },
   "devDependencies": {
     "eslint": "^9",
-    "eslint-config-next": "15.1.0"
+    "eslint-config-next": "15.1.0",
+    "tsx": "^4.7.0"
   }
 }
