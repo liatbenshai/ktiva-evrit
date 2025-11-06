@@ -108,32 +108,33 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50" dir="rtl">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm shadow-lg border-b border-purple-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                <User className="w-6 h-6 text-white" />
+      <header className="bg-white/80 backdrop-blur-sm shadow-lg border-b border-purple-100 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <User className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">שלום,</p>
-                <p className="font-medium text-gray-900">משתמש</p>
+                <p className="text-xs sm:text-sm text-gray-600">שלום,</p>
+                <p className="text-sm sm:text-base font-medium text-gray-900">משתמש</p>
               </div>
             </div>
             <div className="flex gap-2">
               <a
                 href="/"
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                חזרה לעמוד הראשי
+                <span className="hidden sm:inline">חזרה לעמוד הראשי</span>
+                <span className="sm:hidden">בית</span>
               </a>
             </div>
           </div>
           <div className="text-center">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent px-2">
               כתיבה בעברית ✨
             </h1>
-            <p className="mt-3 text-lg text-gray-700 font-medium">
+            <p className="mt-2 sm:mt-3 text-sm sm:text-base lg:text-lg text-gray-700 font-medium px-2">
               הפלטפורמה שלך לכתיבה מקצועית וזורמת בעברית תקנית
             </p>
           </div>
@@ -141,18 +142,18 @@ export default function DashboardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-10 text-center">
-          <h2 className="text-3xl font-bold text-gray-800 mb-3">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8 lg:py-12">
+        <div className="mb-6 sm:mb-8 lg:mb-10 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 sm:mb-3 px-2">
             🎯 מה נכתוב היום?
           </h2>
-          <p className="text-gray-600 text-lg">
+          <p className="text-sm sm:text-base lg:text-lg text-gray-600 px-2">
             בחרי כלי ונתחיל ליצור תוכן מדהים
           </p>
         </div>
 
         {/* Modules Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {modules.map((module, index) => {
             const Icon = module.icon;
             return (
