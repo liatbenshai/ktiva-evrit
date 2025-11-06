@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
+import AIChatBot from '@/components/ai-correction/AIChatBot';
 
 export default function ImproveEmail() {
   const [email, setEmail] = useState('');
@@ -37,6 +38,13 @@ export default function ImproveEmail() {
           </p>
         </div>
       )}
+
+      {/* בוט AI לעזרה */}
+      <AIChatBot 
+        text={email || ''}
+        context="שיפור מייל"
+        userId="default-user"
+      />
     </div>
   );
 }

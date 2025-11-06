@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { BookOpen, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
+import AIChatBot from '@/components/ai-correction/AIChatBot';
 
 export default function CreateStory() {
   const [genre, setGenre] = useState('');
@@ -230,6 +231,13 @@ export default function CreateStory() {
           </div>
         </>
       )}
+
+      {/* בוט AI לעזרה */}
+      <AIChatBot 
+        text={result || ''}
+        context={result ? `סיפור: ${genre}` : 'יצירת סיפור'}
+        userId="default-user"
+      />
     </div>
   );
 }

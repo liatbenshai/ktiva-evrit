@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Send, Loader2, Facebook, Instagram, Linkedin, Twitter } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
+import AIChatBot from '@/components/ai-correction/AIChatBot';
 
 type Platform = 'facebook' | 'instagram' | 'linkedin' | 'twitter';
 
@@ -208,6 +209,13 @@ export default function CreatePost() {
           </div>
         </>
       )}
+
+      {/* בוט AI לעזרה */}
+      <AIChatBot 
+        text={result || ''}
+        context={result ? `פוסט ל-${platformInfo[platform].name}` : 'יצירת פוסט'}
+        userId="default-user"
+      />
     </div>
   );
 }

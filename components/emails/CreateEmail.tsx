@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Send, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import { SynonymButton } from '@/components/SynonymButton';
+import AIChatBot from '@/components/ai-correction/AIChatBot';
 
 export default function CreateEmail() {
   const [context, setContext] = useState('');
@@ -152,6 +153,13 @@ export default function CreateEmail() {
           </div>
         </>
       )}
+
+      {/* בוט AI לעזרה */}
+      <AIChatBot 
+        text={result || ''}
+        context={result ? 'מייל' : 'יצירת מייל'}
+        userId="default-user"
+      />
     </div>
   );
 }

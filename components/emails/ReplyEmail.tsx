@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Reply, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
+import AIChatBot from '@/components/ai-correction/AIChatBot';
 
 export default function ReplyEmail() {
   const [receivedEmail, setReceivedEmail] = useState('');
@@ -144,6 +145,13 @@ export default function ReplyEmail() {
           </div>
         </>
       )}
+
+      {/* בוט AI לעזרה */}
+      <AIChatBot 
+        text={result || ''}
+        context={result ? 'מענה למייל' : 'יצירת מענה למייל'}
+        userId="default-user"
+      />
     </div>
   );
 }

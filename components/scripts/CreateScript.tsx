@@ -229,13 +229,11 @@ export default function CreateScript() {
       )}
 
       {/* בוט AI לעזרה */}
-      {result && (
-        <AIChatBot 
-          text={result}
-          context={`תסריט: ${topic}`}
-          userId="default-user"
-        />
-      )}
+      <AIChatBot 
+        text={result || ''}
+        context={result ? `תסריט: ${topic}` : 'יצירת תסריט'}
+        userId="default-user"
+      />
     </div>
   );
 }

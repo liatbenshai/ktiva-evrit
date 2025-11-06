@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Sparkles, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
+import AIChatBot from '@/components/ai-correction/AIChatBot';
 
 export default function ImproveScript() {
   const [originalScript, setOriginalScript] = useState('');
@@ -138,6 +139,13 @@ export default function ImproveScript() {
           </div>
         </>
       )}
+
+      {/* בוט AI לעזרה */}
+      <AIChatBot 
+        text={result || originalScript || ''}
+        context={result ? 'שיפור תסריט' : 'יצירת תסריט'}
+        userId="default-user"
+      />
     </div>
   );
 }
