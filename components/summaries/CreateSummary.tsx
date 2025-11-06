@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FileText, Upload, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
+import AIChatBot from '@/components/ai-correction/AIChatBot';
 
 type InputMode = 'text' | 'file';
 
@@ -245,6 +246,13 @@ export default function CreateSummary() {
           </div>
         </>
       )}
+
+      {/* בוט AI לעזרה */}
+      <AIChatBot 
+        text={result || text || ''}
+        context={result ? 'סיכום' : 'יצירת סיכום'}
+        userId="default-user"
+      />
     </div>
   );
 }

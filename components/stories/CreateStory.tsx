@@ -235,7 +235,7 @@ export default function CreateStory() {
       {/* בוט AI לעזרה */}
       <AIChatBot 
         text={result || ''}
-        context={result ? `סיפור: ${genre}` : 'יצירת סיפור'}
+        context={result ? `סיפור: ${genre || 'סיפור'}` : 'יצירת סיפור'}
         userId="default-user"
       />
     </div>
