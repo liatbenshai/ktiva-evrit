@@ -19,46 +19,42 @@ export async function POST(req: NextRequest) {
     let prompt = '';
     let systemPrompt = 'אתה עוזר כתיבה מקצועי בעברית. תפקידך לעזור למשתמשים לכתוב טקסטים בעברית תקנית, ברורה ומקצועית.';
 
-    switch (type) {
-      case 'article':
-        prompt = articlePrompt(
-          data.title, 
-          data.keywords, 
-          data.wordCount,
-          data.additionalInstructions
-        );
-        systemPrompt = 'אתה כותב תוכן מומחה SEO עם ידע מעמיק בכללי Yoast ואופטימיזציה למנועי חיפוש. אתה כותב בעברית תקנית, טבעית וזורמת - לא תרגום מילולי מאנגלית.';
-        break;
+      switch (type) {
+        case 'article':
+          prompt = articlePrompt(
+            data.title,
+            data.keywords,
+            data.wordCount,
+            data.additionalInstructions
+          );
+          systemPrompt =
+            'אתה כותב תוכן מומחה SEO עם ידע מעמיק בכללי Yoast ואופטימיזציה למנועי חיפוש. אתה כותב בעברית תקנית, טבעית וזורמת - לא תרגום מילולי מאנגלית.';
+          break;
 
-      case 'email':
-        prompt = emailPrompt(data.context, data.recipient, data.tone);
-        break;
+        case 'email':
+          prompt = emailPrompt(data.context, data.recipient, data.tone);
+          break;
 
-      case 'post':
-        prompt = postPrompt(data.topic, data.platform, data.length);
-        break;
+        case 'post':
+          prompt = postPrompt(data.topic, data.platform, data.length);
+          break;
 
-      case 'story':
-        prompt = storyPrompt(
-          data.genre, 
-          data.characters, 
-          data.setting, 
-          data.plot, 
-          data.length,
-          data.tone,
-          data.additionalInstructions
-        );
-        break;
+        case 'story':
+          prompt = storyPrompt(
+            data.genre,
+            data.characters,
+            data.setting,
+            data.plot,
+            data.length,
+            data.tone,
+            data.additionalInstructions
+          );
+          break;
 
-      case 'summary':
-        // Check if this is a URL
-        if (data.isUrl) {
-          // User provided a URL - we need to fetch it first using web_fetch
-          // The text field contains the URL
-          const urlToFetch = data.text;
-          
-          // Create a prompt that asks Claude to fetch and summarize
-          prompt = `אנא השתמש ב-web_fetch tool כדי למשוך את התוכן מהכתובת הבאה, ולאחר מכן סכם אותו בעברית תקנית.
+        case 'summary':
+          if (data.isUrl) {
+            const urlToFetch = data.text;
+            prompt = `אנא השתמש ב-web_fetch tool כדי למשוך את התוכן מהכתובת הבאה, ולאחר מכן סכם אותו בעברית תקנית.
 
 כתובת: ${urlToFetch}
 
@@ -69,49 +65,67 @@ ${data.focusPoints ? `נקודות מיקוד: ${data.focusPoints}` : ''}
 1. משוך את התוכן מה-URL באמצעות web_fetch
 2. סכם את התוכן בעברית תקנית
 3. התמקד בנקודות המרכזיות`;
-        } else {
-          // Regular text summary
-          prompt = summaryPrompt(data.text, data.length, data.focusPoints);
+          } else {
+            prompt = summaryPrompt(data.text, data.length, data.focusPoints);
+          }
+          break;
+
+        case 'protocol':
+          prompt = protocolPrompt(data.transcript, data.includeDecisions);
+          systemPrompt =
+            'אתה מומחה בכתיבת פרוטוקולים. חוק ברזל: כתוב את דברי הדוברים בגוף ראשון בלבד - "אני", "אנחנו", "לדעתי". לעולם אל תכתוב "הוא אמר", "היא הציעה", "הם דנו". כתוב כאילו הדובר עצמו כותב את הדברים שלו.';
+          break;
+
+        case 'script': {
+          prompt = scriptPrompt({
+            topic: data.topic,
+            duration: data.duration,
+            audience: data.audience,
+            style: data.style,
+            additionalInstructions: data.additionalInstructions,
+            moduleTitle: data.moduleTitle,
+            learningObjectives: data.learningObjectives,
+            workflowSteps: data.workflowSteps,
+            keyTerminology: data.keyTerminology,
+            referenceExamples: data.referenceExamples,
+            practiceIdeas: data.practiceIdeas,
+            studentPainPoints: data.studentPainPoints,
+            callToAction: data.callToAction,
+            knowledgePack: data.knowledgePack,
+            teleprompterNotesLevel: data.teleprompterNotesLevel,
+            voicePersona: data.voicePersona,
+            successCriteria: data.successCriteria,
+            referenceScript: data.referenceScript,
+            examplesToCover: data.examplesToCover,
+          });
+          systemPrompt =
+            'אתה תסריטאי מקצועי בעברית. כתוב תסריט לטלפרומפטר בשפה מדוברת, שלב את היעדים וההנחיות שהמשתמש מספק, שמור על קול נשי בגוף ראשון ופנייה ישירה, והצג הערות במה בסוגריים מרובעים בלבד.';
+          break;
         }
-        break;
 
-      case 'protocol':
-        prompt = protocolPrompt(data.transcript, data.includeDecisions);
-        systemPrompt = 'אתה מומחה בכתיבת פרוטוקולים. חוק ברזל: כתוב את דברי הדוברים בגוף ראשון בלבד - "אני", "אנחנו", "לדעתי". לעולם אל תכתוב "הוא אמר", "היא הציעה", "הם דנו". כתוב כאילו הדובר עצמו כותב את הדברים שלו.';
-        break;
+        case 'aiPrompt':
+          prompt = aiPromptPrompt(
+            data.goal,
+            data.context,
+            data.outputFormat,
+            data.additionalRequirements
+          );
+          systemPrompt =
+            'אתה מומחה בכתיבת Prompts אפקטיביים למודלי שפה גדולים (LLMs). אתה יודע איך לכתוב prompts ברורים, מדויקים ואפקטיביים. אתה כותב בעברית תקנית כשצריך, ובאנגלית כשה-prompt מיועד למודלים באנגלית. אתה פתוח ללמוד ולשפר מעריכות המשתמש.';
+          break;
 
-      case 'script':
-        prompt = scriptPrompt(
-          data.topic,
-          data.duration,
-          data.audience,
-          data.style,
-          data.additionalInstructions
-        );
-        systemPrompt = 'אתה תסריטאי מקצועי עם ניסיון רב בכתיבת תסריטים. אתה כותב בעברית מדוברת, טבעית וזורמת - לא תרגום מילולי מאנגלית. אתה פתוח ללמוד ולשפר מעריכות המשתמש ומשוב שלו.';
-        break;
+        case 'improve':
+          prompt = `${data.instructions || 'שפר את הטקסט הבא לעברית תקנית וזורמת'}${data.keywords ? `\n\nמילות מפתח לשילוב: ${data.keywords}` : ''}:\n\n${data.text}`;
+          systemPrompt =
+            'אתה כותב תוכן מומחה SEO עם ידע מעמיק בכללי Yoast ואופטימיזציה למנועי חיפוש. אתה כותב בעברית תקנית, טבעית וזורמת - לא תרגום מילולי מאנגלית. שמור על המסר המקורי אך שפר את הניסוח, הבהרה והמבנה.';
+          break;
 
-      case 'aiPrompt':
-        prompt = aiPromptPrompt(
-          data.goal,
-          data.context,
-          data.outputFormat,
-          data.additionalRequirements
-        );
-        systemPrompt = 'אתה מומחה בכתיבת Prompts אפקטיביים למודלי שפה גדולים (LLMs). אתה יודע איך לכתוב prompts ברורים, מדויקים ואפקטיביים. אתה כותב בעברית תקנית כשצריך, ובאנגלית כשה-prompt מיועד למודלים באנגלית. אתה פתוח ללמוד ולשפר מעריכות המשתמש.';
-        break;
-
-      case 'improve':
-        prompt = `${data.instructions || 'שפר את הטקסט הבא לעברית תקנית וזורמת'}${data.keywords ? `\n\nמילות מפתח לשילוב: ${data.keywords}` : ''}:\n\n${data.text}`;
-        systemPrompt = 'אתה כותב תוכן מומחה SEO עם ידע מעמיק בכללי Yoast ואופטימיזציה למנועי חיפוש. אתה כותב בעברית תקנית, טבעית וזורמת - לא תרגום מילולי מאנגלית. שמור על המסר המקורי אך שפר את הניסוח, הבהרה והמבנה.';
-        break;
-
-      default:
-        return NextResponse.json(
-          { error: 'סוג לא נתמך' },
-          { status: 400 }
-        );
-    }
+        default:
+          return NextResponse.json(
+            { error: 'סוג לא נתמך' },
+            { status: 400 }
+          );
+      }
 
     const result = await generateText({
       prompt,

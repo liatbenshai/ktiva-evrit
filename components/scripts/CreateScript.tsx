@@ -14,6 +14,19 @@ export default function CreateScript() {
   const [additionalInstructions, setAdditionalInstructions] = useState('');
   const [result, setResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [useTranscriptionKnowledge, setUseTranscriptionKnowledge] = useState(true);
+  const [voicePersona, setVoicePersona] = useState('ליאת, מרצה לקורס תמלול מקוון');
+  const [moduleTitle, setModuleTitle] = useState('');
+  const [learningObjectives, setLearningObjectives] = useState('');
+  const [workflowSteps, setWorkflowSteps] = useState('');
+  const [keyTerminology, setKeyTerminology] = useState('');
+  const [referenceExamples, setReferenceExamples] = useState('');
+  const [practiceIdeas, setPracticeIdeas] = useState('');
+  const [studentPainPoints, setStudentPainPoints] = useState('');
+  const [callToAction, setCallToAction] = useState('');
+  const [successCriteria, setSuccessCriteria] = useState('');
+  const [teleprompterNotesLevel, setTeleprompterNotesLevel] = useState<'basic' | 'detailed'>('detailed');
+  const [referenceScript, setReferenceScript] = useState('');
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
@@ -34,6 +47,20 @@ export default function CreateScript() {
             audience,
             style,
             additionalInstructions,
+            voicePersona,
+            moduleTitle,
+            learningObjectives,
+            workflowSteps,
+            keyTerminology,
+            referenceExamples,
+            practiceIdeas,
+            studentPainPoints,
+            callToAction,
+            successCriteria,
+            knowledgePack: useTranscriptionKnowledge ? 'transcriptionCourse' : 'general',
+            teleprompterNotesLevel,
+            referenceScript,
+            userId: 'default-user',
           },
         }),
       });
@@ -145,6 +172,185 @@ export default function CreateScript() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
           </div>
+
+            <div className="border-t border-gray-200 pt-6 mt-6 space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">התאמת הקורס והתסריט</h3>
+                  <p className="text-sm text-gray-600">
+                    שיתופי פעולה עם חבילת הידע של הקורס ישמרו על קול אחיד, תהליך עבודה ברור ודגשים מקצועיים מתקדמים לתמלול.
+                  </p>
+                </div>
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={useTranscriptionKnowledge}
+                    onChange={(e) => setUseTranscriptionKnowledge(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  השתמש בחבילת הידע של קורס התמלול
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    פרסונה / קול הדיבור
+                  </label>
+                  <input
+                    type="text"
+                    value={voicePersona}
+                    onChange={(e) => setVoicePersona(e.target.value)}
+                    placeholder='לדוגמה: "ליאת, מרצה מקוונת לתמלול – חמה, מקצועית ומשתפת תהליך"'
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    מודול / שם השיעור
+                  </label>
+                  <input
+                    type="text"
+                    value={moduleTitle}
+                    onChange={(e) => setModuleTitle(e.target.value)}
+                    placeholder='לדוגמה: "שיעור 4: סימני פיסוק וטעויות נפוצות"'
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    רמת פירוט הערות טלפרומפטר
+                  </label>
+                  <select
+                    value={teleprompterNotesLevel}
+                    onChange={(e) => setTeleprompterNotesLevel(e.target.value as 'basic' | 'detailed')}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="detailed">פירוט מלא (הערות במה לכל קטע)</option>
+                    <option value="basic">תמציתי (רק הערות חובה)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    קריאה לפעולה בסיום (אופציונלי)
+                  </label>
+                  <input
+                    type="text"
+                    value={callToAction}
+                    onChange={(e) => setCallToAction(e.target.value)}
+                    placeholder='לדוגמה: "שתפו את התמלול שלכם בקבוצת הקורס עד יום רביעי"'
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    יעדי למידה לשילוב בדיבור
+                  </label>
+                  <textarea
+                    value={learningObjectives}
+                    onChange={(e) => setLearningObjectives(e.target.value)}
+                    placeholder="הפרידי בשורות: לדוגמה&#10;- להבין מתי מוסיפים טיים-קוד&#10;- לזהות מילים שאין צורך לתמלל"
+                    rows={4}
+                    dir="rtl"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    שלבי עבודה / תהליך חובה
+                  </label>
+                  <textarea
+                    value={workflowSteps}
+                    onChange={(e) => setWorkflowSteps(e.target.value)}
+                    placeholder="לדוגמה:&#10;- האזנה ראשונית מלאה&#10;- חלוקה לקטעים של 45 שניות&#10;- תיעוד טעויות נפוצות לתיקון בסוף"
+                    rows={4}
+                    dir="rtl"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    מושגים / מונחים שחובה להזכיר
+                  </label>
+                  <textarea
+                    value={keyTerminology}
+                    onChange={(e) => setKeyTerminology(e.target.value)}
+                    placeholder='לדוגמה: "טיים-קוד", "תמלול מילולי", "סימני פיסוק", "בקרת איכות"'
+                    rows={3}
+                    dir="rtl"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    דוגמאות / קבצים להדגמה
+                  </label>
+                  <textarea
+                    value={referenceExamples}
+                    onChange={(e) => setReferenceExamples(e.target.value)}
+                    placeholder='לדוגמה: "[מציגים על המסך: קובץ תמלול עם טעויות סימני פיסוק]"'
+                    rows={3}
+                    dir="rtl"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    תרגולים מודרכים בשידור
+                  </label>
+                  <textarea
+                    value={practiceIdeas}
+                    onChange={(e) => setPracticeIdeas(e.target.value)}
+                    placeholder="לדוגמה: תרגול משותף על קטע שמע של 30 שניות, סימון מילים להדגשה"
+                    rows={3}
+                    dir="rtl"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    אתגרים של הסטודנטים שכדאי לענות עליהם
+                  </label>
+                  <textarea
+                    value={studentPainPoints}
+                    onChange={(e) => setStudentPainPoints(e.target.value)}
+                    placeholder="לדוגמה: התמודדות עם דיבור מהיר, זיהוי דוברים חדשים, שמירה על אנרגיה לאורך ההקלדה"
+                    rows={3}
+                    dir="rtl"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    קריטריוני הצלחה לשיעור (אופציונלי)
+                  </label>
+                  <textarea
+                    value={successCriteria}
+                    onChange={(e) => setSuccessCriteria(e.target.value)}
+                    placeholder='לדוגמה: "הסטודנט יודע להוסיף טיים-קוד בסימונים חשובים ולהבחין בין תמלול מילולי לערוך"'
+                    rows={2}
+                    dir="rtl"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    תסריט קיים להשראה (לא יועתק)
+                  </label>
+                  <textarea
+                    value={referenceScript}
+                    onChange={(e) => setReferenceScript(e.target.value)}
+                    placeholder="הדביקי כאן קטע קצר מהתסריט שלך כדי ללמד את המערכת את הקול והקצב (אופציונלי)"
+                    rows={4}
+                    dir="rtl"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm"
+                  />
+                </div>
+              </div>
+            </div>
 
           <button
             onClick={handleGenerate}

@@ -73,22 +73,39 @@ export async function POST(req: NextRequest) {
         systemPrompt = 'אתה מומחה בכתיבת פרוטוקולים. חוק ברזל: כתוב את דברי הדוברים בגוף ראשון בלבד - "אני", "אנחנו", "לדעתי". לעולם אל תכתוב "הוא אמר", "היא הציעה", "הם דנו". כתוב כאילו הדובר עצמו כותב את הדברים שלו.';
         break;
 
-      case 'script':
-        prompt = scriptPrompt(
-          data.topic,
-          data.duration,
-          data.audience,
-          data.style,
-          data.additionalInstructions
-        );
-        systemPrompt = `אתה עוזר AI מקצועי לכתיבה בעברית. אתה תסריטאי מקצועי עם ניסיון רב בכתיבת תסריטים.
+      case 'script': {
+        prompt = scriptPrompt({
+          topic: data.topic,
+          duration: data.duration,
+          audience: data.audience,
+          style: data.style,
+          additionalInstructions: data.additionalInstructions,
+          moduleTitle: data.moduleTitle,
+          learningObjectives: data.learningObjectives,
+          workflowSteps: data.workflowSteps,
+          keyTerminology: data.keyTerminology,
+          referenceExamples: data.referenceExamples,
+          practiceIdeas: data.practiceIdeas,
+          studentPainPoints: data.studentPainPoints,
+          callToAction: data.callToAction,
+          knowledgePack: data.knowledgePack,
+          teleprompterNotesLevel: data.teleprompterNotesLevel,
+          voicePersona: data.voicePersona,
+          successCriteria: data.successCriteria,
+          referenceScript: data.referenceScript,
+          examplesToCover: data.examplesToCover,
+        });
+        systemPrompt = `אתה תסריטאי מקצועי בעברית המשמש כעוזר כתיבה אישי.
 
-**עקרונות כתיבה:**
-- כתוב בעברית מדוברת, טבעית וזורמת - לא תרגום מילולי מאנגלית
-- הימנע מביטויים כמו "לעבור לשלב הבא" (השתמש ב"להתקדם"), "במקום של" (השתמש ב"במקום")
-- כתוב בצורה זורמת וקולחת
-- אתה פתוח ללמוד ולשפר מעריכות המשתמש ומשוב שלו`;
+**עקרונות חובה:**
+- כתוב בעברית מדוברת, טבעית וזורמת שמתאימה לטלפרומפטר.
+- שמור על קול נשי בגוף ראשון, עם פנייה ישירה לסטודנטים ("אתם", "בואו").
+- שלב את הידע, ההנחיות והיעדים שהמשתמש סיפק בתוך הטקסט המדובר.
+- כל הערת במה או פעולה ויזואלית חייבת להופיע בסוגריים מרובעים [כך] ואינה נקראת בקול.
+- הימנע מביטויי תרגום מילולי ומבנים מאולצים; תעדף עברית טבעית.
+- היה פתוח ללמוד מהמשוב והתאם את הסגנון בהתאם לידע שניתן.`;
         break;
+      }
 
       case 'worksheet':
         prompt = worksheetPrompt(
