@@ -75,17 +75,25 @@ export default function AICorrector(): React.JSX.Element {
   const [selectedAlternative, setSelectedAlternative] = useState<string | null>(null);
 
   // מילים נרדפות למילים בודדות (כמו בתכונת התרגום)
-  const [wordAlternatives, setWordAlternatives] = useState<{ [key: string]: string[] }>({});
-  const [showWordAlternatives, setShowWordAlternatives] = useState(false);
+const [wordAlternatives, setWordAlternatives] = useState<{ [key: string]: string[] }>({});
+const [showWordAlternatives, setShowWordAlternatives] = useState(false);
 
-  // מצב הרחבה/צמצום של הגרסאות החלופיות
-  const [expandedAlternatives, setExpandedAlternatives] = useState<{ [key: number]: boolean }>({});
-  
-  // טקסט נבחר מתוך גרסה חלופית (לשמירה חלקית)
-  const [selectedAlternativeText, setSelectedAlternativeText] = useState<{ text: string; index: number } | null>(null);
+// מצב הרחבה/צמצום של הגרסאות החלופיות
+const [expandedAlternatives, setExpandedAlternatives] = useState<{ [key: number]: boolean }>({});
+
+// טקסט נבחר מתוך גרסה חלופית (לשמירה חלקית)
+const [selectedAlternativeText, setSelectedAlternativeText] = useState<{ text: string; index: number } | null>(null);
 
 // החלטות על דפוסים (אישור/דחייה)
 const [issueStates, setIssueStates] = useState<Record<string, 'accepted' | 'dismissed'>>({});
+
+// שדות לתיקון ידני של דפוסים
+const [issueCustomInputs, setIssueCustomInputs] = useState<Record<string, string>>({});
+const [issueCustomActive, setIssueCustomActive] = useState<Record<string, boolean>>({});
+const [issueCustomApplied, setIssueCustomApplied] = useState<Record<string, string | undefined>>({});
+
+// רמת עומק התיקון
+const [revisionLevel, setRevisionLevel] = useState<'minimal' | 'balanced' | 'deep'>('balanced');
 
 const getIssueKey = (issue: TranslationIssue, index: number) =>
   `${issue.startIndex}-${issue.endIndex}-${issue.original}-${index}`;
@@ -94,6 +102,28 @@ const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'd
   const state = issueStates[getIssueKey(issue, index)];
   return state ?? 'pending';
 };
+
+const revisionLevelOptions: Array<{
+  value: 'minimal' | 'balanced' | 'deep';
+  label: string;
+  description: string;
+}> = [
+  {
+    value: 'minimal',
+    label: 'מינימלי',
+    description: 'רק תיקונים קריטיים',
+  },
+  {
+    value: 'balanced',
+    label: 'מאוזן',
+    description: 'שיפור משמעותי אך שומר על הסגנון',
+  },
+  {
+    value: 'deep',
+    label: 'עמוק',
+    description: 'שכתוב עברי טבעי ומלא',
+  },
+];
 
   // טעינת סטטיסטיקות
   const loadStats = async () => {
@@ -354,13 +384,14 @@ const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'd
 
     setIsAnalyzing(true);
     try {
-      const response = await fetch('/api/ai-correction/analyze', {
+    const response = await fetch('/api/ai-correction/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: originalText,
           userId: 'default-user',
           applyPatterns: autoApplyPatterns, // 🆕 שימוש בהגדרת toggle
+        revisionLevel,
         }),
       });
 
@@ -376,6 +407,9 @@ const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'd
       
       setAnalysis(data.analysis);
       setIssueStates({});
+      setIssueCustomInputs({});
+      setIssueCustomActive({});
+      setIssueCustomApplied({});
       
       // 🆕 דפוסים שהוחלו אוטומטית
       const patternsApplied = data.result?.appliedPatterns || [];
@@ -446,6 +480,24 @@ const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'd
       ...prev,
       [key]: 'accepted',
     }));
+
+  setIssueCustomApplied((prev) => {
+    const updated = { ...prev };
+    delete updated[key];
+    return updated;
+  });
+
+  setIssueCustomInputs((prev) => {
+    const updated = { ...prev };
+    delete updated[key];
+    return updated;
+  });
+
+  setIssueCustomActive((prev) => {
+    const updated = { ...prev };
+    delete updated[key];
+    return updated;
+  });
   };
 
   const handleDismissIssue = (issue: TranslationIssue, index: number) => {
@@ -468,22 +520,24 @@ const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'd
       return;
     }
 
-    if (currentState === 'accepted') {
+  if (currentState === 'accepted') {
+    const customAppliedText = issueCustomApplied[key];
       const currentText = editedText || correctedText || '';
-      const escapedSuggestion = issue.suggestion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const revertRegex = new RegExp(escapedSuggestion);
+    const originalSuggestion = customAppliedText || issue.suggestion;
+    const escapedSuggestion = originalSuggestion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const revertRegex = new RegExp(escapedSuggestion);
 
-      if (revertRegex.test(currentText)) {
-        revertRegex.lastIndex = 0;
-        const revertedText = currentText.replace(revertRegex, issue.original);
-        setEditedText(revertedText);
-        setCorrectedText(revertedText);
-        setIsEditing(true);
-      }
+    if (revertRegex.test(currentText)) {
+      revertRegex.lastIndex = 0;
+      const revertedText = currentText.replace(revertRegex, issue.original);
+      setEditedText(revertedText);
+      setCorrectedText(revertedText);
+      setIsEditing(true);
+    }
 
-      setAppliedPatterns((prev) =>
-        prev.filter((pattern) => !(pattern.from === issue.original && pattern.to === issue.suggestion))
-      );
+    setAppliedPatterns((prev) =>
+      prev.filter((pattern) => !(pattern.from === issue.original && pattern.to === originalSuggestion))
+    );
     }
 
     setIssueStates((prev) => {
@@ -491,7 +545,113 @@ const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'd
       delete updated[key];
       return updated;
     });
+
+  setIssueCustomApplied((prev) => {
+    const updated = { ...prev };
+    delete updated[key];
+    return updated;
+  });
+
+  setIssueCustomInputs((prev) => {
+    const updated = { ...prev };
+    delete updated[key];
+    return updated;
+  });
+
+  setIssueCustomActive((prev) => {
+    const updated = { ...prev };
+    delete updated[key];
+    return updated;
+  });
   };
+
+const toggleCustomIssueInput = (issue: TranslationIssue, index: number) => {
+  const key = getIssueKey(issue, index);
+  const existingCustom = issueCustomApplied[key];
+  setIssueCustomActive((prev) => ({
+    ...prev,
+    [key]: !prev[key],
+  }));
+  setIssueCustomInputs((prev) => ({
+    ...prev,
+    [key]: prev[key] ?? existingCustom ?? issue.suggestion ?? '',
+  }));
+};
+
+const handleCustomInputChange = (issue: TranslationIssue, index: number, value: string) => {
+  const key = getIssueKey(issue, index);
+  setIssueCustomInputs((prev) => ({
+    ...prev,
+    [key]: value,
+  }));
+};
+
+const handleApplyCustomIssue = async (issue: TranslationIssue, index: number) => {
+  const key = getIssueKey(issue, index);
+  const customText = issueCustomInputs[key]?.trim();
+
+  if (!customText) {
+    alert('אנא כתבי את התיקון הרצוי לפני אישור.');
+    return;
+  }
+
+  const currentText = editedText || correctedText || '';
+  const escapedOriginal = issue.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const replaceRegex = new RegExp(escapedOriginal);
+  let newText = currentText;
+
+  if (issue.original && replaceRegex.test(currentText)) {
+    replaceRegex.lastIndex = 0;
+    newText = currentText.replace(replaceRegex, customText);
+  } else if (issue.original && currentText.includes(issue.original)) {
+    newText = currentText.replace(issue.original, customText);
+  } else {
+    console.warn('Original issue text not found while applying custom correction. Appending note only.');
+  }
+
+  if (newText !== currentText) {
+    setEditedText(newText);
+    setCorrectedText(newText);
+    setIsEditing(true);
+  }
+
+  await savePatternAutomatically(issue.original, customText);
+
+  setAppliedPatterns((prev) => {
+    if (prev.some((p) => p.from === issue.original && p.to === customText)) {
+      return prev;
+    }
+    return [...prev, { from: issue.original, to: customText }];
+  });
+
+  setIssueStates((prev) => ({
+    ...prev,
+    [key]: 'accepted',
+  }));
+
+  setIssueCustomApplied((prev) => ({
+    ...prev,
+    [key]: customText,
+  }));
+
+  setIssueCustomActive((prev) => ({
+    ...prev,
+    [key]: false,
+  }));
+
+  setIssueCustomInputs((prev) => ({
+    ...prev,
+    [key]: customText,
+  }));
+};
+
+const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
+  const key = getIssueKey(issue, index);
+  setIssueCustomActive((prev) => ({
+    ...prev,
+    [key]: false,
+  }));
+};
 
   // בחירת טקסט (בדיוק כמו בתכונת התרגום)
   const handleTextSelection = async () => {
@@ -893,6 +1053,29 @@ const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'd
             📂 יבא דפוסים (JSON)
           </button>
         </div>
+
+        {/* בחירת עומק התיקון */}
+        <div className="mt-4 space-y-2">
+          <p className="text-xs sm:text-sm text-gray-700 font-medium">עומק התיקון הרצוי:</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {revisionLevelOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setRevisionLevel(option.value)}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border text-xs sm:text-sm transition-all ${
+                  revisionLevel === option.value
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                    : 'bg-white text-gray-700 border-indigo-200 hover:bg-indigo-50'
+                }`}
+              >
+                <div className="flex flex-col items-center sm:items-start">
+                  <span className="font-semibold">{option.label}</span>
+                  <span className="text-[11px] sm:text-xs opacity-80">{option.description}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
       </Card>
       
       {/* מודל סטטיסטיקות */}
@@ -1214,6 +1397,9 @@ const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'd
                   setShowSelectionSuggestions(false);
                   setAppliedPatterns([]);
                   setIssueStates({});
+                  setIssueCustomInputs({});
+                  setIssueCustomActive({});
+                  setIssueCustomApplied({});
                 }}
                 variant="outline"
                 className="px-4"
@@ -1736,7 +1922,7 @@ const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'd
             <div>
               <h3 className="text-lg font-bold">⚠️ בעיות שזוהו ({analysis.issues.length})</h3>
               <p className="text-sm text-gray-600 mt-1">
-                עברי על כל תיקון מומלץ, אשרי כדי להחיל וללמד את המערכת או דחי אם זה לא רלוונטי.
+                לכל דפוס תוכלי לאשר את ההצעה, לדחות אותה או להזין תיקון משלך כדי ללמד את המערכת כיצד לנסח בעתיד.
               </p>
             </div>
             <div className="flex flex-wrap gap-2 text-xs sm:text-sm">
@@ -1754,6 +1940,8 @@ const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'd
           <div className="space-y-3">
             {analysis.issues.map((issue, idx) => {
               const status = getIssueStatus(issue, idx);
+              const key = getIssueKey(issue, idx);
+              const customAppliedText = issueCustomApplied[key];
               const containerClasses =
                 status === 'accepted'
                   ? 'border-green-400 bg-green-50'
@@ -1762,7 +1950,9 @@ const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'd
                     : 'border-yellow-400 bg-yellow-50';
               const statusLabel =
                 status === 'accepted'
-                  ? 'אושר'
+                  ? customAppliedText
+                    ? 'אושר (תיקון שלך)'
+                    : 'אושר'
                   : status === 'dismissed'
                     ? 'נדחה'
                     : 'ממתין להחלטה';
@@ -1797,6 +1987,11 @@ const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'd
                         "{issue.suggestion}"
                       </span>
                     </div>
+                    {customAppliedText && status === 'accepted' && (
+                      <p className="text-xs text-purple-700 mt-1">
+                        התיקון שבחרת: "{customAppliedText}"
+                      </p>
+                    )}
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <button
                         onClick={() => handleAcceptIssue(issue, idx)}
@@ -1822,6 +2017,16 @@ const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'd
                         <ThumbsDown className="w-4 h-4" />
                         דחי
                       </button>
+                      <button
+                        onClick={() => toggleCustomIssueInput(issue, idx)}
+                        className={`flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded transition-colors ${
+                          issueCustomActive[key]
+                            ? 'bg-purple-200 text-purple-800'
+                            : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                        }`}
+                      >
+                        ✎ תיקון שלי
+                      </button>
                       {status !== 'pending' && (
                         <button
                           onClick={() => handleUndoIssueDecision(issue, idx)}
@@ -1832,6 +2037,32 @@ const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'd
                         </button>
                       )}
                     </div>
+                    {issueCustomActive[key] && (
+                      <div className="mt-3 space-y-2 w-full">
+                        <textarea
+                          value={issueCustomInputs[key] ?? issue.suggestion}
+                          onChange={(e) => handleCustomInputChange(issue, idx, e.target.value)}
+                          className="w-full border border-purple-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                          rows={3}
+                          placeholder="כתבי כאן את התיקון שאת מעדיפה..."
+                          dir="rtl"
+                        />
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => handleApplyCustomIssue(issue, idx)}
+                            className="px-3 py-1.5 bg-purple-600 text-white text-xs font-semibold rounded hover:bg-purple-700 transition-colors"
+                          >
+                            אשרי את התיקון שלי
+                          </button>
+                          <button
+                            onClick={() => handleCancelCustomIssue(issue, idx)}
+                            className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-semibold rounded hover:bg-gray-300 transition-colors"
+                          >
+                            בטלי
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     {status === 'pending' && (
                       <p className="text-xs text-blue-600">
                         אפשר גם לסמן את הביטוי בטקסט המתוקן כדי לקבל הצעות נוספות.

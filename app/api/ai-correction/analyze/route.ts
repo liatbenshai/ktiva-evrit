@@ -13,7 +13,28 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
     text = body.text || '';
-    const { userId = 'default-user', applyPatterns = true } = body;
+    const { userId = 'default-user', applyPatterns = true, revisionLevel = 'balanced' } = body;
+
+    const revisionConfigMap = {
+      minimal: {
+        temperature: 0.55,
+        instruction: 'בצע שינויים מינימליים בלבד. שמור על רוב הניסוח המקורי של המשתמש, ותקן רק ביטויים שברור שהם תרגום או שגיאה קשה. אל תכתוב מחדש פסקאות שלמות אם אין צורך.',
+        mainDescription: 'התיקון הראשי המומלץ - שמרני מאוד, תקן רק את מה שחייב תיקון.',
+      },
+      balanced: {
+        temperature: 0.75,
+        instruction: 'בצע שיפור מאוזן שמרגיש טבעי בעברית אך עדיין משמר את המבנה והטון המקוריים. החלף ביטויי AI נפוצים בניסוחים טבעיים יותר.',
+        mainDescription: 'התיקון הראשי המומלץ - שיפור עברי טבעי ושוטף, תוך שמירה על הסגנון המקורי.',
+      },
+      deep: {
+        temperature: 0.95,
+        instruction: 'הפוך את הטקסט לעברית טבעית לחלוטין. אל תהסס לשכתב משפטים ופסקאות כדי שיישמעו כמו דובר עברית מקצועי. שמור על המשמעות אך לא על הניסוח.',
+        mainDescription: 'התיקון הראשי המומלץ - כתיבה עברית טבעית לחלוטין עם שכתוב חופשי של הטקסט.',
+      },
+    } as const;
+
+    const revisionConfig =
+      revisionConfigMap[revisionLevel as keyof typeof revisionConfigMap] ?? revisionConfigMap.balanced;
 
     if (!text || !text.trim()) {
       return NextResponse.json(
@@ -94,6 +115,12 @@ ${appliedPatterns.map(p => `- "${p.from}" → "${p.to}"`).join('\n')}
 </דפוסים_שכבר_הוחלו>\n`
         : '';
 
+      const mainLine = revisionLevel === 'minimal'
+        ? '1. **main** - התיקון הראשי המומלץ (מינימלי מאוד, שומר על רוב הניסוח המקורי)'
+        : revisionLevel === 'deep'
+          ? '1. **main** - התיקון הראשי המומלץ (שכתוב מקיף בעברית טבעית לחלוטין)'
+          : '1. **main** - התיקון הראשי המומלץ (שיפור עברי טבעי ומאוזן)';
+
       const alternativesPrompt = `אתה מומחה בעברית תקנית וטבעית. המשימה: ליצור 4 גרסאות שונות של הטקסט הבא - גרסה ראשית + 3 גרסאות חלופיות שונות מאוד זו מזו.
 
 <טקסט_מקורי>
@@ -108,12 +135,16 @@ ${textAfterPatterns}
 ${issuesList}
 </בעיות_שזוהו>
 
+<הנחיות_עומק>
+${revisionConfig.instruction}
+</הנחיות_עומק>
+
 **חשוב מאוד:** כל גרסה חייבת להיות שונה לחלוטין מהאחרות! אל תחזיר אותו טקסט 4 פעמים.
 
 **שים לב:** המערכת כבר החילה דפוסי תיקון שנלמדו מהמשתמש. התחל מ"טקסט_אחרי_החלת_דפוסים" ושפר אותו עוד יותר.
 
 צור:
-1. **main** - התיקון הראשי המומלץ (תיקון בינוני, מאוזן, שומר על המשמעות המקורית) - התחל מהטקסט אחרי הדפוסים
+${mainLine} - התחל מהטקסט אחרי הדפוסים
 2. **alternative1** - תיקון מינימלי בלבד - רק את הבעיות הקריטיות ביותר, שינוי מינימלי מהטקסט אחרי הדפוסים
 3. **alternative2** - תיקון בינוני-מתקדם - שיפור נרחב יותר, החלפת ביטויים AI בניסוחים עבריים טבעיים
 4. **alternative3** - תיקון מקסימלי - שיפור מלא, כתיבה עברית טבעית לחלוטין, החלפת כל ביטוי AI אפשרי
@@ -155,7 +186,7 @@ ${issuesList}
         prompt: alternativesPrompt,
         systemPrompt: alternativesSystemPrompt,
         maxTokens: 4096, // הגדלנו ל-4096 כדי שיהיה מספיק מקום
-        temperature: 0.9, // הגדלנו ל-0.9 כדי לקבל גרסאות שונות יותר
+        temperature: revisionConfig.temperature,
       });
 
       console.log('Alternatives response received, length:', alternativesResponse.length);
@@ -248,6 +279,7 @@ ${issuesList}
       result,
       alternatives, // אפשרויות חלופיות לטקסט המלא
       learnedPatterns: patterns.slice(0, 20), // החזרת 20 הדפוסים החזקים ביותר (כהצעות בלבד)
+      revisionLevel,
     });
   } catch (error) {
     console.error('Error analyzing text:', error);
