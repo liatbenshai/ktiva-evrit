@@ -61,11 +61,26 @@ export default function CreateScript() {
 
   const handleScriptSelection = (event: React.SyntheticEvent<HTMLTextAreaElement>) => {
     const textarea = event.currentTarget;
+    let selection = '';
+
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    if (start === end) return;
-    const selection = textarea.value.substring(start, end).trim();
-    if (selection.length === 0) return;
+    if (start !== end) {
+      selection = textarea.value.substring(start, end);
+    }
+
+    if (!selection.trim() && typeof window !== 'undefined') {
+      const globalSelection = window.getSelection()?.toString();
+      if (globalSelection) {
+        selection = globalSelection;
+      }
+    }
+
+    selection = selection.trim();
+    if (!selection) {
+      return;
+    }
+
     setSelectedText(selection);
     setPatternCorrection(selection);
     setPatternSaved(false);
@@ -250,7 +265,7 @@ export default function CreateScript() {
               שמירת דפוס שנלמד מתסריט זה
             </h3>
             <p className="text-sm text-gray-600 mb-3">
-              סמני בתסריט למעלה ניסוח בעייתי, הזיני את הניסוח המתוקן ולחצי על "שמרי דפוס". הדפוס ישמש גם בתסריטים, מאמרים ותכנים אחרים.
+              סמני בתסריט למעלה ניסוח בעייתי (ניתן גם להדביק את הטקסט בשדה הראשון), הזיני את הניסוח המתוקן ולחצי על "שמרי דפוס". הדפוס ישמש גם בתסריטים, מאמרים ותכנים אחרים.
             </p>
 
             <div className="space-y-4">
