@@ -13,7 +13,12 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
     text = body.text || '';
-    const { userId = 'default-user', applyPatterns = true, revisionLevel = 'balanced' } = body;
+    const {
+      userId = 'default-user',
+      applyPatterns = true,
+      revisionLevel = 'balanced',
+      contentStyle = 'general',
+    } = body;
 
     const revisionConfigMap = {
       minimal: {
@@ -35,6 +40,37 @@ export async function POST(req: NextRequest) {
 
     const revisionConfig =
       revisionConfigMap[revisionLevel as keyof typeof revisionConfigMap] ?? revisionConfigMap.balanced;
+
+    const contentStyleConfigMap = {
+      general: {
+        promptInstruction: 'שמור על סגנון עברי תקני ומקצועי, מתאים לרוב סוגי התוכן הכלליים.',
+        systemTone: 'סגנון עברי תקני, מקצועי וקריא לכל קהל.',
+        label: 'כללי',
+      },
+      legal: {
+        promptInstruction: 'ניסוח משפטי רשמי. שמור על טרמינולוגיה משפטית מדויקת, מבנה משפטים ברור ופיסוק פורמלי.',
+        systemTone: 'סגנון משפטי פורמלי, כמו מסמכי חוזים וחוות דעת משפטיות.',
+        label: 'משפטי',
+      },
+      academic: {
+        promptInstruction: 'סגנון מחקרי ואקדמי. כתיבה רשמית, שימוש במונחים מקצועיים, הצגת טיעונים מסודרת ומבנה פסקאות קוהרנטי.',
+        systemTone: 'סגנון אקדמי רשמי, כמו עבודות מחקר, סמינריונים וכתיבה מדעית.',
+        label: 'אקדמי',
+      },
+      marketing: {
+        promptInstruction: 'סגנון שיווקי משכנע. כתיבה אנרגטית עם קריאות לפעולה, יתרונות ברורים וטון חיובי.',
+        systemTone: 'סגנון שיווקי ומוכר, מושך תשומת לב ומניע לפעולה.',
+        label: 'שיווקי',
+      },
+      friendly: {
+        promptInstruction: 'סגנון ידידותי, אישי ושיחתי. כתיבה קלילה ונעימה עם פנייה ישירה לקורא.',
+        systemTone: 'סגנון שיחה קליל ונגיש, כמו כתיבה ברשתות חברתיות או מענה אישי.',
+        label: 'ידידותי',
+      },
+    } as const;
+
+    const contentStyleConfig =
+      contentStyleConfigMap[contentStyle as keyof typeof contentStyleConfigMap] ?? contentStyleConfigMap.general;
 
     if (!text || !text.trim()) {
       return NextResponse.json(
@@ -139,6 +175,10 @@ ${issuesList}
 ${revisionConfig.instruction}
 </הנחיות_עומק>
 
+<הנחיות_סגנון>
+${contentStyleConfig.promptInstruction}
+</הנחיות_סגנון>
+
 **חשוב מאוד:** כל גרסה חייבת להיות שונה לחלוטין מהאחרות! אל תחזיר אותו טקסט 4 פעמים.
 
 **שים לב:** המערכת כבר החילה דפוסי תיקון שנלמדו מהמשתמש. התחל מ"טקסט_אחרי_החלת_דפוסים" ושפר אותו עוד יותר.
@@ -180,7 +220,7 @@ ${mainLine} - התחל מהטקסט אחרי הדפוסים
   ]
 }`;
 
-      const alternativesSystemPrompt = 'אתה מומחה בעברית תקנית וטבעית. אתה מספק תיקון ראשי מומלץ וגרסאות משופרות של טקסטים שנוצרו על ידי AI. **חשוב מאוד:** כל גרסה חייבת להיות שונה לחלוטין מהאחרות - לא לחזור על אותו טקסט. החזר תמיד JSON תקין בלבד, ללא markdown, ללא backticks, ללא טקסט נוסף.';
+      const alternativesSystemPrompt = `אתה מומחה בעברית תקנית וטבעית. אתה מספק תיקון ראשי מומלץ וגרסאות משופרות של טקסטים שנוצרו על ידי AI. **חשוב מאוד:** כל גרסה חייבת להיות שונה לחלוטין מהאחרות - לא לחזור על אותו טקסט. שמור על הסגנון הבא: ${contentStyleConfig.systemTone}. החזר תמיד JSON תקין בלבד, ללא markdown, ללא backticks, ללא טקסט נוסף.`;
 
       const alternativesResponse = await generateText({
         prompt: alternativesPrompt,
@@ -280,6 +320,7 @@ ${mainLine} - התחל מהטקסט אחרי הדפוסים
       alternatives, // אפשרויות חלופיות לטקסט המלא
       learnedPatterns: patterns.slice(0, 20), // החזרת 20 הדפוסים החזקים ביותר (כהצעות בלבד)
       revisionLevel,
+      contentStyle,
     });
   } catch (error) {
     console.error('Error analyzing text:', error);

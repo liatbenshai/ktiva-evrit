@@ -95,6 +95,9 @@ const [issueCustomApplied, setIssueCustomApplied] = useState<Record<string, stri
 // רמת עומק התיקון
 const [revisionLevel, setRevisionLevel] = useState<'minimal' | 'balanced' | 'deep'>('balanced');
 
+// סוג התוכן / הסגנון המבוקש
+const [contentStyle, setContentStyle] = useState<'general' | 'legal' | 'academic' | 'marketing' | 'friendly'>('general');
+
 const getIssueKey = (issue: TranslationIssue, index: number) =>
   `${issue.startIndex}-${issue.endIndex}-${issue.original}-${index}`;
 
@@ -122,6 +125,38 @@ const revisionLevelOptions: Array<{
     value: 'deep',
     label: 'עמוק',
     description: 'שכתוב עברי טבעי ומלא',
+  },
+];
+
+const contentStyleOptions: Array<{
+  value: 'general' | 'legal' | 'academic' | 'marketing' | 'friendly';
+  label: string;
+  description: string;
+}> = [
+  {
+    value: 'general',
+    label: 'כללי',
+    description: 'עברית תקנית ומקצועית',
+  },
+  {
+    value: 'legal',
+    label: 'משפטי',
+    description: 'ניסוח חוזים וכתיבה פורמלית',
+  },
+  {
+    value: 'academic',
+    label: 'אקדמי',
+    description: 'סגנון מחקרי ורשמי',
+  },
+  {
+    value: 'marketing',
+    label: 'שיווקי',
+    description: 'טון משכנע וסוחף',
+  },
+  {
+    value: 'friendly',
+    label: 'ידידותי',
+    description: 'כתיבה קלילה ושיחית',
   },
 ];
 
@@ -392,6 +427,7 @@ const revisionLevelOptions: Array<{
           userId: 'default-user',
           applyPatterns: autoApplyPatterns, // 🆕 שימוש בהגדרת toggle
         revisionLevel,
+          contentStyle,
         }),
       });
 
@@ -1066,6 +1102,29 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
                   revisionLevel === option.value
                     ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
                     : 'bg-white text-gray-700 border-indigo-200 hover:bg-indigo-50'
+                }`}
+              >
+                <div className="flex flex-col items-center sm:items-start">
+                  <span className="font-semibold">{option.label}</span>
+                  <span className="text-[11px] sm:text-xs opacity-80">{option.description}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* בחירת סוג התוכן */}
+        <div className="mt-4 space-y-2">
+          <p className="text-xs sm:text-sm text-gray-700 font-medium">סגנון / סוג תוכן:</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {contentStyleOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setContentStyle(option.value)}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border text-xs sm:text-sm transition-all ${
+                  contentStyle === option.value
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
+                    : 'bg-white text-gray-700 border-emerald-200 hover:bg-emerald-50'
                 }`}
               >
                 <div className="flex flex-col items-center sm:items-start">
