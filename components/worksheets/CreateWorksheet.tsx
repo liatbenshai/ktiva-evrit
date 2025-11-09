@@ -279,8 +279,8 @@ export default function CreateWorksheet() {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
           
-          htmlParts.push(`<div style="margin-bottom: 8px;">
-            <div style="margin-bottom: 4px; font-size: 15px;">${escapedLine}</div>
+          htmlParts.push(`<div style="margin-bottom: 12px;">
+            <div style="margin-bottom: 6px; font-size: 15px;">${escapedLine}</div>
             <div class="answer-space"></div>
           </div>`);
           continue;
@@ -434,26 +434,6 @@ export default function CreateWorksheet() {
                 font-weight: 500;
               }
               
-              .student-info-box {
-                background: #ffffff;
-                border: 1px solid #ced4da;
-                border-radius: 6px;
-                padding: 15px 20px;
-                margin: 0 0 25px 0;
-                display: flex;
-                ${isHebrew ? 'flex-direction: row-reverse;' : 'flex-direction: row;'}
-                justify-content: flex-start;
-                align-items: center;
-                gap: 30px;
-              }
-              
-              .student-field {
-                font-size: 15px;
-                color: #212529;
-                white-space: nowrap;
-                font-weight: 500;
-              }
-              
               body[dir="ltr"] .question, 
               body[dir="ltr"] .exercise {
                 border-right: none;
@@ -503,13 +483,14 @@ export default function CreateWorksheet() {
               }
               
               .answer-space {
-                margin-top: 4px;
-                min-height: 50px;
-                border-bottom: 1px solid #adb5bd;
-                padding: 6px;
+                margin-top: 6px;
+                min-height: 100px;
+                border: 1px dashed #adb5bd;
+                padding: 12px;
                 background: white;
                 margin-right: 10px;
-                line-height: 1.3;
+                line-height: 1.4;
+                border-radius: 10px;
               }
               
               .answer-space::before {
@@ -557,12 +538,6 @@ export default function CreateWorksheet() {
               <div class="print-header">
                 <h1>${escapedTitle}</h1>
                 <div class="student-name-header">${isHebrew ? 'שם: __________________' : 'Name: __________________'}</div>
-              </div>
-              
-              <div class="student-info-box">
-                <div class="student-field">${isHebrew ? 'שם התלמיד:' : 'Student Name:'} ________________________</div>
-                <div class="student-field">${isHebrew ? 'כיתה:' : 'Class:'} ________</div>
-                <div class="student-field">${isHebrew ? 'תאריך:' : 'Date:'} ________</div>
               </div>
               
               <div class="content">
