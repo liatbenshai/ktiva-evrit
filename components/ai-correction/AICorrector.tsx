@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Edit2, Save, X, Copy, Check, Loader2, Languages, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
+import { Edit2, Save, X, Copy, Check, Loader2, Languages, ChevronDown, ChevronUp, BookOpen, ThumbsUp, ThumbsDown, RotateCcw } from 'lucide-react';
 import AIChatBot from './AIChatBot';
 
 interface TranslationIssue {
@@ -83,6 +83,17 @@ export default function AICorrector(): React.JSX.Element {
   
   // טקסט נבחר מתוך גרסה חלופית (לשמירה חלקית)
   const [selectedAlternativeText, setSelectedAlternativeText] = useState<{ text: string; index: number } | null>(null);
+
+// החלטות על דפוסים (אישור/דחייה)
+const [issueStates, setIssueStates] = useState<Record<string, 'accepted' | 'dismissed'>>({});
+
+const getIssueKey = (issue: TranslationIssue, index: number) =>
+  `${issue.startIndex}-${issue.endIndex}-${issue.original}-${index}`;
+
+const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'dismissed' | 'pending' => {
+  const state = issueStates[getIssueKey(issue, index)];
+  return state ?? 'pending';
+};
 
   // טעינת סטטיסטיקות
   const loadStats = async () => {
@@ -364,6 +375,7 @@ export default function AICorrector(): React.JSX.Element {
       }
       
       setAnalysis(data.analysis);
+      setIssueStates({});
       
       // 🆕 דפוסים שהוחלו אוטומטית
       const patternsApplied = data.result?.appliedPatterns || [];
@@ -393,6 +405,92 @@ export default function AICorrector(): React.JSX.Element {
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const handleAcceptIssue = async (issue: TranslationIssue, index: number) => {
+    const key = getIssueKey(issue, index);
+    if (issueStates[key] === 'accepted') {
+      return;
+    }
+
+    const currentText = editedText || correctedText || '';
+    const escapedOriginal = issue.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const replaceRegex = new RegExp(escapedOriginal);
+    let newText = currentText;
+    let textChanged = false;
+
+    if (issue.original && replaceRegex.test(currentText)) {
+      replaceRegex.lastIndex = 0;
+      newText = currentText.replace(replaceRegex, issue.suggestion);
+      textChanged = newText !== currentText;
+    } else if (!issue.original || !currentText.includes(issue.original)) {
+      console.warn('Original issue text not found in current edited text. Marking as accepted without direct replacement.', issue);
+    }
+
+    if (textChanged) {
+      setEditedText(newText);
+      setCorrectedText(newText);
+      setIsEditing(true);
+    }
+
+    await savePatternAutomatically(issue.original, issue.suggestion);
+
+    setAppliedPatterns((prev) => {
+      if (prev.some((p) => p.from === issue.original && p.to === issue.suggestion)) {
+        return prev;
+      }
+      return [...prev, { from: issue.original, to: issue.suggestion }];
+    });
+
+    setIssueStates((prev) => ({
+      ...prev,
+      [key]: 'accepted',
+    }));
+  };
+
+  const handleDismissIssue = (issue: TranslationIssue, index: number) => {
+    const key = getIssueKey(issue, index);
+    if (issueStates[key] === 'dismissed') {
+      return;
+    }
+
+    setIssueStates((prev) => ({
+      ...prev,
+      [key]: 'dismissed',
+    }));
+  };
+
+  const handleUndoIssueDecision = (issue: TranslationIssue, index: number) => {
+    const key = getIssueKey(issue, index);
+    const currentState = issueStates[key];
+
+    if (!currentState) {
+      return;
+    }
+
+    if (currentState === 'accepted') {
+      const currentText = editedText || correctedText || '';
+      const escapedSuggestion = issue.suggestion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const revertRegex = new RegExp(escapedSuggestion);
+
+      if (revertRegex.test(currentText)) {
+        revertRegex.lastIndex = 0;
+        const revertedText = currentText.replace(revertRegex, issue.original);
+        setEditedText(revertedText);
+        setCorrectedText(revertedText);
+        setIsEditing(true);
+      }
+
+      setAppliedPatterns((prev) =>
+        prev.filter((pattern) => !(pattern.from === issue.original && pattern.to === issue.suggestion))
+      );
+    }
+
+    setIssueStates((prev) => {
+      const updated = { ...prev };
+      delete updated[key];
+      return updated;
+    });
   };
 
   // בחירת טקסט (בדיוק כמו בתכונת התרגום)
@@ -704,6 +802,14 @@ export default function AICorrector(): React.JSX.Element {
     setTimeout(() => setCopied(false), 2000);
   };
 
+
+  const acceptedIssuesCount = analysis
+    ? analysis.issues.reduce((count, issue, index) => (getIssueStatus(issue, index) === 'accepted' ? count + 1 : count), 0)
+    : 0;
+  const dismissedIssuesCount = analysis
+    ? analysis.issues.reduce((count, issue, index) => (getIssueStatus(issue, index) === 'dismissed' ? count + 1 : count), 0)
+    : 0;
+  const pendingIssuesCount = analysis ? analysis.issues.length - acceptedIssuesCount - dismissedIssuesCount : 0;
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -1107,6 +1213,7 @@ export default function AICorrector(): React.JSX.Element {
                   setSelectionSuggestions([]);
                   setShowSelectionSuggestions(false);
                   setAppliedPatterns([]);
+                  setIssueStates({});
                 }}
                 variant="outline"
                 className="px-4"
@@ -1622,79 +1729,118 @@ export default function AICorrector(): React.JSX.Element {
         </Card>
       </div>
 
-      {/* ניתוח ובעיות - רק הצגה, לא החלה אוטומטית */}
+      {/* ניתוח ובעיות - ניהול קבלה או דחייה */}
       {analysis && analysis.issues.length > 0 && (
-        <Card className="p-6 space-y-4">
-          <h3 className="text-lg font-bold">⚠️ בעיות שזוהו ({analysis.issues.length}):</h3>
-          <p className="text-sm text-gray-600 mb-3">
-            הבעיות הבאות זוהו בטקסט. סמני את הטקסט הבעייתי בטקסט המתוקן כדי לקבל הצעות חלופיות.
-          </p>
+        <Card className="p-6 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-bold">⚠️ בעיות שזוהו ({analysis.issues.length})</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                עברי על כל תיקון מומלץ, אשרי כדי להחיל וללמד את המערכת או דחי אם זה לא רלוונטי.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs sm:text-sm">
+              <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-lg">
+                ממתין: {pendingIssuesCount}
+              </span>
+              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-lg">
+                אושרו: {acceptedIssuesCount}
+              </span>
+              <span className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg">
+                נדחו: {dismissedIssuesCount}
+              </span>
+            </div>
+          </div>
           <div className="space-y-3">
-            {analysis.issues.map((issue, idx) => (
-              <div key={idx} className="p-4 bg-yellow-50 border-r-4 border-yellow-400 rounded">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="px-2 py-1 bg-yellow-200 text-yellow-800 text-xs rounded">
+            {analysis.issues.map((issue, idx) => {
+              const status = getIssueStatus(issue, idx);
+              const containerClasses =
+                status === 'accepted'
+                  ? 'border-green-400 bg-green-50'
+                  : status === 'dismissed'
+                    ? 'border-gray-300 bg-gray-50'
+                    : 'border-yellow-400 bg-yellow-50';
+              const statusLabel =
+                status === 'accepted'
+                  ? 'אושר'
+                  : status === 'dismissed'
+                    ? 'נדחה'
+                    : 'ממתין להחלטה';
+              const statusBadgeClasses =
+                status === 'accepted'
+                  ? 'bg-green-200 text-green-800'
+                  : status === 'dismissed'
+                    ? 'bg-gray-300 text-gray-700'
+                    : 'bg-yellow-200 text-yellow-800';
+
+              return (
+                <div key={idx} className={`p-4 border-r-4 rounded transition-colors ${containerClasses}`}>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs rounded">
                         {issue.type}
                       </span>
                       <span className="text-sm text-gray-600">
                         ביטחון: {Math.round(issue.confidence * 100)}%
                       </span>
-                    </div>
-                    <p className="text-sm mb-2">{issue.explanation}</p>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-red-600 font-medium line-through">"{issue.original}"</span>
-                      <span className="text-gray-400">→</span>
-                      <span className="text-green-600 font-medium">"{issue.suggestion}"</span>
-                    </div>
-                    <div className="mt-2 flex items-center gap-2">
-                      <button
-                        onClick={async () => {
-                          // החלפת הבעיה בטקסט
-                          if (correctedText.includes(issue.original)) {
-                            const index = correctedText.indexOf(issue.original);
-                            const newText = 
-                              correctedText.substring(0, index) + 
-                              issue.suggestion + 
-                              correctedText.substring(index + issue.original.length);
-                            setEditedText(newText);
-                            setCorrectedText(newText);
-                            setIsEditing(true);
-
-                            // שמירה נקודתית אוטומטית
-                            try {
-                              const response = await fetch('/api/ai-correction/save-pattern', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  originalText: issue.original,
-                                  correctedText: issue.suggestion,
-                                  userId: 'default-user',
-                                }),
-                              });
-
-                              if (response.ok) {
-                                setShowSuccess(true);
-                                setTimeout(() => setShowSuccess(false), 3000);
-                              }
-                            } catch (error) {
-                              console.error('Error saving pattern automatically:', error);
-                            }
-                          }
-                        }}
-                        className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
-                      >
-                        ✓ החל תיקון ושמור
-                      </button>
-                      <span className="text-xs text-blue-600">
-                        או סמני את הטקסט בטקסט המתוקן כדי לקבל הצעות נוספות
+                      <span className={`px-2 py-1 text-xs font-medium rounded ${statusBadgeClasses}`}>
+                        {statusLabel}
                       </span>
                     </div>
+                    <p className="text-sm text-gray-700">{issue.explanation}</p>
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className="text-red-600 font-medium line-through">
+                        "{issue.original}"
+                      </span>
+                      <span className="text-gray-400">→</span>
+                      <span className="text-green-600 font-medium">
+                        "{issue.suggestion}"
+                      </span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => handleAcceptIssue(issue, idx)}
+                        disabled={status === 'accepted'}
+                        className={`flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded transition-colors ${
+                          status === 'accepted'
+                            ? 'bg-green-200 text-green-700 cursor-not-allowed opacity-80'
+                            : 'bg-green-600 text-white hover:bg-green-700'
+                        }`}
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                        אשרי והחל
+                      </button>
+                      <button
+                        onClick={() => handleDismissIssue(issue, idx)}
+                        disabled={status === 'dismissed'}
+                        className={`flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded transition-colors ${
+                          status === 'dismissed'
+                            ? 'bg-gray-200 text-gray-600 cursor-not-allowed opacity-80'
+                            : 'bg-gray-300 text-gray-800 hover:bg-gray-400'
+                        }`}
+                      >
+                        <ThumbsDown className="w-4 h-4" />
+                        דחי
+                      </button>
+                      {status !== 'pending' && (
+                        <button
+                          onClick={() => handleUndoIssueDecision(issue, idx)}
+                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          בטלי החלטה
+                        </button>
+                      )}
+                    </div>
+                    {status === 'pending' && (
+                      <p className="text-xs text-blue-600">
+                        אפשר גם לסמן את הביטוי בטקסט המתוקן כדי לקבל הצעות נוספות.
+                      </p>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
       )}
