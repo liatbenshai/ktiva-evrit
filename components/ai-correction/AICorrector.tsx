@@ -1526,6 +1526,7 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
                       value={editedText}
                       onChange={(e) => setEditedText(e.target.value)}
                       onMouseUp={handleTextSelection}
+                      onTouchEnd={handleTextSelection}
                       className="w-full h-96 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
             dir="rtl"
           />
@@ -1617,6 +1618,7 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
                       className="whitespace-pre-wrap select-text text-base"
                       dir="rtl"
                       onMouseUp={handleTextSelection}
+                      onTouchEnd={handleTextSelection}
                     >
                       {correctedText}
                     </p>
@@ -1717,6 +1719,18 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
                           <div 
                             className="relative"
                             onMouseUp={(e) => {
+                              // רק אם לא לוחצים על כפתור
+                              if ((e.target as HTMLElement).tagName === 'BUTTON') return;
+                              
+                              const selection = window.getSelection();
+                              if (selection && selection.toString().trim().length > 0) {
+                                const selected = selection.toString().trim();
+                                if (selected.length > 0 && selected.length < alt.text.length) {
+                                  setSelectedAlternativeText({ text: selected, index });
+                                }
+                              }
+                            }}
+                            onTouchEnd={(e) => {
                               // רק אם לא לוחצים על כפתור
                               if ((e.target as HTMLElement).tagName === 'BUTTON') return;
                               

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, Loader2, Printer, Copy, Check, Download } from 'lucide-react';
+import { Check, Copy, Download, FileText, Loader2, Printer } from 'lucide-react';
 import { exportWorksheetToPDF } from '@/lib/pdfExport';
 
 export default function CreateWorksheet() {
@@ -555,57 +555,53 @@ export default function CreateWorksheet() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Input Form */}
-      <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-yellow-100">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <FileText className="w-6 h-6 text-yellow-600" />
+    <div className="mx-auto max-w-5xl space-y-6 px-2 sm:px-0">
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="mb-5 sm:mb-6">
+          <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold text-gray-900 sm:text-xl">
+            <FileText className="h-5 w-5 text-yellow-600 sm:h-6 sm:w-6" />
             יצירת דף עבודה ללימודים
           </h2>
-          <p className="text-gray-600">
-            צרי דף עבודה מותאם אישית - לפי הוראה או על בסיס סיפור
+          <p className="text-sm text-gray-600 sm:text-base">
+            צרי דף עבודה מותאם אישית לפי הנחיות, כיתה וסיפור בסיסי, והורידי אותו להדפסה.
           </p>
         </div>
 
-        <div className="space-y-6">
-          {/* הוראה */}
+        <div className="space-y-5 sm:space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-1 block text-sm font-medium text-gray-700 sm:mb-2">
               הוראה * <span className="text-gray-500">(חובה)</span>
             </label>
             <textarea
               value={instruction}
               onChange={(e) => setInstruction(e.target.value)}
-              placeholder="לדוגמה: הכן לי דפי עבודה לילד בכיתה ו' שלומד משוואות עם נעלם אחד, או כתוב שאלות ברמת כיתה ג'"
+              placeholder="לדוגמה: הכן דף עבודה על משוואות עם נעלם אחד לכיתה ו'."
               rows={3}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent resize-none"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-200 sm:px-4 sm:py-3 sm:text-base"
               dir="rtl"
             />
           </div>
 
-          {/* סיפור (אופציונלי) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-1 block text-sm font-medium text-gray-700 sm:mb-2">
               סיפור (אופציונלי)
             </label>
-            <p className="text-xs text-gray-500 mb-2">
-              אם תרצי ליצור שאלות על בסיס סיפור - הדביקי כאן את הסיפור
+            <p className="mb-2 text-xs text-gray-500 sm:text-sm">
+              אם תרצי לבנות שאלות על בסיס סיפור קיים, הדביקי אותו כאן ונייצר שאלות סביבו.
             </p>
             <textarea
               value={story}
               onChange={(e) => setStory(e.target.value)}
               placeholder="הדביקי כאן סיפור בעברית או באנגלית..."
               rows={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent resize-none"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-200 sm:px-4 sm:py-3 sm:text-base"
               dir={story && /^[\u0590-\u05FF\s]+$/.test(story.split('\n')[0]) ? 'rtl' : 'ltr'}
             />
           </div>
 
-          {/* כיתה ומקצוע */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-1 block text-sm font-medium text-gray-700 sm:mb-2">
                 רמת כיתה (אופציונלי)
               </label>
               <input
@@ -613,13 +609,12 @@ export default function CreateWorksheet() {
                 value={grade}
                 onChange={(e) => setGrade(e.target.value)}
                 placeholder="למשל: כיתה ו', כיתה ג', גן"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-200 sm:px-4 sm:py-2.5 sm:text-base"
                 dir="rtl"
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-1 block text-sm font-medium text-gray-700 sm:mb-2">
                 מקצוע/נושא (אופציונלי)
               </label>
               <input
@@ -627,7 +622,7 @@ export default function CreateWorksheet() {
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="למשל: מתמטיקה, לשון, מדעים"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-200 sm:px-4 sm:py-2.5 sm:text-base"
                 dir="rtl"
               />
             </div>
@@ -636,16 +631,16 @@ export default function CreateWorksheet() {
           <button
             onClick={handleGenerate}
             disabled={isGenerating || !instruction.trim()}
-            className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-lg hover:from-yellow-600 hover:to-orange-700 transition-all duration-200 font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-yellow-500 px-4 py-3 text-base font-medium text-white transition-colors hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-300 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isGenerating ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
                 יוצר דף עבודה...
               </>
             ) : (
               <>
-                <FileText className="w-5 h-5" />
+                <FileText className="h-5 w-5" />
                 צור דף עבודה
               </>
             )}
@@ -653,54 +648,49 @@ export default function CreateWorksheet() {
         </div>
       </div>
 
-      {/* Result */}
       {result && (
-        <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-yellow-100">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-yellow-600" />
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+          <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 sm:text-xl">
+              <FileText className="h-5 w-5 text-yellow-600" />
               דף העבודה שנוצר
             </h3>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={handleCopy}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm"
+                className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50"
               >
                 {copied ? (
                   <>
-                    <Check className="w-4 h-4 text-green-600" />
+                    <Check className="h-4 w-4 text-green-600" />
                     הועתק!
                   </>
                 ) : (
                   <>
-                    <Copy className="w-4 h-4" />
+                    <Copy className="h-4 w-4" />
                     העתק
                   </>
                 )}
               </button>
               <button
                 onClick={handleExportPDF}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm"
+                className="flex items-center gap-2 rounded-lg bg-blue-500 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-600"
               >
-                <Download className="w-4 h-4" />
+                <Download className="h-4 w-4" />
                 ייצא PDF
               </button>
               <button
                 onClick={handlePrint}
-                className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors text-sm"
+                className="flex items-center gap-2 rounded-lg bg-yellow-500 px-3 py-2 text-sm text-white transition-colors hover:bg-yellow-600"
               >
-                <Printer className="w-4 h-4" />
+                <Printer className="h-4 w-4" />
                 הדפס
               </button>
             </div>
           </div>
 
-          <div className="prose max-w-none">
-            <div
-              className="bg-gray-50 p-6 rounded-lg border border-gray-200 whitespace-pre-wrap text-base leading-relaxed"
-              dir={isResultHebrew ? 'rtl' : 'ltr'}
-              lang={detectedLanguage}
-            >
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed sm:p-5 sm:text-base">
+            <div dir={isResultHebrew ? 'rtl' : 'ltr'} lang={detectedLanguage}>
               {cleanMarkdown(result).split('\n').map((line, index) => (
                 <div key={index} className={index > 0 ? 'mt-2' : ''}>
                   {line || '\u00A0'}
@@ -709,9 +699,9 @@ export default function CreateWorksheet() {
             </div>
           </div>
 
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              💡 <strong>טיפ:</strong> לחצי על "הדפס" כדי להדפיס את דף העבודה בצורה מקצועית
+          <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <p className="text-sm text-blue-800 sm:text-base">
+              💡 <strong>טיפ:</strong> השתמשי באפשרות “הדפס” כדי לקבל פריסה נוחה להדפסת דף העבודה.
             </p>
           </div>
         </div>
