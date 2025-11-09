@@ -201,6 +201,10 @@ export default function CreateWorksheet() {
           htmlParts.push('<div style="height: 3px;"></div>');
           continue;
         }
+
+        if (/^[_־\s]+$/.test(line)) {
+          continue;
+        }
         
         // בדיקה אם זה תרגיל מאונך - אם השורה היא מספר והשורה הקודמת לא הייתה חלק מתרגיל
         if (/^\d+$/.test(line) && !inVerticalMath) {
@@ -378,14 +382,6 @@ export default function CreateWorksheet() {
                   page-break-inside: avoid;
                 }
                 
-                .student-info-box {
-                  display: flex !important;
-                  page-break-after: avoid;
-                  page-break-inside: avoid;
-                  margin: 0 0 20px 0 !important;
-                  padding: 15px 20px !important;
-                }
-                
                 .print-footer {
                   display: none;
                 }
@@ -484,13 +480,14 @@ export default function CreateWorksheet() {
               
               .answer-space {
                 margin-top: 6px;
-                min-height: 100px;
+                min-height: 140px;
                 border: 1px dashed #adb5bd;
-                padding: 12px;
+                padding: 14px;
                 background: white;
-                margin-right: 10px;
-                line-height: 1.4;
-                border-radius: 10px;
+                margin: 0;
+                line-height: 1.5;
+                border-radius: 12px;
+                width: 100%;
               }
               
               .answer-space::before {
@@ -518,13 +515,6 @@ export default function CreateWorksheet() {
                 
                 .print-header h1 {
                   color: white !important;
-                }
-                
-                .student-info-box {
-                  background: #ffffff !important;
-                  border: 1px solid #ced4da !important;
-                  display: flex !important;
-                  position: relative !important;
                 }
                 
                 body {
