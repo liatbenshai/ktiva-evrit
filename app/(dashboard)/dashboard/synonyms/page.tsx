@@ -28,11 +28,21 @@ export default function SynonymsPage() {
   const fetchSynonyms = async () => {
     try {
       const response = await fetch('/api/synonyms');
-      if (!response.ok) throw new Error('Failed to fetch');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to fetch synonyms:', errorText);
+        throw new Error('Failed to fetch');
+      }
       const data = await response.json();
+      if (!Array.isArray(data)) {
+        console.error('Unexpected synonyms response:', data);
+        throw new Error('Invalid data format');
+      }
       setSynonyms(data);
     } catch (error) {
       console.error('Error fetching synonyms:', error);
+      alert('שגיאה בטעינת מילים נרדפות. בדקי את הלוגים כדי להבין מה קרה.');
+      setSynonyms([]);
     }
   };
 

@@ -35,12 +35,19 @@ export async function DELETE(req: NextRequest) {
       }, { status: 500 });
     }
 
-    // מחיקת הדפוס
+    const pattern = await prisma.translationPattern.findUnique({
+      where: { id: patternId },
+    });
+
+    if (!pattern || pattern.userId !== userId) {
+      return NextResponse.json(
+        { success: false, error: 'Pattern not found' },
+        { status: 404 }
+      );
+    }
+
     await prisma.translationPattern.delete({
-      where: { 
-        id: patternId,
-        userId, // וידוא שרק המשתמש יכול למחוק את הדפוסים שלו
-      },
+      where: { id: patternId },
     });
 
     return NextResponse.json({
