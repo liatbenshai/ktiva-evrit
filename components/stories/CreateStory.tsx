@@ -5,6 +5,8 @@ import { BookOpen, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
+import { usePatternSaver } from '@/hooks/usePatternSaver';
+import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
 
 export default function CreateStory() {
   const [genre, setGenre] = useState('');
@@ -16,6 +18,7 @@ export default function CreateStory() {
   const [additionalInstructions, setAdditionalInstructions] = useState('');
   const [result, setResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const patternSaver = usePatternSaver({ source: 'story', userId: 'default-user' });
 
   const handleGenerate = async () => {
     if (!genre.trim() || !plot.trim()) {
@@ -45,6 +48,7 @@ export default function CreateStory() {
       if (!response.ok) throw new Error('Failed');
       const { result: generatedStory } = await response.json();
       setResult(generatedStory);
+      patternSaver.resetPatternSaved();
     } catch (error) {
       alert('אירעה שגיאה ביצירת הסיפור');
     } finally {
@@ -194,6 +198,9 @@ export default function CreateStory() {
               onChange={(e) => setResult(e.target.value)}
               rows={20}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none font-serif leading-relaxed"
+              onMouseUp={patternSaver.handleSelection}
+              onKeyUp={patternSaver.handleSelection}
+              onTouchEnd={patternSaver.handleSelection}
             />
             
             <div className="mt-4 flex gap-3">
@@ -218,6 +225,17 @@ export default function CreateStory() {
               </button>
             </div>
           </div>
+
+          <PatternSaverPanel
+            sourceLabel="סיפור"
+            selectedText={patternSaver.selectedText}
+            onSelectedTextChange={patternSaver.setSelectedText}
+            patternCorrection={patternSaver.patternCorrection}
+            onPatternCorrectionChange={patternSaver.setPatternCorrection}
+            onSave={patternSaver.handleSavePattern}
+            isSaving={patternSaver.isSavingPattern}
+            patternSaved={patternSaver.patternSaved}
+          />
 
           {/* Additional Improvements */}
           <div className="bg-white rounded-xl shadow-sm border-2 border-purple-100 p-6">

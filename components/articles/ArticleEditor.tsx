@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { 
   ArrowRight, 
   BarChart3, 
@@ -12,6 +12,8 @@ import {
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import { SynonymButton } from '@/components/SynonymButton';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
+import { usePatternSaver } from '@/hooks/usePatternSaver';
+import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
 
 interface ArticleEditorProps {
   initialContent: string;
@@ -37,6 +39,7 @@ export default function ArticleEditor({
   const [forbiddenWords, setForbiddenWords] = useState<string[]>([]);
   const [newForbiddenWord, setNewForbiddenWord] = useState('');
   const [showStats, setShowStats] = useState(true);
+  const patternSaver = usePatternSaver({ source: 'article', userId: 'default-user' });
 
   // Calculate statistics
   const statistics = useMemo(() => {
@@ -201,8 +204,22 @@ export default function ArticleEditor({
               className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-sans"
               style={{ minHeight: '600px', direction: 'rtl' }}
               dir="rtl"
+              onMouseUp={patternSaver.handleSelection}
+              onKeyUp={patternSaver.handleSelection}
+              onTouchEnd={patternSaver.handleSelection}
             />
           </div>
+
+          <PatternSaverPanel
+            sourceLabel="מאמר"
+            selectedText={patternSaver.selectedText}
+            onSelectedTextChange={patternSaver.setSelectedText}
+            patternCorrection={patternSaver.patternCorrection}
+            onPatternCorrectionChange={patternSaver.setPatternCorrection}
+            onSave={patternSaver.handleSavePattern}
+            isSaving={patternSaver.isSavingPattern}
+            patternSaved={patternSaver.patternSaved}
+          />
 
           {/* Forbidden Words */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

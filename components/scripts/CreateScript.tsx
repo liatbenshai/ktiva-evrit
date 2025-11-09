@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Film, Loader2, BookmarkPlus, Check } from 'lucide-react';
+import { Film, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
+import { usePatternSaver } from '@/hooks/usePatternSaver';
+import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
 
 export default function CreateScript() {
   const [topic, setTopic] = useState('');
@@ -14,10 +16,7 @@ export default function CreateScript() {
   const [additionalInstructions, setAdditionalInstructions] = useState('');
   const [result, setResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedText, setSelectedText] = useState('');
-  const [patternCorrection, setPatternCorrection] = useState('');
-  const [isSavingPattern, setIsSavingPattern] = useState(false);
-  const [patternSaved, setPatternSaved] = useState(false);
+  const patternSaver = usePatternSaver({ source: 'script', userId: 'default-user' });
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
@@ -51,77 +50,11 @@ export default function CreateScript() {
       }
       
       setResult(generatedScript);
-      setPatternSaved(false);
+      patternSaver.resetPatternSaved();
     } catch (error) {
       alert('אירעה שגיאה ביצירת התסריט');
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleScriptSelection = (event: React.SyntheticEvent<HTMLTextAreaElement>) => {
-    const textarea = event.currentTarget;
-    let selection = '';
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    if (start !== end) {
-      selection = textarea.value.substring(start, end);
-    }
-
-    if (!selection.trim() && typeof window !== 'undefined') {
-      const globalSelection = window.getSelection()?.toString();
-      if (globalSelection) {
-        selection = globalSelection;
-      }
-    }
-
-    selection = selection.trim();
-    if (!selection) {
-      return;
-    }
-
-    setSelectedText(selection);
-    setPatternCorrection(selection);
-    setPatternSaved(false);
-  };
-
-  const handleSavePattern = async () => {
-    if (!selectedText.trim()) {
-      alert('סמני בתסריט את הביטוי הבעייתי כדי שנדע מה לשפר');
-      return;
-    }
-    if (!patternCorrection.trim()) {
-      alert('הזיני את הניסוח המתוקן');
-      return;
-    }
-
-    setIsSavingPattern(true);
-    try {
-      const response = await fetch('/api/ai-correction/save-pattern', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          originalText: selectedText.trim(),
-          correctedText: patternCorrection.trim(),
-          userId: 'default-user',
-          source: 'script',
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || data.error || 'Failed to save pattern');
-      }
-
-      setPatternSaved(true);
-      alert('✅ הדפוס נשמר! התסריטים הבאים ילמדו מהעדפה הזאת.');
-    } catch (error) {
-      console.error('Error saving script pattern:', error);
-      const message = error instanceof Error ? error.message : 'שגיאה לא ידועה';
-      alert(`שגיאה בשמירת הדפוס: ${message}`);
-    } finally {
-      setIsSavingPattern(false);
     }
   };
 
@@ -250,76 +183,25 @@ export default function CreateScript() {
               rows={20}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm"
               dir="rtl"
-              onMouseUp={handleScriptSelection}
-              onKeyUp={handleScriptSelection}
-              onTouchEnd={handleScriptSelection}
+              onMouseUp={patternSaver.handleSelection}
+              onKeyUp={patternSaver.handleSelection}
+              onTouchEnd={patternSaver.handleSelection}
             />
             <p className="mt-2 text-sm text-gray-500">
               ניתן לערוך את התסריט ישירות בשדה
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <BookmarkPlus className="w-5 h-5 text-blue-600" />
-              שמירת דפוס שנלמד מתסריט זה
-            </h3>
-            <p className="text-sm text-gray-600 mb-3">
-              סמני בתסריט למעלה ניסוח בעייתי (ניתן גם להדביק את הטקסט בשדה הראשון), הזיני את הניסוח המתוקן ולחצי על "שמרי דפוס". הדפוס ישמש גם בתסריטים, מאמרים ותכנים אחרים.
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">הניסוח שסימנת</label>
-                <textarea
-                  value={selectedText}
-                  onChange={(e) => setSelectedText(e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  placeholder="לדוגמה: קיבלתי החלטה"
-                  dir="rtl"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">הניסוח הרצוי (המתוקן)</label>
-                <textarea
-                  value={patternCorrection}
-                  onChange={(e) => setPatternCorrection(e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                  placeholder="לדוגמה: החלטתי"
-                  dir="rtl"
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={handleSavePattern}
-                disabled={isSavingPattern || !selectedText.trim() || !patternCorrection.trim()}
-                className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isSavingPattern ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    שומרת דפוס...
-                  </>
-                ) : (
-                  <>
-                    <BookmarkPlus className="h-4 w-4" />
-                    שמרי דפוס
-                  </>
-                )}
-              </button>
-
-              {patternSaved && (
-                <p className="flex items-center gap-2 text-sm text-green-600">
-                  <Check className="h-4 w-4" />
-                  הדפוס נשמר בהצלחה! תוכן עתידי יימנע מהניסוח שסימנת.
-                </p>
-              )}
-            </div>
-          </div>
+          <PatternSaverPanel
+            sourceLabel="תסריט"
+            selectedText={patternSaver.selectedText}
+            onSelectedTextChange={patternSaver.setSelectedText}
+            patternCorrection={patternSaver.patternCorrection}
+            onPatternCorrectionChange={patternSaver.setPatternCorrection}
+            onSave={patternSaver.handleSavePattern}
+            isSaving={patternSaver.isSavingPattern}
+            patternSaved={patternSaver.patternSaved}
+          />
 
           {/* Improvement Buttons */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

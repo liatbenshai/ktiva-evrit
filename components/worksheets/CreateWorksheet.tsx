@@ -3,6 +3,8 @@
 import { useRef, useState } from 'react';
 import { Check, Copy, Download, FileText, Loader2, Printer, Upload } from 'lucide-react';
 import { exportWorksheetToPDF } from '@/lib/pdfExport';
+import { usePatternSaver } from '@/hooks/usePatternSaver';
+import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
 
 export default function CreateWorksheet() {
   const [instruction, setInstruction] = useState('');
@@ -14,6 +16,7 @@ export default function CreateWorksheet() {
   const [copied, setCopied] = useState(false);
   const instructionFileInputRef = useRef<HTMLInputElement | null>(null);
   const storyFileInputRef = useRef<HTMLInputElement | null>(null);
+  const patternSaver = usePatternSaver({ source: 'worksheet', userId: 'default-user' });
 
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -84,6 +87,8 @@ export default function CreateWorksheet() {
       if (!response.ok) throw new Error('Failed');
       const { result: generatedWorksheet } = await response.json();
       setResult(generatedWorksheet);
+      patternSaver.resetPatternSaved();
+      setCopied(false);
     } catch (error) {
       alert('אירעה שגיאה ביצירת דף העבודה');
     } finally {
@@ -737,7 +742,13 @@ export default function CreateWorksheet() {
           </div>
 
           <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed sm:p-5 sm:text-base">
-            <div dir={isResultHebrew ? 'rtl' : 'ltr'} lang={detectedLanguage}>
+            <div
+              dir={isResultHebrew ? 'rtl' : 'ltr'}
+              lang={detectedLanguage}
+              onMouseUp={patternSaver.handleSelection}
+              onKeyUp={patternSaver.handleSelection}
+              onTouchEnd={patternSaver.handleSelection}
+            >
               {cleanMarkdown(result).split('\n').map((line, index) => (
                 <div key={index} className={index > 0 ? 'mt-2' : ''}>
                   {line || '\u00A0'}
@@ -745,6 +756,18 @@ export default function CreateWorksheet() {
               ))}
             </div>
           </div>
+
+          <PatternSaverPanel
+            sourceLabel="דף עבודה"
+            selectedText={patternSaver.selectedText}
+            onSelectedTextChange={patternSaver.setSelectedText}
+            patternCorrection={patternSaver.patternCorrection}
+            onPatternCorrectionChange={patternSaver.setPatternCorrection}
+            onSave={patternSaver.handleSavePattern}
+            isSaving={patternSaver.isSavingPattern}
+            patternSaved={patternSaver.patternSaved}
+            instructions="סמני קטע בעייתי מתוך דף העבודה שנוצר (אפשר גם להדביק אותו בשדה), הזיני ניסוח מוצלח יותר ולחצי 'שמרי דפוס'."
+          />
 
           <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
             <p className="text-sm text-blue-800 sm:text-base">

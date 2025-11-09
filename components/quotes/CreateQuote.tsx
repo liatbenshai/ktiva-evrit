@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { FileText, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import { SynonymButton } from '@/components/SynonymButton';
+import { usePatternSaver } from '@/hooks/usePatternSaver';
+import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
 
 export default function CreateQuote() {
   const [clientName, setClientName] = useState('');
@@ -13,6 +15,7 @@ export default function CreateQuote() {
   const [additionalTerms, setAdditionalTerms] = useState('');
   const [result, setResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const patternSaver = usePatternSaver({ source: 'quote', userId: 'default-user' });
 
   const handleGenerate = async () => {
     if (!clientName.trim() || !projectDescription.trim() || !services.trim()) {
@@ -40,6 +43,7 @@ export default function CreateQuote() {
       if (!response.ok) throw new Error('Failed');
       const { result: generatedQuote } = await response.json();
       setResult(generatedQuote);
+      patternSaver.resetPatternSaved();
     } catch (error) {
       alert('אירעה שגיאה ביצירת הצעת המחיר');
     } finally {
@@ -154,11 +158,25 @@ export default function CreateQuote() {
               rows={20}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               dir="rtl"
+              onMouseUp={patternSaver.handleSelection}
+              onKeyUp={patternSaver.handleSelection}
+              onTouchEnd={patternSaver.handleSelection}
             />
             <p className="mt-2 text-sm text-gray-500">
               ניתן לערוך את הצעת המחיר ישירות בשדה
             </p>
           </div>
+
+          <PatternSaverPanel
+            sourceLabel="הצעת מחיר"
+            selectedText={patternSaver.selectedText}
+            onSelectedTextChange={patternSaver.setSelectedText}
+            patternCorrection={patternSaver.patternCorrection}
+            onPatternCorrectionChange={patternSaver.setPatternCorrection}
+            onSave={patternSaver.handleSavePattern}
+            isSaving={patternSaver.isSavingPattern}
+            patternSaved={patternSaver.patternSaved}
+          />
 
           {/* Improvement Buttons */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

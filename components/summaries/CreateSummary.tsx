@@ -5,6 +5,8 @@ import { FileText, Upload, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
+import { usePatternSaver } from '@/hooks/usePatternSaver';
+import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
 
 type InputMode = 'text' | 'file';
 
@@ -15,6 +17,7 @@ export default function CreateSummary() {
   const [focusPoints, setFocusPoints] = useState('');
   const [result, setResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const patternSaver = usePatternSaver({ source: 'summary', userId: 'default-user' });
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -74,6 +77,7 @@ export default function CreateSummary() {
       if (!response.ok) throw new Error('Failed');
       const { result: summary } = await response.json();
       setResult(summary);
+      patternSaver.resetPatternSaved();
     } catch (error) {
       alert('אירעה שגיאה ביצירת הסיכום');
     } finally {
@@ -219,8 +223,22 @@ export default function CreateSummary() {
               onChange={(e) => setResult(e.target.value)}
               rows={8}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              onMouseUp={patternSaver.handleSelection}
+              onKeyUp={patternSaver.handleSelection}
+              onTouchEnd={patternSaver.handleSelection}
             />
           </div>
+
+          <PatternSaverPanel
+            sourceLabel="סיכום"
+            selectedText={patternSaver.selectedText}
+            onSelectedTextChange={patternSaver.setSelectedText}
+            patternCorrection={patternSaver.patternCorrection}
+            onPatternCorrectionChange={patternSaver.setPatternCorrection}
+            onSave={patternSaver.handleSavePattern}
+            isSaving={patternSaver.isSavingPattern}
+            patternSaved={patternSaver.patternSaved}
+          />
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
