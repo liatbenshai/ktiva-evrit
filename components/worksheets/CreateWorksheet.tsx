@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Check, Copy, Download, FileText, Loader2, Printer } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Check, Copy, Download, FileText, Loader2, Printer, Upload } from 'lucide-react';
 import { exportWorksheetToPDF } from '@/lib/pdfExport';
 
 export default function CreateWorksheet() {
@@ -12,6 +12,52 @@ export default function CreateWorksheet() {
   const [result, setResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const instructionFileInputRef = useRef<HTMLInputElement | null>(null);
+  const storyFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    target: 'instruction' | 'story'
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.name.match(/\.(pdf|docx|txt)$/i)) {
+      alert('נא להעלות קובץ מסוג: PDF, DOCX או TXT');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process file');
+      }
+
+      const { text } = await response.json();
+
+      if (target === 'instruction') {
+        setInstruction(text);
+      } else {
+        setStory(text);
+      }
+
+      alert('הקובץ נקרא בהצלחה! הטקסט הועתק לשדה המתאים.');
+    } catch (error) {
+      console.error('Error reading file:', error);
+      alert('שגיאה בקריאת הקובץ');
+    }
+  };
 
   const handleGenerate = async () => {
     if (!instruction.trim()) {
@@ -580,6 +626,24 @@ export default function CreateWorksheet() {
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-200 sm:px-4 sm:py-3 sm:text-base"
               dir="rtl"
             />
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500 sm:text-sm">
+              <button
+                type="button"
+                onClick={() => instructionFileInputRef.current?.click()}
+                className="inline-flex items-center gap-2 rounded-lg border border-yellow-300 px-3 py-1.5 text-sm font-medium text-yellow-700 transition hover:border-yellow-400 hover:bg-yellow-50"
+              >
+                <Upload className="h-4 w-4" />
+                העלי קובץ (PDF / DOCX / TXT)
+              </button>
+              <span>נייבא את הטקסט לשדה ההוראות.</span>
+            </div>
+            <input
+              ref={instructionFileInputRef}
+              type="file"
+              accept=".pdf,.docx,.txt"
+              onChange={(event) => handleFileUpload(event, 'instruction')}
+              className="hidden"
+            />
           </div>
 
           <div>
@@ -587,7 +651,7 @@ export default function CreateWorksheet() {
               סיפור (אופציונלי)
             </label>
             <p className="mb-2 text-xs text-gray-500 sm:text-sm">
-              אם תרצי לבנות שאלות על בסיס סיפור קיים, הדביקי אותו כאן ונייצר שאלות סביבו.
+              אם תרצי לבנות שאלות על בסיס סיפור קיים, הדביקי אותו כאן או העלי קובץ ונייצר שאלות סביבו.
             </p>
             <textarea
               value={story}
@@ -596,6 +660,24 @@ export default function CreateWorksheet() {
               rows={6}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-200 sm:px-4 sm:py-3 sm:text-base"
               dir={story && /^[\u0590-\u05FF\s]+$/.test(story.split('\n')[0]) ? 'rtl' : 'ltr'}
+            />
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500 sm:text-sm">
+              <button
+                type="button"
+                onClick={() => storyFileInputRef.current?.click()}
+                className="inline-flex items-center gap-2 rounded-lg border border-yellow-300 px-3 py-1.5 text-sm font-medium text-yellow-700 transition hover:border-yellow-400 hover:bg-yellow-50"
+              >
+                <Upload className="h-4 w-4" />
+                העלי קובץ (PDF / DOCX / TXT)
+              </button>
+              <span>הטקסט ייכנס לשדה הסיפור.</span>
+            </div>
+            <input
+              ref={storyFileInputRef}
+              type="file"
+              accept=".pdf,.docx,.txt"
+              onChange={(event) => handleFileUpload(event, 'story')}
+              className="hidden"
             />
           </div>
 

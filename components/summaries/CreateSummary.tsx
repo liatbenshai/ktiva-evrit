@@ -17,48 +17,35 @@ export default function CreateSummary() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('🔵 handleFileUpload called!');
     const file = e.target.files?.[0];
     if (!file) {
-      console.log('🔴 No file selected');
       return;
     }
 
-    console.log('🟢 File selected:', file.name, file.type, file.size);
-
-    // Check file type
-    if (!file.name.match(/\.(txt|docx)$/i)) {
-      alert('נא להעלות קובץ מסוג: TXT או DOCX');
+    if (!file.name.match(/\.(txt|docx|pdf)$/i)) {
+      alert('נא להעלות קובץ מסוג: PDF, TXT או DOCX');
       return;
     }
-
-    console.log('🟢 File type valid, sending to server...');
 
     try {
-      // Send file to server for processing
       const formData = new FormData();
       formData.append('file', file);
 
-      console.log('🟡 Calling /api/upload...');
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
-
-      console.log('🟡 Response status:', response.status);
 
       if (!response.ok) {
         throw new Error('Failed to upload file');
       }
 
       const result = await response.json();
-      console.log('🟢 Response data:', result);
-
       const { text: extractedText } = result;
       setText(extractedText);
       alert('הקובץ נקרא בהצלחה!');
     } catch (error) {
-      console.error('🔴 Error reading file:', error);
+      console.error('Error reading file:', error);
       alert('שגיאה בקריאת הקובץ');
     }
   };
@@ -152,12 +139,12 @@ export default function CreateSummary() {
                 <Upload className="w-12 h-12 mx-auto text-gray-400 mb-2" />
                 <span className="text-gray-600">לחץ להעלאת קובץ</span>
                 <p className="text-sm text-gray-500 mt-1">
-                  TXT, DOCX
+                  PDF, DOCX, TXT
                 </p>
                 <input
                   type="file"
                   onChange={handleFileUpload}
-                  accept=".txt,.docx"
+                  accept=".pdf,.docx,.txt"
                   className="hidden"
                 />
               </label>
