@@ -13,6 +13,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:check": "tsx scripts/check-database.ts",
     "db:convert": "tsx scripts/convert-to-pooling-url.ts",
+    "analyzer:check": "tsx scripts/analyzer-self-check.ts",
     "postinstall": "prisma generate",
     "deploy": "vercel --prod"
   },

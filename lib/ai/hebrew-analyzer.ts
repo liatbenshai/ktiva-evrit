@@ -99,20 +99,117 @@ const ANGLICISM_INDICATORS = [
 ];
 
 /**
+ * ניקוי טקסט עבור התאמת דפוסים תוך שמירת מיפוי לאינדקסים המקוריים
+ */
+const HEBREW_NIKKUD_REGEX = /[\u0591-\u05C7]/;
+const PUNCTUATION_TO_SPACE_REGEX = /[.,!?;:"“”'׳״()\[\]{}<>/\\\-–—]/;
+
+interface NormalizedText {
+  normalized: string;
+  map: number[];
+}
+
+function normalizeTextForAnalysis(text: string): NormalizedText {
+  const intermediateChars: string[] = [];
+  const intermediateMap: number[] = [];
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+
+    if (HEBREW_NIKKUD_REGEX.test(char)) {
+      continue;
+    }
+
+    let normalizedChar = char;
+
+    if (/\s/.test(char)) {
+      normalizedChar = ' ';
+    } else if (PUNCTUATION_TO_SPACE_REGEX.test(char)) {
+      normalizedChar = ' ';
+    }
+
+    // אין לנו אותיות גדולות בעברית, אבל נשמור על אחידות באותיות לטיניות שנשארו
+    normalizedChar = normalizedChar.toLowerCase();
+
+    intermediateChars.push(normalizedChar);
+    intermediateMap.push(i);
+  }
+
+  // איחוד רווחים רצופים כדי לשמור על התאמות מדויקות
+  const normalizedChars: string[] = [];
+  const normalizedMap: number[] = [];
+  let lastWasSpace = false;
+
+  intermediateChars.forEach((char, index) => {
+    if (char === ' ') {
+      if (lastWasSpace) {
+        return;
+      }
+      lastWasSpace = true;
+    } else {
+      lastWasSpace = false;
+    }
+
+    normalizedChars.push(char);
+    normalizedMap.push(intermediateMap[index]);
+  });
+
+  return {
+    normalized: normalizedChars.join(''),
+    map: normalizedMap,
+  };
+}
+
+/**
+ * יצירת regex עם דגל global בטוח לשימוש בלולאות
+ */
+function createGlobalRegex(pattern: RegExp): RegExp {
+  let flags = pattern.flags;
+  if (!flags.includes('g')) {
+    flags += 'g';
+  }
+  if (!flags.includes('u')) {
+    flags += 'u';
+  }
+  const boundarySnippet = '(?:(?<=^|[^\\p{L}\\p{N}_])(?=[\\p{L}\\p{N}_])|(?<=[\\p{L}\\p{N}_])(?=$|[^\\p{L}\\p{N}_]))';
+  const source = pattern.source.replace(/\\b/g, boundarySnippet);
+  return new RegExp(source, flags);
+}
+
+/**
+ * רישום issue תוך מניעת כפילויות
+ */
+function registerIssue(
+  issues: TranslationIssue[],
+  seenIssues: Set<string>,
+  issue: TranslationIssue
+): boolean {
+  const key = `${issue.startIndex}-${issue.endIndex}-${issue.original.toLowerCase()}`;
+  if (seenIssues.has(key)) {
+    return false;
+  }
+  seenIssues.add(key);
+  issues.push(issue);
+  return true;
+}
+
+/**
  * ניתוח טקסט לזיהוי עברית מתורגמת
  */
 export function analyzeHebrewText(text: string): AnalysisResult {
   const issues: TranslationIssue[] = [];
   let score = 100;
   let aiPatternCount = 0; // ספירת דפוסי AI
+  const seenIssues = new Set<string>();
+  const normalizedText = normalizeTextForAnalysis(text);
 
   // בדיקת דפוסים נפוצים (כולל דפוסי AI)
   for (const pattern of COMMON_TRANSLATION_PATTERNS) {
-    let match;
-    // איפוס regex לפני כל שימוש (כי regex.global שומר מצב)
-    const regex = new RegExp(pattern.pattern.source, pattern.pattern.flags);
-    while ((match = regex.exec(text)) !== null) {
-      issues.push({
+    const originalRegex = createGlobalRegex(pattern.pattern);
+    let match: RegExpExecArray | null;
+
+    while ((match = originalRegex.exec(text)) !== null) {
+      const didRegister = registerIssue(issues, seenIssues, {
         type: 'literal-translation',
         original: match[0],
         suggestion: pattern.suggestion,
@@ -121,8 +218,40 @@ export function analyzeHebrewText(text: string): AnalysisResult {
         startIndex: match.index,
         endIndex: match.index + match[0].length
       });
-      score -= 8; // הורדת ציון יותר משמעותית
-      aiPatternCount++;
+
+      if (didRegister) {
+        score -= 8;
+        aiPatternCount++;
+      }
+    }
+
+    // ניסיון נוסף על טקסט מנורמל כדי לתפוס וריאציות עם פיסוק/ניקוד
+    const normalizedRegex = createGlobalRegex(pattern.pattern);
+    while ((match = normalizedRegex.exec(normalizedText.normalized)) !== null) {
+      const normalizedStart = normalizedText.map[match.index];
+      const normalizedEndIndex = normalizedText.map[match.index + match[0].length - 1];
+
+      if (normalizedStart === undefined || normalizedEndIndex === undefined) {
+        continue;
+      }
+
+      const startIndex = normalizedStart;
+      const endIndex = normalizedEndIndex + 1;
+
+      const didRegister = registerIssue(issues, seenIssues, {
+        type: 'literal-translation',
+        original: text.slice(startIndex, endIndex),
+        suggestion: pattern.suggestion,
+        confidence: 0.75,
+        explanation: pattern.explanation,
+        startIndex,
+        endIndex
+      });
+
+      if (didRegister) {
+        score -= 7;
+        aiPatternCount++;
+      }
     }
   }
   
@@ -141,21 +270,38 @@ export function analyzeHebrewText(text: string): AnalysisResult {
   }
 
   // בדיקת אנגליציזמים
-  const words = text.split(/\s+/);
-  words.forEach((word, index) => {
-    if (ANGLICISM_INDICATORS.some(indicator => word.includes(indicator))) {
-      issues.push({
-        type: 'anglicism',
-        original: word,
-        suggestion: 'נסה להשתמש במילה עברית יותר טבעית',
-        confidence: 0.6,
-        explanation: `המילה "${word}" היא אנגליציזם או מילה פורמלית מדי`,
-        startIndex: text.indexOf(word),
-        endIndex: text.indexOf(word) + word.length
-      });
+  const normalizedWordRegex = /\S+/g;
+  let normalizedWordMatch: RegExpExecArray | null;
+  while ((normalizedWordMatch = normalizedWordRegex.exec(normalizedText.normalized)) !== null) {
+    const word = normalizedWordMatch[0];
+
+    if (!ANGLICISM_INDICATORS.some(indicator => word.includes(indicator))) {
+      continue;
+    }
+
+    const normalizedIndex = normalizedWordMatch.index;
+    const startIndex = normalizedText.map[normalizedIndex];
+    const endIndexCandidate = normalizedText.map[normalizedIndex + word.length - 1];
+
+    if (startIndex === undefined || endIndexCandidate === undefined) {
+      continue;
+    }
+
+    const endIndex = endIndexCandidate + 1;
+
+    const didRegister = registerIssue(issues, seenIssues, {
+      type: 'anglicism',
+      original: text.slice(startIndex, endIndex),
+      suggestion: 'נסה להשתמש במילה עברית יותר טבעית',
+      confidence: 0.6,
+      explanation: `המילה "${word}" היא אנגליציזם או מילה פורמלית מדי`,
+      startIndex,
+      endIndex
+    });
+    if (didRegister) {
       score -= 3;
     }
-  });
+  }
 
   // בדיקת סדר מילים לא טבעי
   const unnaturalPatterns = [
@@ -166,8 +312,9 @@ export function analyzeHebrewText(text: string): AnalysisResult {
 
   for (const pattern of unnaturalPatterns) {
     let match;
-    while ((match = pattern.exec(text)) !== null) {
-      issues.push({
+    const regex = createGlobalRegex(pattern);
+    while ((match = regex.exec(text)) !== null) {
+      const didRegister = registerIssue(issues, seenIssues, {
         type: 'word-order',
         original: match[0],
         suggestion: match[0].replace(/(הוא|היא|הם)\s+/, ''),
@@ -176,7 +323,9 @@ export function analyzeHebrewText(text: string): AnalysisResult {
         startIndex: match.index,
         endIndex: match.index + match[0].length
       });
-      score -= 4;
+      if (didRegister) {
+        score -= 4;
+      }
     }
   }
 
