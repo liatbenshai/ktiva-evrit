@@ -108,6 +108,7 @@ export async function POST(req: NextRequest) {
       originalText,
       correctedText,
       userId = 'default-user',
+      source,
     } = body;
 
     if (!originalText || !correctedText) {
@@ -179,6 +180,16 @@ export async function POST(req: NextRequest) {
           data: {
             occurrences: existingPattern.occurrences + 1,
             confidence: Math.min(1.0, existingPattern.confidence + 0.1),
+            context: source
+              ? JSON.stringify(
+                  Array.from(
+                    new Set([
+                      ...(existingPattern.context ? JSON.parse(existingPattern.context) : []),
+                      source,
+                    ])
+                  )
+                )
+              : existingPattern.context,
             updatedAt: new Date(),
           },
         });
@@ -217,6 +228,7 @@ export async function POST(req: NextRequest) {
             patternType: 'ai-style', // דפוסים ספציפיים לניסוחי AI
             occurrences: 1,
             confidence: 0.8, // ביטחון התחלתי גבוה כי המשתמש בחר את זה במפורש
+            context: source ? JSON.stringify([source]) : undefined,
           },
         });
 
