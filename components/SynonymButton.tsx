@@ -81,7 +81,7 @@ export function SynonymButton({
       
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>יצירת גרסאות עם מילים נרדפות</DialogTitle>
+          <DialogTitle>גרסאות חלופיות</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -127,22 +127,26 @@ export function SynonymButton({
 
           {!generatedVersions.length && !isGenerating && (
             <Card>
-              <CardContent className="py-8">
-                <div className="text-center">
-                  <RefreshCw className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">יצירת גרסאות עם מילים נרדפות</h3>
-                  <p className="text-gray-600 mb-4">
-                    המערכת תיצור 3 גרסאות שונות של הטקסט עם מילים נרדפות
-                  </p>
-                  <Button onClick={handleGenerateSynonyms} disabled={isGenerating}>
+              <CardContent className="py-10">
+                <div className="text-center space-y-4">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50 text-indigo-500">
+                    <RefreshCw className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold">מוכנה לגרסאות חדשות?</h3>
+                    <p className="text-gray-600">
+                      בלחיצה אחת ניצור עד שלוש וריאציות עם מילים נרדפות שמתאימות לתסריט הנוכחי.
+                    </p>
+                  </div>
+                  <Button onClick={handleGenerateSynonyms} disabled={isGenerating} className="inline-flex items-center gap-2">
                     {isGenerating ? (
                       <>
-                        <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="ml-1.5 h-4 w-4 animate-spin" />
                         יוצר גרסאות...
                       </>
                     ) : (
                       <>
-                        <RefreshCw className="ml-2 h-4 w-4" />
+                        <RefreshCw className="ml-1.5 h-4 w-4" />
                         צור גרסאות
                       </>
                     )}
