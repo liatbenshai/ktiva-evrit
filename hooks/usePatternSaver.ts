@@ -2,15 +2,18 @@
 
 import { useCallback, useState } from 'react';
 
+export interface SavedPatternInfo {
+  from: string;
+  to: string;
+  confidence: number;
+  occurrences: number;
+  originalSelection: string;
+}
+
 interface UsePatternSaverOptions {
   source: string;
   userId?: string;
-  onSuccess?: (pattern: {
-    from: string;
-    to: string;
-    confidence: number;
-    occurrences: number;
-  }) => void;
+  onSuccess?: (pattern: SavedPatternInfo) => void;
 }
 
 export function usePatternSaver({
@@ -46,13 +49,13 @@ export function usePatternSaver({
         }
       }
 
-      selection = selection.trim();
-      if (!selection) {
+      const trimmedSelection = selection.trim();
+      if (!trimmedSelection) {
         return;
       }
 
       setSelectedText(selection);
-      setPatternCorrection(selection);
+      setPatternCorrection(trimmedSelection);
       setPatternSaved(false);
     },
     [],
@@ -75,6 +78,7 @@ export function usePatternSaver({
     setPatternSaved(false);
 
     try {
+      const originalSelection = selectedText;
       const response = await fetch('/api/ai-correction/save-pattern', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -97,7 +101,10 @@ export function usePatternSaver({
       setPatternCorrection('');
 
       if (typeof onSuccess === 'function') {
-        onSuccess(data.pattern);
+        onSuccess({
+          ...data.pattern,
+          originalSelection,
+        });
       }
 
       alert('✅ הדפוס נשמר! התכנים הבאים ילמדו מהעדפה הזאת.');

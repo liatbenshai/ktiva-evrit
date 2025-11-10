@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { Check, Copy, Download, FileText, Loader2, Printer, Upload } from 'lucide-react';
 import { exportWorksheetToPDF } from '@/lib/pdfExport';
-import { usePatternSaver } from '@/hooks/usePatternSaver';
+import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
 
 export default function CreateWorksheet() {
@@ -16,7 +16,29 @@ export default function CreateWorksheet() {
   const [copied, setCopied] = useState(false);
   const instructionFileInputRef = useRef<HTMLInputElement | null>(null);
   const storyFileInputRef = useRef<HTMLInputElement | null>(null);
-  const patternSaver = usePatternSaver({ source: 'worksheet', userId: 'default-user' });
+  const applyPatternToText = (text: string, pattern: SavedPatternInfo) => {
+    if (!text) return text;
+
+    const { originalSelection, from, to } = pattern;
+
+    if (originalSelection && text.includes(originalSelection)) {
+      return text.replace(originalSelection, to);
+    }
+
+    if (from && text.includes(from)) {
+      return text.replace(from, to);
+    }
+
+    return text;
+  };
+
+  const patternSaver = usePatternSaver({
+    source: 'worksheet',
+    userId: 'default-user',
+    onSuccess: (pattern) => {
+      setResult((prev) => applyPatternToText(prev, pattern));
+    },
+  });
 
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,

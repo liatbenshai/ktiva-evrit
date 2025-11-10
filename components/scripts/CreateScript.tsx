@@ -5,7 +5,7 @@ import { Film, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
-import { usePatternSaver } from '@/hooks/usePatternSaver';
+import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
 
 export default function CreateScript() {
@@ -16,7 +16,30 @@ export default function CreateScript() {
   const [additionalInstructions, setAdditionalInstructions] = useState('');
   const [result, setResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const patternSaver = usePatternSaver({ source: 'script', userId: 'default-user' });
+
+  const applyPatternToText = (text: string, pattern: SavedPatternInfo) => {
+    if (!text) return text;
+
+    const { originalSelection, from, to } = pattern;
+
+    if (originalSelection && text.includes(originalSelection)) {
+      return text.replace(originalSelection, to);
+    }
+
+    if (from && text.includes(from)) {
+      return text.replace(from, to);
+    }
+
+    return text;
+  };
+
+  const patternSaver = usePatternSaver({
+    source: 'script',
+    userId: 'default-user',
+    onSuccess: (pattern) => {
+      setResult((prev) => applyPatternToText(prev, pattern));
+    },
+  });
 
   const handleGenerate = async () => {
     if (!topic.trim()) {

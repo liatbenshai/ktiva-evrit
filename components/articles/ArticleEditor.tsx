@@ -12,7 +12,7 @@ import {
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import { SynonymButton } from '@/components/SynonymButton';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
-import { usePatternSaver } from '@/hooks/usePatternSaver';
+import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
 
 interface ArticleEditorProps {
@@ -39,7 +39,29 @@ export default function ArticleEditor({
   const [forbiddenWords, setForbiddenWords] = useState<string[]>([]);
   const [newForbiddenWord, setNewForbiddenWord] = useState('');
   const [showStats, setShowStats] = useState(true);
-  const patternSaver = usePatternSaver({ source: 'article', userId: 'default-user' });
+  const applyPatternToText = (text: string, pattern: SavedPatternInfo) => {
+    if (!text) return text;
+
+    const { originalSelection, from, to } = pattern;
+
+    if (originalSelection && text.includes(originalSelection)) {
+      return text.replace(originalSelection, to);
+    }
+
+    if (from && text.includes(from)) {
+      return text.replace(from, to);
+    }
+
+    return text;
+  };
+
+  const patternSaver = usePatternSaver({
+    source: 'article',
+    userId: 'default-user',
+    onSuccess: (pattern) => {
+      setContent((prev) => applyPatternToText(prev, pattern));
+    },
+  });
 
   // Calculate statistics
   const statistics = useMemo(() => {

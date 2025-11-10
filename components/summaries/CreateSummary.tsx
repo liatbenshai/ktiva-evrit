@@ -5,7 +5,7 @@ import { FileText, Upload, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
-import { usePatternSaver } from '@/hooks/usePatternSaver';
+import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
 
 type InputMode = 'text' | 'file';
@@ -17,7 +17,30 @@ export default function CreateSummary() {
   const [focusPoints, setFocusPoints] = useState('');
   const [result, setResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const patternSaver = usePatternSaver({ source: 'summary', userId: 'default-user' });
+
+  const applyPatternToText = (text: string, pattern: SavedPatternInfo) => {
+    if (!text) return text;
+
+    const { originalSelection, from, to } = pattern;
+
+    if (originalSelection && text.includes(originalSelection)) {
+      return text.replace(originalSelection, to);
+    }
+
+    if (from && text.includes(from)) {
+      return text.replace(from, to);
+    }
+
+    return text;
+  };
+
+  const patternSaver = usePatternSaver({
+    source: 'summary',
+    userId: 'default-user',
+    onSuccess: (pattern) => {
+      setResult((prev) => applyPatternToText(prev, pattern));
+    },
+  });
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

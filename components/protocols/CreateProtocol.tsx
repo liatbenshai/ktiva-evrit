@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { FileText, Users, ListChecks, Loader2 } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import { SynonymButton } from '@/components/SynonymButton';
-import { usePatternSaver } from '@/hooks/usePatternSaver';
+import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
 
 type ProtocolType = 'summary' | 'topical';
@@ -15,7 +15,29 @@ export default function CreateProtocol() {
   const [includeDecisions, setIncludeDecisions] = useState(true);
   const [result, setResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const patternSaver = usePatternSaver({ source: 'protocol', userId: 'default-user' });
+  const applyPatternToText = (text: string, pattern: SavedPatternInfo) => {
+    if (!text) return text;
+
+    const { originalSelection, from, to } = pattern;
+
+    if (originalSelection && text.includes(originalSelection)) {
+      return text.replace(originalSelection, to);
+    }
+
+    if (from && text.includes(from)) {
+      return text.replace(from, to);
+    }
+
+    return text;
+  };
+
+  const patternSaver = usePatternSaver({
+    source: 'protocol',
+    userId: 'default-user',
+    onSuccess: (pattern) => {
+      setResult((prev) => applyPatternToText(prev, pattern));
+    },
+  });
 
   const handleGenerate = async () => {
     if (!transcript.trim()) {
