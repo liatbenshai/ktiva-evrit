@@ -13,6 +13,7 @@ interface SynonymButtonProps {
   category?: string
   userId?: string
   onVersionSelect?: (version: string) => void
+  triggerLabel?: string
 }
 
 export function SynonymButton({ 
@@ -20,7 +21,8 @@ export function SynonymButton({
   context = '', 
   category = 'general', 
   userId = 'default-user',
-  onVersionSelect 
+  onVersionSelect,
+  triggerLabel = 'מילים נרדפות'
 }: SynonymButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -75,7 +77,7 @@ export function SynonymButton({
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <RefreshCw className="ml-2 h-4 w-4" />
-          מילים נרדפות
+          {triggerLabel}
         </Button>
       </DialogTrigger>
       

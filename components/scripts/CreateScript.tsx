@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Film, Loader2 } from 'lucide-react';
+import { Film, Loader2, RefreshCw } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
@@ -268,17 +268,25 @@ export default function CreateScript() {
             </div>
 
             <div className="rounded-3xl border border-slate-100 bg-white/90 p-6 sm:p-8 shadow-lg shadow-slate-100/60">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">📝 גרסאות חלופיות</h3>
-              <p className="text-sm text-slate-500">
-                קבלי ניסוחים אחרים וחיזוקים לסגנון שלך דרך מילים נרדפות שמתאימות לתסריט הנוכחי.
-              </p>
-              <div className="mt-4 flex justify-center">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-50 text-indigo-500">
+                    <RefreshCw className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">גרסאות חלופיות</h3>
+                    <p className="text-sm text-slate-500">
+                      בלחיצה אחת נייצר עד שלוש וריאציות עם מילים נרדפות שמתאימות לתסריט הנוכחי.
+                    </p>
+                  </div>
+                </div>
                 <SynonymButton
                   text={result}
                   context={`תסריט: ${topic}`}
                   category="scripts"
                   userId="default-user"
                   onVersionSelect={(version) => setResult(version)}
+                  triggerLabel="פתח גרסאות"
                 />
               </div>
             </div>
