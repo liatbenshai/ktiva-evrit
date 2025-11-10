@@ -21,6 +21,12 @@ const SUPPORTED_LANGUAGES: Record<SupportedLanguageKey, { label: string; descrip
   italian: { label: 'איטלקית', description: 'שפה עשירה לביטויים תרבותיים ואוהבי קולינריה' },
 }
 
+const SPEECH_LANG_MAP: Record<SupportedLanguageKey, string> = {
+  english: 'en-US',
+  romanian: 'ro-RO',
+  italian: 'it-IT',
+}
+
 interface UsageExample {
   target: string
   hebrew: string
@@ -50,8 +56,30 @@ export default function LanguagesPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isSpeechSupported, setIsSpeechSupported] = useState(false)
 
   const disableActions = useMemo(() => !hebrewTerm.trim() || isLoading, [hebrewTerm, isLoading])
+
+  useEffect(() => {
+    if ('speechSynthesis' in window) {
+      setIsSpeechSupported(true)
+      const loadVoices = () => {
+        const availableVoices = window.speechSynthesis.getVoices()
+        if (availableVoices.length > 0) {
+          setVoices(availableVoices)
+        }
+      }
+
+      loadVoices()
+      window.speechSynthesis.addEventListener('voiceschanged', loadVoices)
+
+      return () => {
+        window.speechSynthesis.removeEventListener('voiceschanged', loadVoices)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -139,6 +167,40 @@ export default function LanguagesPage() {
   }
 
   const getCurrentLanguageMeta = SUPPORTED_LANGUAGES[targetLanguage]
+
+  const getVoiceForLanguage = (lang: SupportedLanguageKey) => {
+    if (!voices.length) return null
+    const langCode = SPEECH_LANG_MAP[lang]
+    return (
+      voices.find((voice) => voice.lang === langCode) ||
+      voices.find((voice) => voice.lang.startsWith(langCode.split('-')[0])) ||
+      null
+    )
+  }
+
+  const speak = (text: string, lang: SupportedLanguageKey) => {
+    if (!isSpeechSupported || !text.trim()) return
+
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+    }
+
+    const voice = getVoiceForLanguage(lang)
+    if (!voice) {
+      setFeedback('הדפדפן לא מצא קול מתאים לשפה הזו. נסי להגדיר חבילת שפה במערכת ההפעלה שלך.')
+      return
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.voice = voice
+    utterance.lang = voice.lang
+    utterance.onend = () => setIsSpeaking(false)
+    utterance.onerror = () => setIsSpeaking(false)
+
+    setIsSpeaking(true)
+    window.speechSynthesis.speak(utterance)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-pink-50" dir="rtl">
@@ -252,6 +314,15 @@ export default function LanguagesPage() {
                   {result.pronunciation && (
                     <p className="mt-1 text-sm text-slate-500">הגייה: {result.pronunciation}</p>
                   )}
+                  {isSpeechSupported && (
+                    <button
+                      onClick={() => speak(result.translatedTerm, result.targetLanguage)}
+                      className="mt-3 inline-flex items-center gap-2 rounded-full border border-indigo-200 px-3 py-1.5 text-xs font-semibold text-indigo-600 transition hover:border-indigo-300 hover:bg-indigo-50"
+                    >
+                      {isSpeaking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LanguagesIcon className="h-3.5 w-3.5" />}
+                      השמעה
+                    </button>
+                  )}
                 </div>
                 {result.culturalNotes && (
                   <div className="rounded-2xl bg-purple-50 px-4 py-3 text-sm text-purple-600">
@@ -271,6 +342,15 @@ export default function LanguagesPage() {
                   <div key={index} className="rounded-2xl border border-slate-200 px-4 py-3">
                     <p className="font-semibold text-slate-700" dir="ltr">{example.target}</p>
                     <p className="mt-1 text-xs text-slate-500">{example.hebrew}</p>
+                    {isSpeechSupported && (
+                      <button
+                        onClick={() => speak(example.target, result.targetLanguage)}
+                        className="mt-2 inline-flex items-center gap-2 rounded-full border border-indigo-200 px-2.5 py-1 text-[11px] font-medium text-indigo-600 transition hover:border-indigo-300 hover:bg-indigo-50"
+                      >
+                        <LanguagesIcon className="h-3 w-3" />
+                        השמע
+                      </button>
+                    )}
                   </div>
                 ))}
                 {result.extraSuggestions.length > 0 && (
