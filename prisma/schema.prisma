@@ -157,3 +157,21 @@ model TranslationPattern {
   @@index([badPattern])
   @@unique([userId, badPattern, goodPattern])
 }
+
+// Language learning entries - mapping Hebrew terms to target languages
+model LanguageEntry {
+  id               String   @id @default(cuid())
+  userId           String   @default("default-user")
+  hebrewTerm       String
+  targetLanguage   String
+  translatedTerm   String
+  pronunciation    String?
+  usageExamples    String?  // JSON array of examples
+  notes            String?  // Additional cultural/contextual notes
+  extraSuggestions String?  // JSON array of tips or related phrases
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([targetLanguage])
+}

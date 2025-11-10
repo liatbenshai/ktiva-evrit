@@ -103,6 +103,13 @@ const learningCards = [
     gradient: 'from-fuchsia-500 via-rose-500 to-orange-500',
   },
   {
+    title: 'לימוד שפות',
+    description: 'לימדי איך לומר ביטויים בעברית באנגלית, רומנית ואיטלקית עם דוגמאות טבעיות.',
+    icon: Languages,
+    href: '/dashboard/languages',
+    gradient: 'from-teal-500 via-blue-500 to-purple-500',
+  },
+  {
     title: 'למידת פתגמים',
     description: 'הוסיפי פתגמים ומטבעות לשון שהמערכת תדע להשתמש בהם.',
     icon: Languages,
