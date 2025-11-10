@@ -12,9 +12,6 @@ import {
   ScrollText,
   Sparkles,
   Wand2,
-  CheckCircle2,
-  ArrowRight,
-  PenLine,
 } from 'lucide-react';
 
 const creationCards = [
@@ -116,51 +113,42 @@ const learningCards = [
 
 export default function DashboardPage() {
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-purple-50">
-      <header className="sticky top-0 z-40 border-b border-white/40 bg-gradient-to-r from-indigo-500/80 via-purple-500/80 to-pink-500/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:py-4">
-          <Link href="/dashboard" className="flex items-center gap-2 text-white">
+    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <header className="sticky top-0 z-30 border-b border-white/40 bg-white/80 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-2 text-indigo-600">
             <Wand2 className="h-5 w-5" />
-            <span className="text-base font-semibold">כתיבה בעברית</span>
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href="/dashboard/ai-correction"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-indigo-600 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              <Brain className="h-4 w-4" />
-              התחילי לתקן
-            </Link>
-            <Link
-              href="/dashboard/articles"
-              className="hidden items-center gap-2 rounded-full border border-white/60 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15 sm:inline-flex"
-            >
-              <PenLine className="h-4 w-4" />
-              התחילי לכתוב
-            </Link>
+            <span className="text-sm font-semibold sm:text-base">כתיבה בעברית</span>
           </div>
+          <Link
+            href="/dashboard/ai-correction"
+            className="rounded-full bg-indigo-600 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-indigo-700"
+          >
+            התחילי לתקן
+          </Link>
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-6xl px-4 pb-16">
-        <section className="mt-8 overflow-hidden rounded-4xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 text-white shadow-2xl sm:p-14">
+        <section className="mt-8 rounded-3xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 text-white shadow-2xl sm:p-12">
           <div className="mx-auto flex max-w-3xl flex-col items-center gap-5 text-center">
             <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
-              עוזר הכתיבה הצבעוני שלך בעברית
+              עוזר הכתיבה החכם שלך בעברית טבעית
             </h1>
             <p className="text-sm text-white/85 sm:text-base">
-              כתבי מאמרים, תסריטים, מיילים ופוסטים בעברית טבעית וזורמת. המערכת לומדת ממך בכל הקלקה ומציגה לך את הכלי המדויק – בקליק אחד.
+              כתיבה, תיקון ולמידה של מאמרים, מיילים, פוסטים וסיפורים בעברית תקנית. כל תיקון שלך נשמר והמערכת משתפרת בכל שימוש – כך שהתוכן הבא ירגיש כבר שלך.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/dashboard/ai-correction"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-indigo-600 shadow-lg transition hover:-translate-y-0.5 hover:text-purple-500"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-indigo-600 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
               >
-                התחילי תיקון
+                התחילי תיקון עכשיו
+                <span aria-hidden>→</span>
               </Link>
               <Link
                 href="/dashboard/articles"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/70 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/70 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/10"
               >
                 צרי תוכן חדש
               </Link>
@@ -168,83 +156,66 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="mt-14 space-y-4">
-          <div className="flex flex-col gap-1 text-indigo-900 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-xl font-semibold">כלי יצירת תוכן</h2>
-            <p className="text-sm text-indigo-500">בחרי כרטיס אחד והתחילי מיד – הכלים מופיעים בצבעים שונים כדי שיהיה קל לזהות.</p>
+        <section className="mt-14 space-y-5">
+          <div className="flex items-center justify-between text-slate-900">
+            <div>
+              <h2 className="text-lg font-semibold sm:text-xl">יצירת תוכן</h2>
+              <p className="text-xs text-slate-500 sm:text-sm">כל כלי מופיע פעם אחת בלבד – בחרי ויצאנו לדרך.</p>
+            </div>
+            <Sparkles className="hidden h-5 w-5 text-indigo-400 sm:block" aria-hidden />
           </div>
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {creationCards.map(({ title, description, icon: Icon, href, gradient }) => (
               <Link
                 key={href}
                 href={href}
-                className={`group flex h-full flex-col justify-between rounded-3xl bg-gradient-to-br ${gradient} p-6 text-white shadow-lg transition hover:-translate-y-1 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-purple-100`}
+                className={`group flex h-full flex-col justify-between rounded-3xl bg-gradient-to-br ${gradient} p-5 shadow-lg transition hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100`}
               >
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/20">
+                <div className="flex items-center gap-3 text-white">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/20 text-white">
                     <Icon className="h-5 w-5" />
                   </span>
-                  <h3 className="text-lg font-semibold">{title}</h3>
+                  <h3 className="text-base font-semibold sm:text-lg">{title}</h3>
                 </div>
                 <p className="mt-3 flex-1 text-sm leading-relaxed text-white/90">{description}</p>
-                <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-white/95 transition group-hover:gap-2">
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-white transition group-hover:gap-2">
                   כניסה לכלי
-                  <ArrowRight className="h-4 w-4" />
+                  <span aria-hidden>→</span>
                 </span>
               </Link>
             ))}
           </div>
         </section>
 
-        <section className="mt-16 space-y-4">
-          <div className="flex flex-col gap-1 text-indigo-900 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-xl font-semibold">מערכת הלמידה האישית</h2>
-            <p className="text-sm text-indigo-500">כאן המערכת מאמצת את העדפותיך ובונה מילון פנימי לסגנון שלך.</p>
+        <section className="mt-14 space-y-5">
+          <div className="flex items-center justify-between text-slate-900">
+            <div>
+              <h2 className="text-lg font-semibold sm:text-xl">מערכת הלמידה</h2>
+              <p className="text-xs text-slate-500 sm:text-sm">כאן המערכת מאמצת את הסגנון האישי שלך.</p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {learningCards.map(({ title, description, icon: Icon, href, gradient }) => (
               <Link
                 key={href}
                 href={href}
-                className={`group flex h-full flex-col justify-between rounded-3xl bg-gradient-to-br ${gradient} p-6 text-white shadow-lg transition hover:-translate-y-1 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-purple-100`}
+                className={`group flex h-full flex-col justify-between rounded-3xl bg-gradient-to-br ${gradient} p-5 shadow-lg transition hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100`}
               >
-                <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
+                <div className="flex items-center gap-3 text-white">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white">
                     <Icon className="h-4 w-4" />
                   </span>
-                  <h3 className="text-lg font-semibold">{title}</h3>
+                  <h3 className="text-base font-semibold sm:text-lg">{title}</h3>
                 </div>
                 <p className="mt-3 flex-1 text-sm leading-relaxed text-white/90">{description}</p>
-                <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-white/95 transition group-hover:gap-2">
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-white transition group-hover:gap-2">
                   המשיכי מכאן
-                  <ArrowRight className="h-4 w-4" />
+                  <span aria-hidden>→</span>
                 </span>
               </Link>
             ))}
-          </div>
-        </section>
-
-        <section className="mt-18 rounded-4xl bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 px-6 py-10 text-center text-white shadow-2xl sm:px-10 sm:py-14">
-          <h2 className="text-2xl font-semibold sm:text-3xl">בואי נצבע את הכתיבה שלך</h2>
-          <p className="mt-2 text-sm text-white/85 sm:text-base">
-            הצטרפי לחוויית כתיבה צבעונית, מדויקת ומותאמת אישית. כל גרסה שלך נשמרת ומזינה את המערכת.
-          </p>
-          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href="/dashboard/ai-correction"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-indigo-600 shadow-lg transition hover:-translate-y-0.5 hover:text-purple-500"
-            >
-              להתחיל בתיקון
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/dashboard/articles"
-              className="inline-flex items-center gap-2 rounded-full bg-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/25"
-            >
-              לעבור לכתיבה
-            </Link>
           </div>
         </section>
       </main>
