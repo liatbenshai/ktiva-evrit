@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { RefreshCw, Loader2, Lightbulb, TrendingUp } from 'lucide-react'
+import clsx from 'clsx'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -14,6 +15,7 @@ interface SynonymButtonProps {
   userId?: string
   onVersionSelect?: (version: string) => void
   triggerLabel?: string
+  triggerClassName?: string
 }
 
 export function SynonymButton({ 
@@ -22,7 +24,8 @@ export function SynonymButton({
   category = 'general', 
   userId = 'default-user',
   onVersionSelect,
-  triggerLabel = 'מילים נרדפות'
+  triggerLabel = 'מילים נרדפות',
+  triggerClassName,
 }: SynonymButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -75,7 +78,11 @@ export function SynonymButton({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button
+          variant="outline"
+          size="sm"
+          className={clsx('inline-flex items-center gap-2', triggerClassName)}
+        >
           <RefreshCw className="ml-2 h-4 w-4" />
           {triggerLabel}
         </Button>

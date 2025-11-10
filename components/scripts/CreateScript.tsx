@@ -268,26 +268,27 @@ export default function CreateScript() {
             </div>
 
             <div className="rounded-3xl border border-slate-100 bg-white/90 p-6 sm:p-8 shadow-lg shadow-slate-100/60">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-50 text-indigo-500">
-                    <RefreshCw className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900">גרסאות חלופיות</h3>
-                    <p className="text-sm text-slate-500">
-                      בלחיצה אחת נייצר עד שלוש וריאציות עם מילים נרדפות שמתאימות לתסריט הנוכחי.
-                    </p>
-                  </div>
+              <div className="text-center space-y-4">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-500">
+                  <RefreshCw className="h-5 w-5" />
                 </div>
-                <SynonymButton
-                  text={result}
-                  context={`תסריט: ${topic}`}
-                  category="scripts"
-                  userId="default-user"
-                  onVersionSelect={(version) => setResult(version)}
-                  triggerLabel="פתח גרסאות"
-                />
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold text-slate-900">גרסאות חלופיות</h3>
+                  <p className="text-sm text-slate-500">
+                    לחצי על הכפתור כדי לקבל עד שלוש וריאציות חדשות עם מילים נרדפות שמתאימות לתסריט הזה.
+                  </p>
+                </div>
+                <div className="pt-2">
+                  <SynonymButton
+                    text={result}
+                    context={`תסריט: ${topic}`}
+                    category="scripts"
+                    userId="default-user"
+                    onVersionSelect={(version) => setResult(version)}
+                    triggerLabel="פתח גרסאות"
+                    triggerClassName="rounded-full bg-indigo-500 text-white hover:bg-indigo-600 border-0 px-5 py-2"
+                  />
+                </div>
               </div>
             </div>
           </section>
