@@ -78,6 +78,13 @@ const creationCards = [
     href: '/dashboard/prompts',
     gradient: 'from-purple-500 via-indigo-500 to-blue-500',
   },
+  {
+    title: 'לימוד שפות',
+    description: 'מונחים וביטויים בעברית עם מקבילות באנגלית, רומנית ואיטלקית.',
+    icon: Languages,
+    href: '/dashboard/languages',
+    gradient: 'from-teal-500 via-blue-500 to-purple-500',
+  },
 ];
 
 const learningCards = [
@@ -101,13 +108,6 @@ const learningCards = [
     icon: ScrollText,
     href: '/dashboard/learn',
     gradient: 'from-fuchsia-500 via-rose-500 to-orange-500',
-  },
-  {
-    title: 'לימוד שפות',
-    description: 'לימדי איך לומר ביטויים בעברית באנגלית, רומנית ואיטלקית עם דוגמאות טבעיות.',
-    icon: Languages,
-    href: '/dashboard/languages',
-    gradient: 'from-teal-500 via-blue-500 to-purple-500',
   },
   {
     title: 'למידת פתגמים',
