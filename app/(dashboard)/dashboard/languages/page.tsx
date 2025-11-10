@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import Link from 'next/link'
 import {
   Languages as LanguagesIcon,
@@ -15,10 +15,24 @@ import {
 
 type SupportedLanguageKey = 'english' | 'romanian' | 'italian'
 
-const SUPPORTED_LANGUAGES: Record<SupportedLanguageKey, { label: string; description: string }> = {
-  english: { label: 'אנגלית', description: 'שימוש יומיומי, שפה עסקית וחברתית' },
-  romanian: { label: 'רומנית', description: 'לימוד ביטויים יומיומיים וקשר עם קהילה דוברת רומנית' },
-  italian: { label: 'איטלקית', description: 'שפה עשירה לביטויים תרבותיים ואוהבי קולינריה' },
+interface LanguageMeta {
+  label: string
+  description: string
+}
+
+const SUPPORTED_LANGUAGES: Record<SupportedLanguageKey, LanguageMeta> = {
+  english: {
+    label: 'אנגלית',
+    description: 'דיבור יום-יומי, פגישות עסקיות ומיילים רשמיים',
+  },
+  romanian: {
+    label: 'רומנית',
+    description: 'שיחות יומיומיות, ביקור בארץ, דיבור עם משפחה',
+  },
+  italian: {
+    label: 'איטלקית',
+    description: 'שיחות יומיומיות, תרבות, לימודים ועבודה',
+  },
 }
 
 const SPEECH_LANG_MAP: Record<SupportedLanguageKey, string> = {
@@ -26,6 +40,8 @@ const SPEECH_LANG_MAP: Record<SupportedLanguageKey, string> = {
   romanian: 'ro-RO',
   italian: 'it-IT',
 }
+
+const FALLBACK_LANG_CODES = ['it', 'en', 'fr', 'es']
 
 interface UsageExample {
   target: string
@@ -59,6 +75,7 @@ export default function LanguagesPage() {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
   const [spokenText, setSpokenText] = useState<string | null>(null)
   const [isSpeechSupported, setIsSpeechSupported] = useState(false)
+  const [voiceOverrides, setVoiceOverrides] = useState<Partial<Record<SupportedLanguageKey, string>>>({})
 
   const disableActions = useMemo(() => !hebrewTerm.trim() || isLoading, [hebrewTerm, isLoading])
 
@@ -168,17 +185,103 @@ export default function LanguagesPage() {
 
   const getCurrentLanguageMeta = SUPPORTED_LANGUAGES[targetLanguage]
 
-  const getVoiceForLanguage = (lang: SupportedLanguageKey) => {
-    if (!voices.length) return null
-    const langCode = SPEECH_LANG_MAP[lang]
-    return (
-      voices.find((voice) => voice.lang === langCode) ||
-      voices.find((voice) => voice.lang.startsWith(langCode.split('-')[0])) ||
-      null
-    )
-  }
+  const findBestVoice = useCallback(
+    (lang: SupportedLanguageKey) => {
+      if (!voices.length) return null
+
+      const langCode = SPEECH_LANG_MAP[lang]
+      const shortCode = langCode.split('-')[0]
+
+      const exactMatch = voices.find((voice) => voice.lang === langCode)
+      if (exactMatch) return exactMatch
+
+      const partialMatch = voices.find((voice) => voice.lang.startsWith(shortCode))
+      if (partialMatch) return partialMatch
+
+      const fallbackMatch = voices.find((voice) =>
+        FALLBACK_LANG_CODES.some((code) => voice.lang.toLowerCase().startsWith(code))
+      )
+
+      return fallbackMatch || voices[0]
+    },
+    [voices]
+  )
+
+  const getVoiceForLanguage = useCallback(
+    (lang: SupportedLanguageKey) => {
+      if (!voices.length) return null
+
+      const overrideName = voiceOverrides[lang]
+      if (overrideName) {
+        const overrideVoice = voices.find((voice) => voice.name === overrideName)
+        if (overrideVoice) {
+          return overrideVoice
+        }
+      }
+
+      return findBestVoice(lang)
+    },
+    [findBestVoice, voiceOverrides, voices]
+  )
+
+  useEffect(() => {
+    if (!voices.length) return
+
+    setVoiceOverrides((prev) => {
+      const updated = { ...prev }
+      let changed = false
+
+      ;(Object.keys(SUPPORTED_LANGUAGES) as SupportedLanguageKey[]).forEach((lang) => {
+        if (!updated[lang]) {
+          const best = findBestVoice(lang)
+          if (best) {
+            updated[lang] = best.name
+            changed = true
+          }
+        }
+      })
+
+      return changed ? updated : prev
+    })
+  }, [findBestVoice, voices])
+
+  const sortedVoices = useMemo(() => {
+    if (!voices.length) return []
+
+    const targetCode = SPEECH_LANG_MAP[targetLanguage]
+    const targetShort = targetCode.split('-')[0]
+
+    const rank = (voice: SpeechSynthesisVoice) => {
+      const voiceLang = voice.lang.toLowerCase()
+      if (voiceLang === targetCode.toLowerCase()) return 0
+      if (voiceLang.startsWith(targetShort)) return 1
+      const fallbackIndex = FALLBACK_LANG_CODES.findIndex((code) => voiceLang.startsWith(code))
+      if (fallbackIndex !== -1) return 2 + fallbackIndex
+      return 10
+    }
+
+    return [...voices].sort((a, b) => {
+      const rankDiff = rank(a) - rank(b)
+      if (rankDiff !== 0) return rankDiff
+      return a.name.localeCompare(b.name)
+    })
+  }, [targetLanguage, voices])
+
+  const handleVoiceOverrideChange = useCallback((lang: SupportedLanguageKey, voiceName: string) => {
+    setVoiceOverrides((prev) => {
+      const next = { ...prev }
+      if (!voiceName) {
+        delete next[lang]
+      } else {
+        next[lang] = voiceName
+      }
+      return next
+    })
+  }, [])
 
   const speak = (text: string, lang: SupportedLanguageKey) => {
+    if (!isSpeechSupported || !text.trim()) return
+
     const trimmedText = text.trim()
     if (!trimmedText) return
 
@@ -192,7 +295,7 @@ export default function LanguagesPage() {
 
     const voice = getVoiceForLanguage(lang)
     if (!voice) {
-      setFeedback('הדפדפן לא מצא קול מתאים לשפה הזו. נסי להגדיר חבילת שפה במערכת ההפעלה שלך.')
+      setFeedback('לא נמצא קול מתאים לשפה הזו. ניתן לבחור קול חלופי מהרשימה או להוסיף שפה במערכת ההפעלה.')
       return
     }
 
@@ -261,6 +364,45 @@ export default function LanguagesPage() {
               </button>
             ))}
           </div>
+
+          {isSpeechSupported && voices.length > 0 && (
+            <div className="mt-6 space-y-3 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-indigo-700">בחירת קול להשמעה</p>
+                  <p className="text-xs text-indigo-600/90">
+                    בחרי קול שיזכיר לך את הצליל הכי קרוב לשפה {getCurrentLanguageMeta.label}. אם אין קול רשמי, אפשר לבחור קול חלופי (למשל איטלקי או אנגלי).
+                  </p>
+                </div>
+                <select
+                  value={voiceOverrides[targetLanguage] ?? ''}
+                  onChange={(event) => handleVoiceOverrideChange(targetLanguage, event.target.value)}
+                  className="w-full rounded-xl border border-indigo-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200 sm:w-[260px]"
+                >
+                  {sortedVoices.map((voice) => (
+                    <option key={`${voice.name}-${voice.lang}`} value={voice.name}>
+                      {voice.name} ({voice.lang})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {(() => {
+                const currentVoice = getVoiceForLanguage(targetLanguage)
+                if (!currentVoice) return null
+
+                const targetCode = SPEECH_LANG_MAP[targetLanguage]
+                const isFallbackVoice = !currentVoice.lang.toLowerCase().startsWith(targetCode.split('-')[0].toLowerCase())
+
+                return (
+                  <p className="text-xs text-indigo-700">
+                    {isFallbackVoice
+                      ? `נבחר קול חלופי (${currentVoice.name}). כדי לקבל קול מקורי לשפה ${getCurrentLanguageMeta.label}, ניתן להוסיף חבילת דיבור במערכת.`
+                      : `נבחר קול מקורי לשפה ${getCurrentLanguageMeta.label} (${currentVoice.name}).`}
+                  </p>
+                )
+              })()}
+            </div>
+          )}
 
           <div className="mt-8 space-y-4">
             <label className="block text-sm font-medium text-slate-700">ביטוי בעברית שתרצי ללמוד בשפה {getCurrentLanguageMeta.label}</label>
