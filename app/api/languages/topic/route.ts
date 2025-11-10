@@ -61,14 +61,14 @@ export async function POST(req: NextRequest) {
 
     const displayLabel = customTopic?.trim() || topicLabel || topicInfo?.label || 'נושא מותאם אישית'
     const displayDescription = topicDescription || topicInfo?.description || ''
+    const descriptionForPrompt = displayDescription || 'בחר מצבים יומיומיים רלוונטיים לנושא.'
 
     const languageMeta = SUPPORTED_LANGUAGES[languageKey]
 
     const prompt = `אתה מורה לשפות שמדבר עברית שוטפת ועוזר לדוברי עברית ללמוד ${languageMeta.label} בצורה טבעית ומדויקת.
 
 המשימה: צור ערכת מילים בנושא "${displayLabel}" עבור ${languageMeta.label}.
-הרחב בקצרה על הסיטואציות האפשריות בנושא זה: ${displayDescription || 'בחר מצבים יומיומיים רלוונטיים לנושא.
-'}
+הרחב בקצרה על הסיטואציות האפשריות בנושא זה: ${descriptionForPrompt}
 
 החזר JSON תקין בלבד במבנה הבא:
 {
