@@ -57,7 +57,7 @@ export default function LanguagesPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
-  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [spokenText, setSpokenText] = useState<string | null>(null)
   const [isSpeechSupported, setIsSpeechSupported] = useState(false)
 
   const disableActions = useMemo(() => !hebrewTerm.trim() || isLoading, [hebrewTerm, isLoading])
@@ -179,11 +179,15 @@ export default function LanguagesPage() {
   }
 
   const speak = (text: string, lang: SupportedLanguageKey) => {
-    if (!isSpeechSupported || !text.trim()) return
+    const trimmedText = text.trim()
+    if (!trimmedText) return
 
     if (window.speechSynthesis.speaking) {
       window.speechSynthesis.cancel()
-      setIsSpeaking(false)
+      if (spokenText === trimmedText) {
+        setSpokenText(null)
+        return
+      }
     }
 
     const voice = getVoiceForLanguage(lang)
@@ -192,13 +196,13 @@ export default function LanguagesPage() {
       return
     }
 
-    const utterance = new SpeechSynthesisUtterance(text)
+    const utterance = new SpeechSynthesisUtterance(trimmedText)
     utterance.voice = voice
     utterance.lang = voice.lang
-    utterance.onend = () => setIsSpeaking(false)
-    utterance.onerror = () => setIsSpeaking(false)
+    utterance.onend = () => setSpokenText(null)
+    utterance.onerror = () => setSpokenText(null)
 
-    setIsSpeaking(true)
+    setSpokenText(trimmedText)
     window.speechSynthesis.speak(utterance)
   }
 
@@ -319,7 +323,7 @@ export default function LanguagesPage() {
                       onClick={() => speak(result.translatedTerm, result.targetLanguage)}
                       className="mt-3 inline-flex items-center gap-2 rounded-full border border-indigo-200 px-3 py-1.5 text-xs font-semibold text-indigo-600 transition hover:border-indigo-300 hover:bg-indigo-50"
                     >
-                      {isSpeaking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LanguagesIcon className="h-3.5 w-3.5" />}
+                      {spokenText === result.translatedTerm ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LanguagesIcon className="h-3.5 w-3.5" />}
                       השמעה
                     </button>
                   )}
