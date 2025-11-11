@@ -95,28 +95,64 @@ ${sanitizedText}
       )
     }
 
-    const suggestionsArray = Array.isArray(parsed?.suggestions) ? parsed.suggestions : []
+    const ensureString = (value: unknown) => (typeof value === 'string' ? value : '')
+
+    const suggestionsArray = Array.isArray(parsed?.suggestions)
+      ? parsed.suggestions
+      : Array.isArray(parsed)
+      ? parsed
+      : []
 
     const sanitizedSuggestions = suggestionsArray
       .map((suggestion: any) => {
-        if (!suggestion) return null
-        const usageExample = suggestion.usageExample && typeof suggestion.usageExample === 'object'
-          ? {
-              target: suggestion.usageExample.target || '',
-              hebrew: suggestion.usageExample.hebrew || '',
-            }
-          : undefined
+        if (!suggestion || typeof suggestion !== 'object') return null
+
+        const hebrewTerm = ensureString(
+          suggestion.hebrewTerm || suggestion.source || suggestion.original || suggestion.badPattern
+        )
+
+        const translatedTerm = ensureString(
+          suggestion.translatedTerm ||
+            suggestion.translation ||
+            suggestion.target ||
+            suggestion.goodPattern ||
+            suggestion.term
+        )
+
+        const pronunciation = ensureString(suggestion.pronunciation || suggestion.pronounce)
+
+        const usageExampleRaw = suggestion.usageExample || suggestion.example || suggestion.examples?.[0]
+        const usageExample =
+          usageExampleRaw && typeof usageExampleRaw === 'object'
+            ? {
+                target: ensureString(usageExampleRaw.target || usageExampleRaw.targetLanguage || usageExampleRaw.translation),
+                hebrew: ensureString(usageExampleRaw.hebrew || usageExampleRaw.explanation || usageExampleRaw.comment),
+              }
+            : undefined
+
+        const relatedSource = suggestion.relatedWords || suggestion.related || suggestion.alternatives
+        const relatedWords = Array.isArray(relatedSource)
+          ? relatedSource.map((item) => ensureString(item)).filter(Boolean)
+          : []
+
+        const learningNote = ensureString(
+          suggestion.learningNote || suggestion.note || suggestion.tips || suggestion.context
+        )
+
+        if (!hebrewTerm || !translatedTerm) {
+          return null
+        }
 
         return {
-          hebrewTerm: suggestion.hebrewTerm || '',
-          translatedTerm: suggestion.translatedTerm || '',
-          pronunciation: suggestion.pronunciation || '',
+          hebrewTerm,
+          translatedTerm,
+          pronunciation,
           usageExample,
-          relatedWords: Array.isArray(suggestion.relatedWords) ? suggestion.relatedWords : [],
-          learningNote: suggestion.learningNote || '',
+          relatedWords,
+          learningNote,
         }
       })
-      .filter((item: any) => item && item.hebrewTerm && item.translatedTerm)
+      .filter(Boolean)
 
     return NextResponse.json({
       success: true,

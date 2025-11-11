@@ -804,66 +804,74 @@ export default function LanguagesPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {topicPack.suggestions.map((term) => {
-                  const termId = `${term.hebrewTerm}-${term.translatedTerm}`
-                  return (
-                    <div key={termId} className="flex h-full flex-col justify-between rounded-2xl border border-indigo-100 bg-white/95 p-4 shadow-sm">
-                      <div>
-                        <div className="flex items-center justify-between gap-3">
+                {topicPack.suggestions.length === 0 ? (
+                  <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 text-sm text-indigo-700">
+                    לא נמצאו מילים מתאימות לנושא הזה כרגע. נסי להגדיר את הנושא מחדש או להזין הנחיות ממוקדות יותר.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {topicPack.suggestions.map((term) => {
+                      const termId = `${term.hebrewTerm}-${term.translatedTerm}`
+                      return (
+                        <div key={termId} className="flex h-full flex-col justify-between rounded-2xl border border-indigo-100 bg-white/95 p-4 shadow-sm">
                           <div>
-                            <p className="text-sm font-semibold text-indigo-900" dir="rtl">{term.hebrewTerm}</p>
-                            <div className="mt-1 flex items-center gap-2 text-sm text-indigo-700">
-                              <span>{term.translatedTerm}</span>
-                              {term.pronunciation && (
-                                <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] text-indigo-600">{term.pronunciation}</span>
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-semibold text-indigo-900" dir="rtl">{term.hebrewTerm}</p>
+                                <div className="mt-1 flex items-center gap-2 text-sm text-indigo-700">
+                                  <span>{term.translatedTerm}</span>
+                                  {term.pronunciation && (
+                                    <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] text-indigo-600">{term.pronunciation}</span>
+                                  )}
+                                </div>
+                              </div>
+                              {term.translatedTerm && (
+                                <button
+                                  type="button"
+                                  onClick={() => speak(term.translatedTerm, topicLanguage)}
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 transition hover:bg-indigo-200"
+                                >
+                                  <Volume2 className="h-4 w-4" />
+                                </button>
                               )}
                             </div>
+
+                            {term.usageExample && (
+                              <div className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50/60 p-3 text-sm text-indigo-700">
+                                <p>{term.usageExample.target}</p>
+                                <p className="mt-1 text-xs text-indigo-600/80" dir="rtl">{term.usageExample.hebrew}</p>
+                              </div>
+                            )}
+
+                            {term.learningNote && (
+                              <p className="mt-3 text-xs text-indigo-500/90">הערת למידה: {term.learningNote}</p>
+                            )}
+
+                            {term.relatedWords.length > 0 && (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {term.relatedWords.map((word) => (
+                                  <span key={word} className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] text-indigo-600">
+                                    {word}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                          {term.translatedTerm && (
-                            <button
-                              type="button"
-                              onClick={() => speak(term.translatedTerm, topicLanguage)}
-                              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 transition hover:bg-indigo-200"
-                            >
-                              <Volume2 className="h-4 w-4" />
-                            </button>
-                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => topicPack && saveTermFromPack(term, topicPack)}
+                            disabled={savingTermId === termId}
+                            className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {savingTermId === termId ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookmarkCheck className="h-4 w-4" />}
+                            שמרי למאגר האישי
+                          </button>
                         </div>
-
-                        {term.usageExample && (
-                          <div className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50/60 p-3 text-sm text-indigo-700">
-                            <p>{term.usageExample.target}</p>
-                            <p className="mt-1 text-xs text-indigo-600/80" dir="rtl">{term.usageExample.hebrew}</p>
-                          </div>
-                        )}
-
-                        {term.learningNote && (
-                          <p className="mt-3 text-xs text-indigo-500/90">הערת למידה: {term.learningNote}</p>
-                        )}
-
-                        {term.relatedWords.length > 0 && (
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {term.relatedWords.map((word) => (
-                              <span key={word} className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] text-indigo-600">
-                                {word}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => topicPack && saveTermFromPack(term, topicPack)}
-                        disabled={savingTermId === termId}
-                        className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {savingTermId === termId ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookmarkCheck className="h-4 w-4" />}
-                        שמרי למאגר האישי
-                      </button>
-                    </div>
-                  )
-                })}
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -929,66 +937,74 @@ export default function LanguagesPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {extractionPack.suggestions.map((term) => {
-                  const termId = `${term.hebrewTerm}-${term.translatedTerm}-extract`
-                  return (
-                    <div key={termId} className="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm">
-                      <div>
-                        <div className="flex items-center justify-between gap-3">
+                {extractionPack.suggestions.length === 0 ? (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                    לא זוהו מילים מרכזיות בטקסט. ודאי שהטקסט כולל ביטויים משמעותיים או נסי פסקה אחרת.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {extractionPack.suggestions.map((term) => {
+                      const termId = `${term.hebrewTerm}-${term.translatedTerm}-extract`
+                      return (
+                        <div key={termId} className="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm">
                           <div>
-                            <p className="text-sm font-semibold text-slate-900" dir="rtl">{term.hebrewTerm}</p>
-                            <div className="mt-1 flex items-center gap-2 text-sm text-slate-700">
-                              <span>{term.translatedTerm}</span>
-                              {term.pronunciation && (
-                                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">{term.pronunciation}</span>
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-semibold text-slate-900" dir="rtl">{term.hebrewTerm}</p>
+                                <div className="mt-1 flex items-center gap-2 text-sm text-slate-700">
+                                  <span>{term.translatedTerm}</span>
+                                  {term.pronunciation && (
+                                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">{term.pronunciation}</span>
+                                  )}
+                                </div>
+                              </div>
+                              {term.translatedTerm && (
+                                <button
+                                  type="button"
+                                  onClick={() => speak(term.translatedTerm, extractionLanguage)}
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200"
+                                >
+                                  <Volume2 className="h-4 w-4" />
+                                </button>
                               )}
                             </div>
+
+                            {term.usageExample && (
+                              <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-sm text-slate-700">
+                                <p>{term.usageExample.target}</p>
+                                <p className="mt-1 text-xs text-slate-500" dir="rtl">{term.usageExample.hebrew}</p>
+                              </div>
+                            )}
+
+                            {term.learningNote && (
+                              <p className="mt-3 text-xs text-slate-500">הערת למידה: {term.learningNote}</p>
+                            )}
+
+                            {term.relatedWords.length > 0 && (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {term.relatedWords.map((word) => (
+                                  <span key={word} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] text-slate-600">
+                                    {word}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                          {term.translatedTerm && (
-                            <button
-                              type="button"
-                              onClick={() => speak(term.translatedTerm, extractionLanguage)}
-                              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200"
-                            >
-                              <Volume2 className="h-4 w-4" />
-                            </button>
-                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => extractionPack && saveTermFromPack(term, extractionPack)}
+                            disabled={savingTermId === termId}
+                            className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {savingTermId === termId ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookmarkCheck className="h-4 w-4" />}
+                            שמרי למאגר האישי
+                          </button>
                         </div>
-
-                        {term.usageExample && (
-                          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-sm text-slate-700">
-                            <p>{term.usageExample.target}</p>
-                            <p className="mt-1 text-xs text-slate-500" dir="rtl">{term.usageExample.hebrew}</p>
-                          </div>
-                        )}
-
-                        {term.learningNote && (
-                          <p className="mt-3 text-xs text-slate-500">הערת למידה: {term.learningNote}</p>
-                        )}
-
-                        {term.relatedWords.length > 0 && (
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {term.relatedWords.map((word) => (
-                              <span key={word} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] text-slate-600">
-                                {word}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => extractionPack && saveTermFromPack(term, extractionPack)}
-                        disabled={savingTermId === termId}
-                        className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {savingTermId === termId ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookmarkCheck className="h-4 w-4" />}
-                        שמרי למאגר האישי
-                      </button>
-                    </div>
-                  )
-                })}
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}
