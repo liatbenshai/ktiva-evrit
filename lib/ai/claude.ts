@@ -38,8 +38,8 @@ export async function generateText({
     if (content.type === 'text') {
       return content.text;
     }
-    if (content.type === 'json') {
-      return JSON.stringify(content.json);
+    if ('json' in content) {
+      return JSON.stringify((content as { json: unknown }).json);
     }
 
     throw new Error('Unexpected response type');
