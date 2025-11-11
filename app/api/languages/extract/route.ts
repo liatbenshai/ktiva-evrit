@@ -79,6 +79,7 @@ ${sanitizedText}
       systemPrompt,
       maxTokens: 1200,
       temperature: 0.7,
+      responseFormat: { type: 'json_object' },
     })
 
     let parsed: any

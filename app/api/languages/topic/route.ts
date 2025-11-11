@@ -103,6 +103,7 @@ export async function POST(req: NextRequest) {
       systemPrompt,
       maxTokens: 1200,
       temperature: 0.75,
+      responseFormat: { type: 'json_object' },
     })
 
     let parsed: any

@@ -9,6 +9,7 @@ export interface GenerateTextOptions {
   systemPrompt?: string;
   maxTokens?: number;
   temperature?: number;
+  responseFormat?: { type: 'json_object' };
 }
 
 export async function generateText({
@@ -16,6 +17,7 @@ export async function generateText({
   systemPrompt = 'אתה עוזר כתיבה מקצועי בעברית. תפקידך לעזור למשתמשים לכתוב טקסטים בעברית תקנית, ברורה ומקצועית.',
   maxTokens = 4096,
   temperature = 0.7,
+  responseFormat,
 }: GenerateTextOptions) {
   try {
     const message = await anthropic.messages.create({
@@ -23,6 +25,7 @@ export async function generateText({
       max_tokens: maxTokens,
       temperature,
       system: systemPrompt,
+      ...(responseFormat ? { response_format: responseFormat } : {}),
       messages: [
         {
           role: 'user',
@@ -34,6 +37,9 @@ export async function generateText({
     const content = message.content[0];
     if (content.type === 'text') {
       return content.text;
+    }
+    if (content.type === 'json') {
+      return JSON.stringify(content.json);
     }
 
     throw new Error('Unexpected response type');
