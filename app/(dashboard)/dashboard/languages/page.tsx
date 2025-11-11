@@ -163,6 +163,9 @@ export default function LanguagesPage() {
   const [savingTermId, setSavingTermId] = useState<string | null>(null)
   const [quizTargetLanguage, setQuizTargetLanguage] = useState<SupportedLanguageKey>('english')
   const [quizState, setQuizState] = useState<QuizState | null>(null)
+  const [extractionText, setExtractionText] = useState('')
+  const [isExtractionLoading, setIsExtractionLoading] = useState(false)
+  const [extractionPack, setExtractionPack] = useState<TopicPack | null>(null)
 
   const disableActions = useMemo(() => !hebrewTerm.trim() || isLoading, [hebrewTerm, isLoading])
 
@@ -308,8 +311,38 @@ export default function LanguagesPage() {
     }
   }
 
-  const handleSaveTopicTerm = async (term: TopicSuggestionTerm) => {
-    if (!topicPack) return
+  const handleExtractFromText = async () => {
+    if (!extractionText.trim()) {
+      setFeedback('נא להדביק טקסט שממנו נוכל להפיק מילים חשובות.')
+      return
+    }
+    try {
+      setIsExtractionLoading(true)
+      setFeedback(null)
+      const response = await fetch('/api/languages/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: extractionText,
+          targetLanguage,
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'נכשלה הפקת האוצר מהמילים מהטקסט')
+      }
+
+      setExtractionPack(data.data as TopicPack)
+    } catch (error) {
+      console.error('Failed to extract vocabulary from text', error)
+      setFeedback(error instanceof Error ? error.message : 'שגיאה בהפקת מילים מהטקסט')
+    } finally {
+      setIsExtractionLoading(false)
+    }
+  }
+
+  const saveTermFromPack = async (term: TopicSuggestionTerm, pack: TopicPack) => {
     const termId = `${term.hebrewTerm}-${term.translatedTerm}`
     try {
       setSavingTermId(termId)
@@ -319,11 +352,11 @@ export default function LanguagesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           hebrewTerm: term.hebrewTerm,
-          targetLanguage: topicPack.targetLanguage,
+          targetLanguage: pack.targetLanguage,
           translatedTerm: term.translatedTerm,
           pronunciation: term.pronunciation,
           usageExamples: term.usageExample ? [term.usageExample] : [],
-          culturalNotes: term.learningNote || topicPack.summary,
+          culturalNotes: term.learningNote || pack.summary,
           extraSuggestions: term.relatedWords,
         }),
       })
@@ -331,14 +364,14 @@ export default function LanguagesPage() {
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'שגיאה בשמירת המונח מהנושא')
+        throw new Error(data.error || 'שגיאה בשמירת המונח מהערכת המילים')
       }
 
-      setFeedback('המונח מהערכת הנושא נשמר בהצלחה ✨')
+      setFeedback('המונח נשמר ללמידה האישית שלך ✨')
       await fetchHistory()
     } catch (error) {
-      console.error('Failed to save topic term', error)
-      setFeedback(error instanceof Error ? error.message : 'שגיאה בשמירת המונח מהנושא')
+      console.error('Failed to save term from pack', error)
+      setFeedback(error instanceof Error ? error.message : 'שגיאה בשמירת המונח מהערכת המילים')
     } finally {
       setSavingTermId(null)
     }
@@ -425,6 +458,7 @@ export default function LanguagesPage() {
   const getCurrentLanguageMeta = SUPPORTED_LANGUAGES[targetLanguage]
   const selectedTopic = TOPIC_PRESETS.find((topic) => topic.id === selectedTopicId)
   const topicLanguage = topicPack?.targetLanguage ?? targetLanguage
+  const extractionLanguage = extractionPack?.targetLanguage ?? targetLanguage
 
   const availableQuizLanguages = useMemo<SupportedLanguageKey[]>(() => {
     const unique = new Set<SupportedLanguageKey>()
@@ -820,7 +854,132 @@ export default function LanguagesPage() {
 
                       <button
                         type="button"
-                        onClick={() => handleSaveTopicTerm(term)}
+                        onClick={() => topicPack && saveTermFromPack(term, topicPack)}
+                        disabled={savingTermId === termId}
+                        className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {savingTermId === termId ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookmarkCheck className="h-4 w-4" />}
+                        שמרי למאגר האישי
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl sm:p-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-800 sm:text-xl">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
+                  <BookOpen className="h-5 w-5" />
+                </span>
+                לימוד מתוך טקסט קיים
+              </h3>
+              <p className="mt-1 text-sm text-slate-600">
+                הדביקי כאן טקסט שנוצר בכלי אחר (תסריט, מאמר, מייל או איגרת) והמערכת תציע מילים וביטויים מרכזיים לתרגול בשפה {SUPPORTED_LANGUAGES[targetLanguage].label}.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            <label className="text-xs font-medium text-slate-600">טקסט בעברית ללימוד</label>
+            <textarea
+              value={extractionText}
+              onChange={(event) => setExtractionText(event.target.value)}
+              rows={5}
+              placeholder="לדוגמה: פסקה מתוך מאמר, סיכום, תסריט או תרגיל של המערכת."
+              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-slate-500">ככל שהטקסט מדויק יותר – ההצעות יהיו מותאמות לצרכים שלך.</p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExtractFromText}
+                  disabled={isExtractionLoading}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isExtractionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lightbulb className="h-4 w-4" />}
+                  הפקי אוצר מילים מהטקסט
+                </button>
+                {extractionPack && (
+                  <button
+                    onClick={() => setExtractionPack(null)}
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300"
+                  >
+                    איפוס
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {extractionPack && (
+            <div className="mt-8 space-y-6">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
+                <h4 className="text-base font-semibold text-slate-800">
+                  מילים מרכזיות מהטקסט בשפה {SUPPORTED_LANGUAGES[extractionPack.targetLanguage].label}
+                </h4>
+                <p className="mt-2 text-sm text-slate-600">{extractionPack.summary}</p>
+                {extractionPack.practiceTip && (
+                  <p className="mt-2 text-xs text-slate-500">טיפ לתרגול: {extractionPack.practiceTip}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {extractionPack.suggestions.map((term) => {
+                  const termId = `${term.hebrewTerm}-${term.translatedTerm}-extract`
+                  return (
+                    <div key={termId} className="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm">
+                      <div>
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900" dir="rtl">{term.hebrewTerm}</p>
+                            <div className="mt-1 flex items-center gap-2 text-sm text-slate-700">
+                              <span>{term.translatedTerm}</span>
+                              {term.pronunciation && (
+                                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">{term.pronunciation}</span>
+                              )}
+                            </div>
+                          </div>
+                          {term.translatedTerm && (
+                            <button
+                              type="button"
+                              onClick={() => speak(term.translatedTerm, extractionLanguage)}
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200"
+                            >
+                              <Volume2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+
+                        {term.usageExample && (
+                          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-sm text-slate-700">
+                            <p>{term.usageExample.target}</p>
+                            <p className="mt-1 text-xs text-slate-500" dir="rtl">{term.usageExample.hebrew}</p>
+                          </div>
+                        )}
+
+                        {term.learningNote && (
+                          <p className="mt-3 text-xs text-slate-500">הערת למידה: {term.learningNote}</p>
+                        )}
+
+                        {term.relatedWords.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {term.relatedWords.map((word) => (
+                              <span key={word} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] text-slate-600">
+                                {word}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => extractionPack && saveTermFromPack(term, extractionPack)}
                         disabled={savingTermId === termId}
                         className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                       >
