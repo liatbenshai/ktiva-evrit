@@ -27,31 +27,42 @@ export async function GET(req: NextRequest) {
       where.topic = topic;
     }
 
-    const lessons = await prisma.lesson.findMany({
-      where,
-      include: {
-        vocabulary: {
-          orderBy: { order: 'asc' },
-        },
-        exercises: {
-          include: {
-            options: {
-              orderBy: { order: 'asc' },
+    // Try to fetch lessons with better error handling
+    let lessons;
+    try {
+      lessons = await prisma.lesson.findMany({
+        where,
+        include: {
+          vocabulary: {
+            orderBy: { order: 'asc' },
+          },
+          exercises: {
+            include: {
+              options: {
+                orderBy: { order: 'asc' },
+              },
             },
+            orderBy: { order: 'asc' },
           },
-          orderBy: { order: 'asc' },
+          ...(includeProgress && {
+            userProgress: {
+              where: { userId },
+            },
+          }),
         },
-        ...(includeProgress && {
-          userProgress: {
-            where: { userId },
-          },
-        }),
-      },
-      orderBy: [
-        { topic: 'asc' },
-        { order: 'asc' },
-      ],
-    });
+        orderBy: [
+          { topic: 'asc' },
+          { order: 'asc' },
+        ],
+      });
+    } catch (prismaError: any) {
+      console.error('Prisma error details:', {
+        code: prismaError.code,
+        message: prismaError.message,
+        meta: prismaError.meta,
+      });
+      throw prismaError;
+    }
 
     // Group by topic for easier frontend consumption
     const groupedByTopic = lessons.reduce((acc, lesson) => {
@@ -69,11 +80,22 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error fetching lessons:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+    });
     return NextResponse.json(
       {
         success: false,
         error: 'שגיאה בטעינת השיעורים',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+        details: error.message || 'Unknown error',
+        code: error.code,
+        ...(process.env.NODE_ENV === 'development' && {
+          stack: error.stack,
+          meta: error.meta,
+        }),
       },
       { status: 500 }
     );
