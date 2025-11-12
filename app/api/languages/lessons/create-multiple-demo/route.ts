@@ -167,7 +167,23 @@ function getTranslation(term: any, lang: SupportedLanguageKey): string {
 }
 
 function getPronunciation(term: any, lang: SupportedLanguageKey): string {
-  return term.pronunciation?.[lang] || term.pronunciation?.fr || term.pronunciation?.en || '';
+  // Map language keys to template keys
+  const langMap: Record<SupportedLanguageKey, string> = {
+    french: 'fr',
+    romanian: 'ro',
+    italian: 'it',
+    english: 'en',
+  };
+  const templateKey = langMap[lang];
+  
+  // Try pronunciation with template key first (en, ro, it, fr)
+  if (term.pronunciation?.[templateKey]) return term.pronunciation[templateKey];
+  
+  // Try full language name as fallback
+  if (term.pronunciation?.[lang]) return term.pronunciation[lang];
+  
+  // Fallback to English
+  return term.pronunciation?.en || '';
 }
 
 export async function POST(req: NextRequest) {
