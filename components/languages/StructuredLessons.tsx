@@ -196,6 +196,7 @@ export default function StructuredLessons({
       english: 'en-US',
       romanian: 'ro-RO',
       italian: 'it-IT',
+      french: 'fr-FR',
     };
     return map[lang];
   };
