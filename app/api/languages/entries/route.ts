@@ -35,10 +35,20 @@ export async function GET(req: NextRequest) {
     }))
 
     return NextResponse.json({ success: true, entries: parsedEntries })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to list language entries:', error)
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+    })
     return NextResponse.json(
-      { success: false, error: 'שגיאה בטעינת המונחים שנשמרו' },
+      { 
+        success: false, 
+        error: 'שגיאה בטעינת המונחים שנשמרו',
+        details: error.message || 'Unknown error',
+        code: error.code,
+      },
       { status: 500 }
     )
   }

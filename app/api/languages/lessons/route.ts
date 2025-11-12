@@ -30,6 +30,20 @@ export async function GET(req: NextRequest) {
     // Try to fetch lessons with better error handling
     let lessons;
     try {
+      // First check if the table exists by trying a simple count
+      const lessonCount = await prisma.lesson.count({
+        where: { isPublished: true },
+      }).catch(() => null);
+      
+      if (lessonCount === null) {
+        console.error('Lesson table might not exist or Prisma Client not updated');
+        return NextResponse.json({
+          success: false,
+          error: 'טבלת השיעורים לא קיימת. נסי לרענן את הדף או להמתין כמה שניות.',
+          details: 'The Lesson table might not exist in the database. Please try refreshing or wait a few seconds.',
+        }, { status: 500 });
+      }
+      
       lessons = await prisma.lesson.findMany({
         where,
         include: {

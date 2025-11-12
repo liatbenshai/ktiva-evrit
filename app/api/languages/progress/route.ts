@@ -103,11 +103,21 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error fetching progress:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+    });
     return NextResponse.json(
       {
         success: false,
         error: 'שגיאה בטעינת ההתקדמות',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+        details: error.message || 'Unknown error',
+        code: error.code,
+        ...(process.env.NODE_ENV === 'development' && {
+          stack: error.stack,
+          meta: error.meta,
+        }),
       },
       { status: 500 }
     );
