@@ -98,10 +98,16 @@ export default function StructuredLessons({
       const data = await response.json();
 
       if (data.success) {
-        setLessons(data.lessons || []);
-        const uniqueTopics = Array.from(new Set((data.lessons || []).map((l: Lesson) => l.topic)));
+        const fetchedLessons = data.lessons || [];
+        setLessons(fetchedLessons);
+        const uniqueTopics = Array.from(new Set(fetchedLessons.map((l: Lesson) => l.topic)));
         setTopics(uniqueTopics as string[]);
-        if ((data.lessons || []).length === 0) {
+        
+        // Check if we have lessons for the current target language
+        const lessonsForCurrentLanguage = fetchedLessons.filter((l: Lesson) => l.targetLanguage === targetLanguage);
+        if (lessonsForCurrentLanguage.length === 0) {
+          setError('אין שיעורים זמינים לשפה זו כרגע. לחצי על הכפתור למטה כדי ליצור שיעורים.');
+        } else if (fetchedLessons.length === 0) {
           setError('אין שיעורים זמינים כרגע. שיעורים יופיעו כאן ברגע שייווצרו.');
         }
       } else {
@@ -240,7 +246,7 @@ export default function StructuredLessons({
         {error && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             {error}
-            {error.includes('אין שיעורים') && (
+            {(error.includes('אין שיעורים') || error.includes('לחצי על הכפתור')) && (
               <div className="mt-3 space-y-2">
                 <button
                   onClick={() => handleCreateDemo(false)}
@@ -254,10 +260,33 @@ export default function StructuredLessons({
                   disabled={isCreatingDemo}
                   className="block w-full rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isCreatingDemo ? 'יוצר שיעורים...' : 'צרי כל השיעורים (כל הרמות והנושאים)'}
+                  {isCreatingDemo ? 'יוצר שיעורים...' : 'צרי כל השיעורים (כל הרמות והנושאים - לכל השפות)'}
                 </button>
               </div>
             )}
+          </div>
+        )}
+        
+        {/* Always show create buttons if no lessons for current language */}
+        {!error && lessons.filter((l: Lesson) => l.targetLanguage === targetLanguage).length === 0 && (
+          <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-800">
+            <p className="mb-3">אין שיעורים זמינים לשפה {targetLanguage === 'english' ? 'אנגלית' : targetLanguage === 'romanian' ? 'רומנית' : 'איטלקית'} כרגע.</p>
+            <div className="space-y-2">
+              <button
+                onClick={() => handleCreateDemo(false)}
+                disabled={isCreatingDemo}
+                className="block w-full rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isCreatingDemo ? 'יוצר שיעור דוגמה...' : 'צרי שיעור דוגמה אחד'}
+              </button>
+              <button
+                onClick={() => handleCreateDemo(true)}
+                disabled={isCreatingDemo}
+                className="block w-full rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isCreatingDemo ? 'יוצר שיעורים...' : 'צרי כל השיעורים (כל הרמות והנושאים - לכל השפות)'}
+              </button>
+            </div>
           </div>
         )}
         {isLoading && (
