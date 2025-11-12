@@ -14,28 +14,49 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    const allProgress = await prisma.userLessonProgress.findMany({
-      where,
-      include: {
-        lesson: {
-          select: {
-            id: true,
-            title: true,
-            topic: true,
-            level: true,
-            targetLanguage: true,
+    let allProgress = [];
+    let totalLessons = 0;
+    
+    try {
+      allProgress = await prisma.userLessonProgress.findMany({
+        where,
+        include: {
+          lesson: {
+            select: {
+              id: true,
+              title: true,
+              topic: true,
+              level: true,
+              targetLanguage: true,
+            },
           },
         },
-      },
-    });
+      });
+    } catch (error: any) {
+      if (error.code === 'P2021' || error.message?.includes('does not exist')) {
+        console.warn('UserLessonProgress table does not exist yet');
+        allProgress = [];
+      } else {
+        throw error;
+      }
+    }
 
     // Calculate statistics
-    const totalLessons = await prisma.lesson.count({
-      where: {
-        isPublished: true,
-        ...(targetLanguage ? { targetLanguage } : {}),
-      },
-    });
+    try {
+      totalLessons = await prisma.lesson.count({
+        where: {
+          isPublished: true,
+          ...(targetLanguage ? { targetLanguage } : {}),
+        },
+      });
+    } catch (error: any) {
+      if (error.code === 'P2021' || error.message?.includes('does not exist')) {
+        console.warn('Lesson table does not exist yet');
+        totalLessons = 0;
+      } else {
+        throw error;
+      }
+    }
 
     const completedLessons = allProgress.filter((p) => p.status === 'COMPLETED' || p.status === 'MASTERED').length;
     const inProgressLessons = allProgress.filter((p) => p.status === 'IN_PROGRESS').length;
