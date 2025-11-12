@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Also get from saved language entries
-    let savedEntries = [];
+    let savedEntries: any[] = [];
     try {
       savedEntries = await prisma.languageEntry.findMany({
         where: {
