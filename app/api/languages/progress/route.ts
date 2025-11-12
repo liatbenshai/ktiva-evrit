@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    let allProgress = [];
+    let allProgress: any[] = [];
     let totalLessons = 0;
     
     try {
