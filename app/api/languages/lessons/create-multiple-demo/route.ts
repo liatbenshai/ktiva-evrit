@@ -96,122 +96,150 @@ export async function POST(req: NextRequest) {
     const createdLessons: any[] = [];
     const errors: string[] = [];
 
-    // If createAll, create lessons for all levels and topics
+    // If createAll, create lessons for all languages, levels and topics
+    const languagesToCreate = createAll 
+      ? (['english', 'romanian', 'italian'] as SupportedLanguageKey[])
+      : ([targetLanguage] as SupportedLanguageKey[]);
+    
     const levelsToCreate = createAll 
       ? (['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as LanguageLevel[])
       : (['BEGINNER'] as LanguageLevel[]);
 
-    for (const level of levelsToCreate) {
-      const topicsForLevel = LESSON_TEMPLATES[level] || {};
-      
-      for (const [topic, template] of Object.entries(topicsForLevel)) {
-        try {
-          // Check if lesson already exists
-          const existing = await prisma.lesson.findFirst({
-            where: {
-              targetLanguage,
-              level,
-              topic,
-              title: template.title,
-            },
-          });
+    console.log('Creating lessons for languages:', languagesToCreate);
+    console.log('Creating lessons for levels:', levelsToCreate);
+    console.log('createAll flag:', createAll);
 
-          if (existing) {
-            errors.push(`שיעור "${template.title}" כבר קיים`);
-            continue;
-          }
-
-          // Create lesson with vocabulary
-          const vocabularyData = template.vocabulary.map((term: any, index: number) => ({
-            hebrewTerm: term.hebrew,
-            translatedTerm: getTranslation(term, targetLanguage),
-            pronunciation: getPronunciation(term, targetLanguage),
-            difficulty: 'EASY' as const,
-            partOfSpeech: 'NOUN' as const,
-            order: index + 1,
-            usageExample: JSON.stringify({
-              target: `${getTranslation(term, targetLanguage)} - ${term.hebrew}`,
-              hebrew: term.hebrew,
-            }),
-          }));
-
-          // Create exercises
-          const exercisesData = [
-            {
-              type: 'MATCHING' as const,
-              title: 'התאם את המילה',
-              instructions: `בחרי את התרגום הנכון למילה "${template.vocabulary[0].hebrew}"`,
-              question: `מה התרגום של "${template.vocabulary[0].hebrew}"?`,
-              correctAnswer: getTranslation(template.vocabulary[0], targetLanguage),
-              points: 10,
-              order: 1,
-              options: {
-                create: [
-                  {
-                    text: getTranslation(template.vocabulary[0], targetLanguage),
-                    isCorrect: true,
-                    explanation: `נכון! "${template.vocabulary[0].hebrew}" מתרגם ל-${getTranslation(template.vocabulary[0], targetLanguage)}`,
-                    order: 1,
-                  },
-                  {
-                    text: getTranslation(template.vocabulary[1] || template.vocabulary[0], targetLanguage),
-                    isCorrect: false,
-                    explanation: 'זה לא התרגום הנכון',
-                    order: 2,
-                  },
-                  {
-                    text: getTranslation(template.vocabulary[2] || template.vocabulary[0], targetLanguage),
-                    isCorrect: false,
-                    explanation: 'זה לא התרגום הנכון',
-                    order: 3,
-                  },
-                ],
+    for (const lang of languagesToCreate) {
+      console.log(`Processing language: ${lang}`);
+      for (const level of levelsToCreate) {
+        const topicsForLevel = LESSON_TEMPLATES[level] || {};
+        
+        for (const [topic, template] of Object.entries(topicsForLevel)) {
+          try {
+            // Check if lesson already exists
+            const existing = await prisma.lesson.findFirst({
+              where: {
+                targetLanguage: lang,
+                level,
+                topic,
+                title: template.title,
               },
-            },
-            {
-              type: 'FILL_BLANK' as const,
-              title: 'השלמי את המשפט',
-              instructions: 'השלמי את המילה החסרה',
-              question: `The word "${getTranslation(template.vocabulary[1] || template.vocabulary[0], targetLanguage)}" means "[BLANK]" in Hebrew`,
-              correctAnswer: template.vocabulary[1]?.hebrew || template.vocabulary[0].hebrew,
-              points: 10,
-              order: 2,
-            },
-          ];
+            });
 
-          const lesson = await prisma.lesson.create({
-            data: {
-              targetLanguage,
-              level,
-              topic,
-              title: template.title,
-              description: template.description,
-              duration: 15,
-              objectives: JSON.stringify(['ללמוד מילים בסיסיות', 'להבין שימוש במילים']),
-              grammarNotes: `<p>בשיעור זה נלמד מילים הקשורות ל-${topic}.</p>`,
-              culturalTips: `מילים אלה שימושיות מאוד ב-${targetLanguage === 'english' ? 'אנגלית' : targetLanguage === 'romanian' ? 'רומנית' : 'איטלקית'}.`,
-              order: 1,
-              isPublished: true,
-              vocabulary: {
-                create: vocabularyData,
+            if (existing) {
+              errors.push(`שיעור "${template.title}" (${lang}) כבר קיים`);
+              continue;
+            }
+
+            // Get the next order number for this topic/level/language
+            const maxOrder = await prisma.lesson.findFirst({
+              where: {
+                targetLanguage: lang,
+                level,
+                topic,
               },
-              exercises: {
-                create: exercisesData,
+              orderBy: {
+                order: 'desc',
               },
-            },
-            include: {
-              vocabulary: true,
-              exercises: {
-                include: {
-                  options: true,
+              select: {
+                order: true,
+              },
+            });
+
+            const nextOrder = (maxOrder?.order || 0) + 1;
+
+            // Create lesson with vocabulary
+            const vocabularyData = template.vocabulary.map((term: any, index: number) => ({
+              hebrewTerm: term.hebrew,
+              translatedTerm: getTranslation(term, lang),
+              pronunciation: getPronunciation(term, lang),
+              difficulty: 'EASY' as const,
+              partOfSpeech: 'NOUN' as const,
+              order: index + 1,
+              usageExample: JSON.stringify({
+                target: `${getTranslation(term, lang)} - ${term.hebrew}`,
+                hebrew: term.hebrew,
+              }),
+            }));
+
+            // Create exercises
+            const exercisesData = [
+              {
+                type: 'MATCHING' as const,
+                title: 'התאם את המילה',
+                instructions: `בחרי את התרגום הנכון למילה "${template.vocabulary[0].hebrew}"`,
+                question: `מה התרגום של "${template.vocabulary[0].hebrew}"?`,
+                correctAnswer: getTranslation(template.vocabulary[0], lang),
+                points: 10,
+                order: 1,
+                options: {
+                  create: [
+                    {
+                      text: getTranslation(template.vocabulary[0], lang),
+                      isCorrect: true,
+                      explanation: `נכון! "${template.vocabulary[0].hebrew}" מתרגם ל-${getTranslation(template.vocabulary[0], lang)}`,
+                      order: 1,
+                    },
+                    {
+                      text: getTranslation(template.vocabulary[1] || template.vocabulary[0], lang),
+                      isCorrect: false,
+                      explanation: 'זה לא התרגום הנכון',
+                      order: 2,
+                    },
+                    {
+                      text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang),
+                      isCorrect: false,
+                      explanation: 'זה לא התרגום הנכון',
+                      order: 3,
+                    },
+                  ],
                 },
               },
-            },
-          });
+              {
+                type: 'FILL_BLANK' as const,
+                title: 'השלמי את המשפט',
+                instructions: 'השלמי את המילה החסרה',
+                question: `The word "${getTranslation(template.vocabulary[1] || template.vocabulary[0], lang)}" means "[BLANK]" in Hebrew`,
+                correctAnswer: template.vocabulary[1]?.hebrew || template.vocabulary[0].hebrew,
+                points: 10,
+                order: 2,
+              },
+            ];
 
-          createdLessons.push(lesson);
-        } catch (error: any) {
-          errors.push(`שגיאה ביצירת שיעור "${template.title}": ${error.message}`);
+            const lesson = await prisma.lesson.create({
+              data: {
+                targetLanguage: lang,
+                level,
+                topic,
+                title: template.title,
+                description: template.description,
+                duration: 15,
+                objectives: JSON.stringify(['ללמוד מילים בסיסיות', 'להבין שימוש במילים']),
+                grammarNotes: `<p>בשיעור זה נלמד מילים הקשורות ל-${topic}.</p>`,
+                culturalTips: `מילים אלה שימושיות מאוד ב-${lang === 'english' ? 'אנגלית' : lang === 'romanian' ? 'רומנית' : 'איטלקית'}.`,
+                order: nextOrder,
+                isPublished: true,
+                vocabulary: {
+                  create: vocabularyData,
+                },
+                exercises: {
+                  create: exercisesData,
+                },
+              },
+              include: {
+                vocabulary: true,
+                exercises: {
+                  include: {
+                    options: true,
+                  },
+                },
+              },
+            });
+
+            createdLessons.push(lesson);
+          } catch (error: any) {
+            errors.push(`שגיאה ביצירת שיעור "${template.title}" (${lang}): ${error.message}`);
+          }
         }
       }
     }
