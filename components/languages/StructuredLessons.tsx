@@ -88,6 +88,7 @@ export default function StructuredLessons({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isCreatingDemo, setIsCreatingDemo] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchLessons = useCallback(async (level?: LanguageLevel) => {
     setIsLoading(true);
@@ -201,6 +202,33 @@ export default function StructuredLessons({
     return map[lang];
   };
 
+  const handleDeleteAll = async () => {
+    if (!confirm('האם את בטוחה שברצונך למחוק את כל השיעורים? פעולה זו לא ניתנת לביטול.')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/languages/lessons/delete-all', {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSuccess(`נמחקו ${data.deletedCount} שיעורים בהצלחה`);
+        await fetchLessons(selectedLevel || undefined);
+        setTimeout(() => setSuccess(null), 5000);
+      } else {
+        setError(data.error || 'שגיאה במחיקת שיעורים');
+      }
+    } catch (error: any) {
+      console.error('Error deleting lessons:', error);
+      setError('שגיאה במחיקת שיעורים');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleCreateDemo = async (createAll = false) => {
     setIsCreatingDemo(true);
     setError(null);
@@ -284,6 +312,23 @@ export default function StructuredLessons({
                 </button>
               </div>
             )}
+          </div>
+        )}
+        
+        {/* Delete and Recreate buttons */}
+        {lessons.length > 0 && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            <p className="mb-3">יש שיעורים קיימים. כדי ליצור שיעורים חדשים בשפות הנכונות:</p>
+            <div className="space-y-2">
+              <button
+                onClick={handleDeleteAll}
+                disabled={isDeleting}
+                className="block w-full rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isDeleting ? 'מוחק שיעורים...' : 'מחקי את כל השיעורים הקיימים'}
+              </button>
+              <p className="text-xs text-red-600 mt-2">לאחר המחיקה, לחצי על "צרי כל השיעורים" כדי ליצור שיעורים חדשים בשפות הנכונות</p>
+            </div>
           </div>
         )}
         
