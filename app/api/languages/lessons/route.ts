@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Try to fetch lessons with better error handling
-    let lessons = [];
+    let lessons: any[] = [];
     try {
       // Try to fetch lessons - if table doesn't exist, return empty array
       try {
