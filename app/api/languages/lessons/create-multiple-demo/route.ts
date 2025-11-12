@@ -147,17 +147,21 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
 };
 
 function getTranslation(term: any, lang: SupportedLanguageKey): string {
-  // Try direct key first (french, romanian, italian, english)
-  if (term[lang]) return term[lang];
-  // Try short codes
+  // Map language keys to template keys
   const langMap: Record<SupportedLanguageKey, string> = {
     french: 'fr',
     romanian: 'ro',
     italian: 'it',
     english: 'en',
   };
-  const shortCode = langMap[lang];
-  if (term[shortCode]) return term[shortCode];
+  
+  // Try short code first (en, ro, it, fr) - this is what's in the templates
+  const templateKey = langMap[lang];
+  if (term[templateKey]) return term[templateKey];
+  
+  // Try full language name (french, romanian, italian, english) - fallback
+  if (term[lang]) return term[lang];
+  
   // Fallback to English
   return term.en || '';
 }
