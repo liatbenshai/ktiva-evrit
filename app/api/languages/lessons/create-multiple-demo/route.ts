@@ -167,7 +167,6 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'בריא', en: 'Healthy', ro: 'Sănătos', it: 'Sano', fr: 'Sain', pronunciation: { en: 'HEL-thee', ro: 'suh-nuh-TOHS', it: 'SAH-noh', fr: 'san' } },
         { hebrew: 'חולה', en: 'Sick', ro: 'Bolnav', it: 'Malato', fr: 'Malade', pronunciation: { en: 'sik', ro: 'bohl-NAHV', it: 'mah-LAH-toh', fr: 'mah-LAHD' } },
         { hebrew: 'חום', en: 'Fever', ro: 'Febră', it: 'Febbre', fr: 'Fièvre', pronunciation: { en: 'FEE-ver', ro: 'FEH-bruh', it: 'FEHB-breh', fr: 'fee-EHV-ruh' } },
-        { hebrew: 'תרופה', en: 'Medicine', ro: 'Medicament', it: 'Medicina', fr: 'Médicament', pronunciation: { en: 'MED-i-sin', ro: 'meh-dee-kah-MENT', it: 'meh-dee-CHEE-nah', fr: 'may-dee-kah-MAHN' } },
         { hebrew: 'טיפול', en: 'Treatment', ro: 'Tratament', it: 'Trattamento', fr: 'Traitement', pronunciation: { en: 'TREET-ment', ro: 'trah-tah-MENT', it: 'traht-tah-MEN-toh', fr: 'trayt-MAHN' } },
         { hebrew: 'בדיקה', en: 'Examination', ro: 'Examinare', it: 'Visita', fr: 'Examen', pronunciation: { en: 'ig-zam-uh-NAY-shun', ro: 'ehk-sah-mee-NAH-reh', it: 'vee-ZEE-tah', fr: 'ehg-zah-MAHN' } },
       ],
