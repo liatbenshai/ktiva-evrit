@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
         
         for (const [topic, template] of Object.entries(topicsForLevel)) {
           try {
-            // Check if lesson already exists
+            // Check if lesson already exists (by title, language, level, topic)
             const existing = await prisma.lesson.findFirst({
               where: {
                 targetLanguage: lang,
@@ -127,9 +127,12 @@ export async function POST(req: NextRequest) {
             });
 
             if (existing) {
+              console.log(`Skipping existing lesson: ${template.title} (${lang}, ${level}, ${topic})`);
               errors.push(`שיעור "${template.title}" (${lang}) כבר קיים`);
               continue;
             }
+
+            console.log(`Creating lesson: ${template.title} for ${lang}, ${level}, ${topic}`);
 
             // Get the next order number for this topic/level/language
             const maxOrder = await prisma.lesson.findFirst({
@@ -237,12 +240,17 @@ export async function POST(req: NextRequest) {
             });
 
             createdLessons.push(lesson);
+            console.log(`Successfully created lesson: ${template.title} (${lang})`);
           } catch (error: any) {
+            console.error(`Error creating lesson "${template.title}" (${lang}):`, error);
             errors.push(`שגיאה ביצירת שיעור "${template.title}" (${lang}): ${error.message}`);
           }
         }
       }
+      console.log(`Finished processing language: ${lang}. Created: ${createdLessons.filter(l => l.targetLanguage === lang).length}`);
     }
+
+    console.log(`Total created: ${createdLessons.length}, Errors: ${errors.length}`);
 
     return NextResponse.json({
       success: true,
