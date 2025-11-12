@@ -78,6 +78,7 @@ export default function StructuredLessons({
   const [topics, setTopics] = useState<string[]>([]);
 
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [isCreatingDemo, setIsCreatingDemo] = useState(false);
 
   const fetchLessons = useCallback(async (level?: LanguageLevel) => {
@@ -185,29 +186,35 @@ export default function StructuredLessons({
     return map[lang];
   };
 
-  const handleCreateDemo = async () => {
+  const handleCreateDemo = async (createAll = false) => {
     setIsCreatingDemo(true);
     setError(null);
     try {
-      const response = await fetch('/api/languages/lessons/create-demo', {
+      const response = await fetch('/api/languages/lessons/create-multiple-demo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           targetLanguage,
-          level: selectedLevel || 'BEGINNER',
-          topic: 'היכרות',
+          createAll,
         }),
       });
       const data = await response.json();
       if (data.success) {
         await fetchLessons(selectedLevel || undefined);
         setError(null);
+        if (data.created > 0) {
+          setSuccess(`נוצרו ${data.created} שיעורים בהצלחה!`);
+          setTimeout(() => setSuccess(null), 5000);
+        }
+        if (data.errors && data.errors.length > 0) {
+          setError(`${data.message}. שגיאות: ${data.errors.join(', ')}`);
+        }
       } else {
-        setError(data.error || 'שגיאה ביצירת שיעור דוגמה');
+        setError(data.error || 'שגיאה ביצירת שיעורים');
       }
     } catch (error: any) {
-      console.error('Error creating demo lesson:', error);
-      setError('שגיאה ביצירת שיעור דוגמה');
+      console.error('Error creating demo lessons:', error);
+      setError('שגיאה ביצירת שיעורים');
     } finally {
       setIsCreatingDemo(false);
     }
@@ -234,13 +241,22 @@ export default function StructuredLessons({
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             {error}
             {error.includes('אין שיעורים') && (
-              <button
-                onClick={handleCreateDemo}
-                disabled={isCreatingDemo}
-                className="mt-3 block w-full rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isCreatingDemo ? 'יוצר שיעור דוגמה...' : 'צרי שיעור דוגמה'}
-              </button>
+              <div className="mt-3 space-y-2">
+                <button
+                  onClick={() => handleCreateDemo(false)}
+                  disabled={isCreatingDemo}
+                  className="block w-full rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isCreatingDemo ? 'יוצר שיעור דוגמה...' : 'צרי שיעור דוגמה אחד'}
+                </button>
+                <button
+                  onClick={() => handleCreateDemo(true)}
+                  disabled={isCreatingDemo}
+                  className="block w-full rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isCreatingDemo ? 'יוצר שיעורים...' : 'צרי כל השיעורים (כל הרמות והנושאים)'}
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -288,6 +304,11 @@ export default function StructuredLessons({
 
     return (
       <div className="space-y-6">
+        {success && (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+            {success}
+          </div>
+        )}
         {error && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             {error}
@@ -340,13 +361,22 @@ export default function StructuredLessons({
           ) : topics.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center">
               <p className="mb-4 text-slate-600">אין נושאים זמינים ברמה זו כרגע.</p>
-              <button
-                onClick={handleCreateDemo}
-                disabled={isCreatingDemo}
-                className="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isCreatingDemo ? 'יוצר שיעור דוגמה...' : 'צרי שיעור דוגמה'}
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={() => handleCreateDemo(false)}
+                  disabled={isCreatingDemo}
+                  className="block w-full rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isCreatingDemo ? 'יוצר שיעור דוגמה...' : 'צרי שיעור דוגמה אחד'}
+                </button>
+                <button
+                  onClick={() => handleCreateDemo(true)}
+                  disabled={isCreatingDemo}
+                  className="block w-full rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isCreatingDemo ? 'יוצר שיעורים...' : 'צרי כל השיעורים לרמה זו'}
+                </button>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
