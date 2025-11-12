@@ -216,6 +216,8 @@ export default function StructuredLessons({
       const data = await response.json();
       if (data.success) {
         setSuccess(`נמחקו ${data.deletedCount} שיעורים בהצלחה`);
+        setLessons([]); // Clear lessons immediately
+        setTopics([]); // Clear topics
         await fetchLessons(selectedLevel || undefined);
         setTimeout(() => setSuccess(null), 5000);
       } else {
