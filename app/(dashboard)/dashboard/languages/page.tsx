@@ -13,7 +13,9 @@ import {
   Home,
   ListChecks,
   Trophy,
+  GraduationCap,
 } from 'lucide-react'
+import StructuredLessons from '@/components/languages/StructuredLessons'
 
 type SupportedLanguageKey = 'english' | 'romanian' | 'italian'
 
@@ -90,7 +92,10 @@ function shuffleArray<T>(array: T[]): T[] {
   return arr
 }
 
+type TabType = 'free' | 'structured';
+
 export default function LanguagesPage() {
+  const [activeTab, setActiveTab] = useState<TabType>('free');
   const [targetLanguage, setTargetLanguage] = useState<SupportedLanguageKey>('english')
   const [hebrewTerm, setHebrewTerm] = useState('')
   const [result, setResult] = useState<LearnResult | null>(null)
@@ -469,8 +474,50 @@ export default function LanguagesPage() {
         </div>
       </header>
 
+      {/* Tab Navigation */}
+      <div className="mx-auto w-full max-w-5xl px-4 pt-6">
+        <div className="flex gap-2 border-b border-indigo-100">
+          <button
+            onClick={() => setActiveTab('free')}
+            className={`inline-flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-semibold transition ${
+              activeTab === 'free'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <BookOpen className="h-4 w-4" />
+            תרגום חופשי
+          </button>
+          <button
+            onClick={() => setActiveTab('structured')}
+            className={`inline-flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-semibold transition ${
+              activeTab === 'structured'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <GraduationCap className="h-4 w-4" />
+            שיעורים מובנים
+          </button>
+        </div>
+      </div>
+
       <main className="mx-auto w-full max-w-5xl px-4 py-12">
-        <section className="rounded-3xl bg-white p-6 shadow-xl sm:p-8">
+        {activeTab === 'structured' ? (
+          <StructuredLessons
+            targetLanguage={targetLanguage}
+            onLanguageChange={setTargetLanguage}
+            speakText={(text: string, lang: string) => {
+              const langKey = Object.keys(SPEECH_LANG_MAP).find(
+                (key) => SPEECH_LANG_MAP[key as SupportedLanguageKey] === lang
+              ) as SupportedLanguageKey | undefined;
+              if (langKey) {
+                speak(text, langKey);
+              }
+            }}
+          />
+        ) : (
+          <section className="rounded-3xl bg-white p-6 shadow-xl sm:p-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-2">
               <h2 className="flex items-center gap-2 text-xl font-semibold text-indigo-700">
@@ -565,9 +612,8 @@ export default function LanguagesPage() {
           {feedback && (
             <div className="mt-4 rounded-2xl bg-indigo-50 px-4 py-3 text-sm text-indigo-600">{feedback}</div>
           )}
-        </section>
 
-        {result && (
+          {result && (
           <section className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-md lg:col-span-2">
               <div className="flex items-center justify-between gap-2">
@@ -794,6 +840,8 @@ export default function LanguagesPage() {
               </div>
             </div>
           </section>
+          )}
+        </section>
         )}
       </main>
     </div>

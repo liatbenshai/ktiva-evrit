@@ -175,3 +175,167 @@ model LanguageEntry {
   @@index([userId])
   @@index([targetLanguage])
 }
+
+// Enums for language learning system
+enum LanguageLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum LessonStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  MASTERED
+}
+
+enum ExerciseType {
+  MATCHING        // התאמה - מילה בעברית → תרגום
+  FILL_BLANK      // מילוי חסר - השלמת משפט
+  WORD_ORDER      // סידור מילים - בניית משפט
+  LISTENING       // האזנה וזיהוי
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum PartOfSpeech {
+  NOUN
+  VERB
+  ADJECTIVE
+  ADVERB
+  PRONOUN
+  PREPOSITION
+  CONJUNCTION
+  ARTICLE
+  OTHER
+}
+
+enum GrammaticalGender {
+  MASCULINE
+  FEMININE
+  NEUTER
+  NONE
+}
+
+// Structured language lessons
+model Lesson {
+  id              String   @id @default(cuid())
+  targetLanguage  String   // english, romanian, italian
+  level           LanguageLevel
+  topic           String   // היכרות, אוכל, עבודה, נסיעות, בית, משפחה
+  title           String
+  description     String?
+  duration        Int      // מספר דקות משוער
+  objectives      String?  // JSON array of objectives
+  grammarNotes    String?  // Rich text - הסברים דקדוקיים
+  culturalTips    String?  // טיפים תרבותיים
+  order           Int      // מספר סידורי בתוך הנושא
+  isPublished     Boolean  @default(false)
+  
+  // Relations
+  vocabulary      LessonVocabulary[]
+  exercises       LessonExercise[]
+  prerequisites   Lesson[] @relation("LessonPrerequisites")
+  requiredBy      Lesson[] @relation("LessonPrerequisites")
+  userProgress    UserLessonProgress[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([targetLanguage, level, topic])
+  @@index([isPublished])
+  @@unique([targetLanguage, level, topic, order])
+}
+
+// Vocabulary items for each lesson
+model LessonVocabulary {
+  id              String   @id @default(cuid())
+  lessonId        String
+  lesson          Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  hebrewTerm      String
+  translatedTerm  String
+  pronunciation   String?
+  audioUrl        String?  // אם נרצה להעלות הקלטות משלנו
+  difficulty      Difficulty @default(EASY)
+  partOfSpeech    PartOfSpeech?
+  gender          GrammaticalGender?
+  usageExample    String?  // JSON object with target and hebrew
+  notes           String?
+  
+  order           Int      // סדר הצגה בשיעור
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([lessonId])
+}
+
+// Exercises for lessons
+model LessonExercise {
+  id              String   @id @default(cuid())
+  lessonId        String
+  lesson          Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  type            ExerciseType
+  title           String?
+  instructions    String   // הוראות לתרגיל
+  question        String   // השאלה או הטקסט לתרגיל
+  correctAnswer   String?  // תשובה נכונה (אם רלוונטי)
+  exerciseData    String?  // JSON - נתונים ספציפיים לתרגיל (מילים, משפטים, וכו')
+  points          Int      @default(10) // נקודות לתרגיל
+  order           Int      // סדר בתוך השיעור
+  
+  // Relations
+  options         LessonExerciseOption[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([lessonId])
+  @@index([type])
+}
+
+// Options/answers for exercises
+model LessonExerciseOption {
+  id              String   @id @default(cuid())
+  exerciseId      String
+  exercise        LessonExercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  
+  text            String   // הטקסט של האפשרות
+  isCorrect       Boolean  @default(false)
+  explanation     String?  // הסבר אם נכון/לא נכון
+  order           Int      // סדר הצגה
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([exerciseId])
+}
+
+// User progress tracking for lessons
+model UserLessonProgress {
+  id              String   @id @default(cuid())
+  userId          String   @default("default-user")
+  lessonId        String
+  lesson          Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  status          LessonStatus @default(NOT_STARTED)
+  score           Int?     // ציון אחרון 0-100
+  attempts        Int      @default(0)
+  completedAt     DateTime?
+  lastReviewedAt  DateTime?
+  needsReview     Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([status])
+  @@index([needsReview])
+}
