@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2, TrendingUp, BookOpen, CheckCircle, PlayCircle } from 'lucide-react';
+import { Loader2, TrendingUp, BookOpen, CheckCircle, PlayCircle, Cards, HelpCircle } from 'lucide-react';
 import LessonCard from './LessonCard';
 import LessonView from './LessonView';
+import Flashcards from './Flashcards';
 
-type SupportedLanguageKey = 'english' | 'romanian' | 'italian';
+type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french';
 type LanguageLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 
 const LEVEL_CONFIG: Record<LanguageLevel, { label: string; color: string; gradient: string }> = {
@@ -33,6 +34,12 @@ const TOPIC_ICONS: Record<string, string> = {
   נסיעות: '✈️',
   בית: '🏠',
   משפחה: '👨‍👩‍👧‍👦',
+  מספרים: '🔢',
+  צבעים: '🎨',
+  קניות: '🛒',
+  בריאות: '🏥',
+  עסקים: '💼',
+  תרבות: '🎭',
 };
 
 interface Lesson {
@@ -76,6 +83,7 @@ export default function StructuredLessons({
   const [isLoading, setIsLoading] = useState(false);
   const [progressStats, setProgressStats] = useState<ProgressStats | null>(null);
   const [topics, setTopics] = useState<string[]>([]);
+  const [practiceMode, setPracticeMode] = useState<'lessons' | 'flashcards' | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -225,6 +233,17 @@ export default function StructuredLessons({
       setIsCreatingDemo(false);
     }
   };
+
+  // If viewing flashcards
+  if (practiceMode === 'flashcards') {
+    return (
+      <Flashcards
+        targetLanguage={targetLanguage}
+        onBack={() => setPracticeMode(null)}
+        speakText={speakText}
+      />
+    );
+  }
 
   // If viewing a lesson
   if (selectedLesson) {
@@ -380,6 +399,30 @@ export default function StructuredLessons({
             </div>
           </div>
         )}
+
+        {/* Practice Options */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-6">
+          <button
+            onClick={() => setPracticeMode('flashcards')}
+            className="group rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 p-6 text-left transition hover:border-indigo-300 hover:shadow-lg"
+          >
+            <div className="mb-3 inline-flex items-center justify-center rounded-xl bg-indigo-100 p-3 text-indigo-600">
+              <Cards className="h-6 w-6" />
+            </div>
+            <h3 className="mb-2 text-lg font-semibold text-slate-900">כרטיסיות למידה</h3>
+            <p className="text-sm text-slate-600">תרגלי מילים עם כרטיסיות אינטראקטיביות</p>
+          </button>
+          <button
+            onClick={() => {/* TODO: Add quiz component */}}
+            className="group rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 text-left transition hover:border-emerald-300 hover:shadow-lg"
+          >
+            <div className="mb-3 inline-flex items-center justify-center rounded-xl bg-emerald-100 p-3 text-emerald-600">
+              <HelpCircle className="h-6 w-6" />
+            </div>
+            <h3 className="mb-2 text-lg font-semibold text-slate-900">חידון</h3>
+            <p className="text-sm text-slate-600">בחני את עצמך עם חידונים</p>
+          </button>
+        </div>
 
         <div>
           <h2 className="mb-4 text-xl font-semibold text-slate-900">בחרי נושא</h2>

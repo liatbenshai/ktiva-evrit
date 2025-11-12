@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import StructuredLessons from '@/components/languages/StructuredLessons'
 
-type SupportedLanguageKey = 'english' | 'romanian' | 'italian'
+type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french'
 
 interface LanguageMeta {
   label: string
@@ -37,12 +37,17 @@ const SUPPORTED_LANGUAGES: Record<SupportedLanguageKey, LanguageMeta> = {
     label: 'איטלקית',
     description: 'שיחות יומיומיות, תרבות, לימודים ועבודה',
   },
+  french: {
+    label: 'צרפתית',
+    description: 'שיחות יומיומיות, תרבות, עסקים ולימודים',
+  },
 }
 
 const SPEECH_LANG_MAP: Record<SupportedLanguageKey, string> = {
   english: 'en-US',
   romanian: 'ro-RO',
   italian: 'it-IT',
+  french: 'fr-FR',
 }
 
 const FALLBACK_LANG_CODES = ['it', 'en', 'fr', 'es']
