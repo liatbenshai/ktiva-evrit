@@ -77,8 +77,12 @@ export default function StructuredLessons({
   const [progressStats, setProgressStats] = useState<ProgressStats | null>(null);
   const [topics, setTopics] = useState<string[]>([]);
 
+  const [error, setError] = useState<string | null>(null);
+  const [isCreatingDemo, setIsCreatingDemo] = useState(false);
+
   const fetchLessons = useCallback(async (level?: LanguageLevel) => {
     setIsLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams({
         targetLanguage,
@@ -94,11 +98,17 @@ export default function StructuredLessons({
 
       if (data.success) {
         setLessons(data.lessons || []);
-        const uniqueTopics = Array.from(new Set(data.lessons.map((l: Lesson) => l.topic)));
+        const uniqueTopics = Array.from(new Set((data.lessons || []).map((l: Lesson) => l.topic)));
         setTopics(uniqueTopics as string[]);
+        if ((data.lessons || []).length === 0) {
+          setError('אין שיעורים זמינים כרגע. שיעורים יופיעו כאן ברגע שייווצרו.');
+        }
+      } else {
+        setError(data.error || 'שגיאה בטעינת השיעורים');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching lessons:', error);
+      setError('שגיאה בטעינת השיעורים. נסי לרענן את הדף.');
     } finally {
       setIsLoading(false);
     }
@@ -175,6 +185,34 @@ export default function StructuredLessons({
     return map[lang];
   };
 
+  const handleCreateDemo = async () => {
+    setIsCreatingDemo(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/languages/lessons/create-demo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetLanguage,
+          level: selectedLevel || 'BEGINNER',
+          topic: 'היכרות',
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        await fetchLessons(selectedLevel || undefined);
+        setError(null);
+      } else {
+        setError(data.error || 'שגיאה ביצירת שיעור דוגמה');
+      }
+    } catch (error: any) {
+      console.error('Error creating demo lesson:', error);
+      setError('שגיאה ביצירת שיעור דוגמה');
+    } finally {
+      setIsCreatingDemo(false);
+    }
+  };
+
   // If viewing a lesson
   if (selectedLesson) {
     return (
@@ -192,6 +230,25 @@ export default function StructuredLessons({
   if (!selectedLevel) {
     return (
       <div className="space-y-6">
+        {error && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            {error}
+            {error.includes('אין שיעורים') && (
+              <button
+                onClick={handleCreateDemo}
+                disabled={isCreatingDemo}
+                className="mt-3 block w-full rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isCreatingDemo ? 'יוצר שיעור דוגמה...' : 'צרי שיעור דוגמה'}
+              </button>
+            )}
+          </div>
+        )}
+        {isLoading && (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          </div>
+        )}
         <div className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50 p-6">
           <h2 className="mb-2 text-xl font-semibold text-indigo-800">בחרי רמת למידה</h2>
           <p className="text-sm text-indigo-600">איזו רמה מתאימה לך?</p>
@@ -231,6 +288,11 @@ export default function StructuredLessons({
 
     return (
       <div className="space-y-6">
+        {error && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            {error}
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <button
             onClick={() => setSelectedLevel(null)}
@@ -271,8 +333,24 @@ export default function StructuredLessons({
 
         <div>
           <h2 className="mb-4 text-xl font-semibold text-slate-900">בחרי נושא</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {topics.map((topic) => {
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            </div>
+          ) : topics.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center">
+              <p className="mb-4 text-slate-600">אין נושאים זמינים ברמה זו כרגע.</p>
+              <button
+                onClick={handleCreateDemo}
+                disabled={isCreatingDemo}
+                className="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isCreatingDemo ? 'יוצר שיעור דוגמה...' : 'צרי שיעור דוגמה'}
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {topics.map((topic) => {
               const topicLessons = lessonsByTopic[topic] || [];
               const completedCount = topicLessons.filter((l) => {
                 // This would need to check user progress
@@ -299,7 +377,8 @@ export default function StructuredLessons({
                 </button>
               );
             })}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     );
