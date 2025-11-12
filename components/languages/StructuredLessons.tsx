@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2, TrendingUp, BookOpen, CheckCircle, PlayCircle, Cards, HelpCircle } from 'lucide-react';
+import { Loader2, TrendingUp, BookOpen, CheckCircle, PlayCircle, CreditCard, HelpCircle } from 'lucide-react';
 import LessonCard from './LessonCard';
 import LessonView from './LessonView';
 import Flashcards from './Flashcards';
@@ -407,7 +407,7 @@ export default function StructuredLessons({
             className="group rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 p-6 text-left transition hover:border-indigo-300 hover:shadow-lg"
           >
             <div className="mb-3 inline-flex items-center justify-center rounded-xl bg-indigo-100 p-3 text-indigo-600">
-              <Cards className="h-6 w-6" />
+              <CreditCard className="h-6 w-6" />
             </div>
             <h3 className="mb-2 text-lg font-semibold text-slate-900">כרטיסיות למידה</h3>
             <p className="text-sm text-slate-600">תרגלי מילים עם כרטיסיות אינטראקטיביות</p>

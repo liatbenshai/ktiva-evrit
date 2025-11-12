@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get user progress for lessons
-    let progressItems = [];
+    let progressItems: any[] = [];
     try {
       progressItems = await prisma.userLessonProgress.findMany({
         where: {
@@ -59,8 +59,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Get vocabulary from lessons that need review
-    const lessonIds = progressItems.map((p) => p.lessonId);
-    let vocabularyToReview = [];
+    const lessonIds = progressItems.map((p: any) => p.lessonId);
+    let vocabularyToReview: any[] = [];
     
     if (lessonIds.length > 0) {
       try {
@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get saved entries that might need review (older entries)
-    let savedEntriesToReview = [];
+    let savedEntriesToReview: any[] = [];
     try {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);

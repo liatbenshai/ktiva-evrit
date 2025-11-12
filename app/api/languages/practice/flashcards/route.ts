@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       where.lesson.topic = topic;
     }
 
-    let vocabulary = [];
+    let vocabulary: any[] = [];
     try {
       vocabulary = await prisma.lessonVocabulary.findMany({
         where,

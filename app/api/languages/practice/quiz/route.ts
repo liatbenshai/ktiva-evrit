@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
       where.lesson.topic = topic;
     }
 
-    let allVocabulary = [];
+    let allVocabulary: any[] = [];
     try {
       allVocabulary = await prisma.lessonVocabulary.findMany({
         where,
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Also get from saved entries
-    let savedEntries = [];
+    let savedEntries: any[] = [];
     try {
       savedEntries = await prisma.languageEntry.findMany({
         where: {
