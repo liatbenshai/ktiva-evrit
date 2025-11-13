@@ -755,16 +755,13 @@ export async function POST(req: NextRequest) {
         for (const [topic, template] of Object.entries(topicsForLevel)) {
           try {
             // Check if lesson already exists (by title, language, level, topic)
+            // Don't include vocabulary/exercises to avoid loading fields that might not exist yet (like isSentence)
             const existing = await prisma.lesson.findFirst({
               where: {
                 targetLanguage: lang,
                 level,
                 topic,
                 title: template.title,
-              },
-              include: {
-                vocabulary: true,
-                exercises: true,
               },
             });
 
@@ -789,7 +786,8 @@ export async function POST(req: NextRequest) {
                     : null;
                   const isSentence = term.isSentence || false;
                   
-                  return {
+                  // Build vocabulary data - conditionally include isSentence if it exists in schema
+                  const vocabData: any = {
                     hebrewTerm: term.hebrew,
                     translatedTerm: mainTranslation,
                     pronunciation: getPronunciation(term, lang),
@@ -801,8 +799,17 @@ export async function POST(req: NextRequest) {
                       hebrew: term.hebrew,
                     }),
                     notes: notesContent,
-                    isSentence: isSentence,
                   };
+                  
+                  // Only include isSentence if the field exists in the database
+                  // This will be added after prisma db push runs successfully in Vercel
+                  // For now, we'll skip it to avoid errors
+                  // TODO: Uncomment after migration is complete
+                  // if (isSentence) {
+                  //   vocabData.isSentence = true;
+                  // }
+                  
+                  return vocabData;
                 });
 
                 // Create exercises
@@ -917,7 +924,8 @@ export async function POST(req: NextRequest) {
                 : null;
               const isSentence = term.isSentence || false;
               
-              return {
+              // Build vocabulary data - conditionally include isSentence if it exists in schema
+              const vocabData: any = {
                 hebrewTerm: term.hebrew,
                 translatedTerm: mainTranslation,
                 pronunciation: getPronunciation(term, lang),
@@ -929,8 +937,17 @@ export async function POST(req: NextRequest) {
                   hebrew: term.hebrew,
                 }),
                 notes: notesContent,
-                isSentence: isSentence,
               };
+              
+              // Only include isSentence if the field exists in the database
+              // This will be added after prisma db push runs successfully in Vercel
+              // For now, we'll skip it to avoid errors
+              // TODO: Uncomment after migration is complete
+              // if (isSentence) {
+              //   vocabData.isSentence = true;
+              // }
+              
+              return vocabData;
             });
 
             // Create exercises

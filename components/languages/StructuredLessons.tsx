@@ -128,19 +128,34 @@ export default function StructuredLessons({
         const uniqueTopics = Array.from(new Set(fetchedLessons.map((l: Lesson) => l.topic)));
         setTopics(uniqueTopics as string[]);
         
+        // Only set error on main page (when no level is selected)
         // Check if we have lessons for the current target language
         const lessonsForCurrentLanguage = fetchedLessons.filter((l: Lesson) => l.targetLanguage === targetLanguage);
-        if (lessonsForCurrentLanguage.length === 0) {
-          setError('אין שיעורים זמינים לשפה זו כרגע. לחצי על הכפתור למטה כדי ליצור שיעורים.');
-        } else if (fetchedLessons.length === 0) {
-          setError('אין שיעורים זמינים כרגע. שיעורים יופיעו כאן ברגע שייווצרו.');
+        if (!selectedLevel) {
+          // Only show error on main page
+          if (lessonsForCurrentLanguage.length === 0) {
+            setError('אין שיעורים זמינים לשפה זו כרגע. לחצי על הכפתור למטה כדי ליצור שיעורים.');
+          } else if (fetchedLessons.length === 0) {
+            setError('אין שיעורים זמינים כרגע. שיעורים יופיעו כאן ברגע שייווצרו.');
+          } else {
+            setError(null); // Clear error if lessons exist
+          }
+        } else {
+          // Clear error when level is selected (we're in topic selection)
+          setError(null);
         }
       } else {
-        setError(data.error || 'שגיאה בטעינת השיעורים');
+        // Only set error on main page
+        if (!selectedLevel) {
+          setError(data.error || 'שגיאה בטעינת השיעורים');
+        }
       }
     } catch (error: any) {
       console.error('Error fetching lessons:', error);
-      setError('שגיאה בטעינת השיעורים. נסי לרענן את הדף.');
+      // Only set error on main page
+      if (!selectedLevel) {
+        setError('שגיאה בטעינת השיעורים. נסי לרענן את הדף.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -435,11 +450,6 @@ export default function StructuredLessons({
         {success && (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
             {success}
-          </div>
-        )}
-        {error && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            {error}
           </div>
         )}
         <div className="flex items-center justify-between">
