@@ -120,6 +120,12 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'עשרה', en: 'Ten', ro: 'Zece', it: 'Dieci', fr: 'Dix', ru: 'Десять', pronunciation: { en: 'ten', ro: 'ZEH-cheh', it: 'DYEH-chee', fr: 'dees', ru: 'DYEH-syat' } },
         { hebrew: 'עשרים', en: 'Twenty', ro: 'Douăzeci', it: 'Venti', fr: 'Vingt', ru: 'Двадцать', pronunciation: { en: 'TWEN-tee', ro: 'doh-uh-ZEH-chee', it: 'VEHN-tee', fr: 'van', ru: 'DVAH-tsat' } },
       ],
+      sentences: [
+        { hebrew: 'יש לי שלושה אחים ואחת אחת', en: 'I have three brothers and one sister', ro: 'Am trei frați și o soră', it: 'Ho tre fratelli e una sorella', fr: 'J\'ai trois frères et une sœur', ru: 'У меня три брата и одна сестра', isSentence: true },
+        { hebrew: 'אני צריך לקנות חמישה תפוחים ושני לחמים', en: 'I need to buy five apples and two breads', ro: 'Trebuie să cumpăr cinci mere și două pâini', it: 'Devo comprare cinque mele e due pani', fr: 'Je dois acheter cinq pommes et deux pains', ru: 'Мне нужно купить пять яблок и два хлеба', isSentence: true },
+        { hebrew: 'הפגישה תתחיל בשעה עשר בבוקר', en: 'The meeting will start at ten in the morning', ro: 'Întâlnirea va începe la ora zece dimineața', it: 'L\'incontro inizierà alle dieci del mattino', fr: 'La réunion commencera à dix heures du matin', ru: 'Встреча начнётся в десять утра', isSentence: true },
+        { hebrew: 'יש לנו עשרים תלמידים בכיתה', en: 'We have twenty students in the class', ro: 'Avem douăzeci de elevi în clasă', it: 'Abbiamo venti studenti in classe', fr: 'Nous avons vingt élèves dans la classe', ru: 'У нас двадцать учеников в классе', isSentence: true },
+      ],
     },
     צבעים: {
       title: 'צבעים בסיסיים',
@@ -135,6 +141,12 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'סגול', en: 'Purple', ro: 'Violet', it: 'Viola', fr: 'Violet', ru: 'Фиолетовый', pronunciation: { en: 'PUR-pul', ro: 'vee-oh-LET', it: 'vee-OH-lah', fr: 'vee-oh-LAY', ru: 'fee-ah-LEH-tah-vy' } },
         { hebrew: 'כתום', en: 'Orange', ro: 'Portocaliu', it: 'Arancione', fr: 'Orange', ru: 'Оранжевый', pronunciation: { en: 'OR-anj', ro: 'por-toh-KAH-lee-oo', it: 'ah-rahn-CHOH-neh', fr: 'oh-RAHNZH', ru: 'ah-RAHN-zheh-vy' } },
         { hebrew: 'חום', en: 'Brown', ro: 'Maro', it: 'Marrone', fr: 'Marron', ru: 'Коричневый', pronunciation: { en: 'brown', ro: 'mah-ROH', it: 'mahr-ROH-neh', fr: 'mah-ROHN', ru: 'kah-REECH-nyeh-vy' } },
+      ],
+      sentences: [
+        { hebrew: 'השמיים כחולים והים כחול גם כן', en: 'The sky is blue and the sea is also blue', ro: 'Cerul este albastru și marea este de asemenea albastră', it: 'Il cielo è blu e il mare è anche blu', fr: 'Le ciel est bleu et la mer est aussi bleue', ru: 'Небо синее и море тоже синее', isSentence: true },
+        { hebrew: 'אני אוהבת את הצבע הירוק של הטבע', en: 'I love the green color of nature', ro: 'Îmi place culoarea verde a naturii', it: 'Amo il colore verde della natura', fr: 'J\'aime la couleur verte de la nature', ru: 'Я люблю зелёный цвет природы', isSentence: true },
+        { hebrew: 'השמלה האדומה נראית יפה מאוד', en: 'The red dress looks very beautiful', ro: 'Rochia roșie arată foarte frumos', it: 'Il vestito rosso sembra molto bello', fr: 'La robe rouge a l\'air très belle', ru: 'Красное платье выглядит очень красиво', isSentence: true },
+        { hebrew: 'השמש הצהובה זורחת בשמיים', en: 'The yellow sun shines in the sky', ro: 'Soarele galben strălucește pe cer', it: 'Il sole giallo splende nel cielo', fr: 'Le soleil jaune brille dans le ciel', ru: 'Жёлтое солнце светит в небе', isSentence: true },
       ],
     },
     בעלי_חיים: {
@@ -159,6 +171,12 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'כריש', en: 'Shark', ro: 'Rechin', it: 'Squalo', fr: 'Requin', ru: 'Акула', pronunciation: { en: 'shahrk', ro: 'reh-KEEN', it: 'SKWAH-loh', fr: 'ruh-KAN', ru: 'ah-KOO-lah' } },
         { hebrew: 'לווייתן', en: 'Whale', ro: 'Balena', it: 'Balena', fr: 'Baleine', ru: 'Кит', pronunciation: { en: 'wayl', ro: 'bah-LEH-nah', it: 'bah-LEH-nah', fr: 'bah-LEHN', ru: 'keet' } },
       ],
+      sentences: [
+        { hebrew: 'הכלב שלי אוהב לשחק בפארק', en: 'My dog loves to play in the park', ro: 'Câinele meu îi place să se joace în parc', it: 'Il mio cane ama giocare nel parco', fr: 'Mon chien adore jouer dans le parc', ru: 'Моя собака любит играть в парке', isSentence: true },
+        { hebrew: 'החתול ישן על המיטה כל היום', en: 'The cat sleeps on the bed all day', ro: 'Pisica doarme pe pat toată ziua', it: 'Il gatto dorme sul letto tutto il giorno', fr: 'Le chat dort sur le lit toute la journée', ru: 'Кошка спит на кровати весь день', isSentence: true },
+        { hebrew: 'ראיתי אריה בגן החיות אתמול', en: 'I saw a lion at the zoo yesterday', ro: 'Am văzut un leu la grădina zoologică ieri', it: 'Ho visto un leone allo zoo ieri', fr: 'J\'ai vu un lion au zoo hier', ru: 'Вчера я видел льва в зоопарке', isSentence: true },
+        { hebrew: 'הפיל הוא החיה הגדולה ביותר', en: 'The elephant is the largest animal', ro: 'Elefantul este cel mai mare animal', it: 'L\'elefante è l\'animale più grande', fr: 'L\'éléphant est le plus grand animal', ru: 'Слон - самое большое животное', isSentence: true },
+      ],
     },
     זמן: {
       title: 'זמן וימים',
@@ -175,6 +193,12 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'חודש', en: 'Month', ro: 'Lună', it: 'Mese', fr: 'Mois', ru: 'Месяц', pronunciation: { en: 'muhnth', ro: 'LOO-nuh', it: 'MEH-zeh', fr: 'mwah', ru: 'MYEH-syats' } },
         { hebrew: 'שנה', en: 'Year', ro: 'An', it: 'Anno', fr: 'Année', ru: 'Год', pronunciation: { en: 'yeer', ro: 'ahn', it: 'AHN-noh', fr: 'ah-NAY', ru: 'got' } },
       ],
+      sentences: [
+        { hebrew: 'אני מתעורר כל בוקר בשעה שבע', en: 'I wake up every morning at seven', ro: 'Mă trezesc în fiecare dimineață la ora șapte', it: 'Mi sveglio ogni mattina alle sette', fr: 'Je me réveille tous les matins à sept heures', ru: 'Я просыпаюсь каждое утро в семь часов', isSentence: true },
+        { hebrew: 'הפגישה תתקיים מחר בערב', en: 'The meeting will take place tomorrow evening', ro: 'Întâlnirea va avea loc mâine seara', it: 'L\'incontro si terrà domani sera', fr: 'La réunion aura lieu demain soir', ru: 'Встреча состоится завтра вечером', isSentence: true },
+        { hebrew: 'אני עובד שמונה שעות ביום', en: 'I work eight hours a day', ro: 'Lucrez opt ore pe zi', it: 'Lavoro otto ore al giorno', fr: 'Je travaille huit heures par jour', ru: 'Я работаю восемь часов в день', isSentence: true },
+        { hebrew: 'השבוע עבר מהר מאוד', en: 'The week passed very quickly', ro: 'Săptămâna a trecut foarte repede', it: 'La settimana è passata molto velocemente', fr: 'La semaine est passée très vite', ru: 'Неделя прошла очень быстро', isSentence: true },
+      ],
     },
     ימים_בשבוע: {
       title: 'ימים בשבוע',
@@ -190,6 +214,12 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'היום', en: 'Today', ro: 'Astăzi', it: 'Oggi', fr: 'Aujourd\'hui', ru: 'Сегодня', pronunciation: { en: 'tuh-DAY', ro: 'ahs-TUH-zee', it: 'OHJ-jee', fr: 'oh-zhoor-DWEE', ru: 'seh-VOHD-nyah' } },
         { hebrew: 'מחר', en: 'Tomorrow', ro: 'Mâine', it: 'Domani', fr: 'Demain', ru: 'Завтра', pronunciation: { en: 'tuh-MOR-oh', ro: 'MUH-ee-neh', it: 'doh-MAH-nee', fr: 'duh-MAN', ru: 'ZAHV-trah' } },
         { hebrew: 'אתמול', en: 'Yesterday', ro: 'Ieri', it: 'Ieri', fr: 'Hier', ru: 'Вчера', pronunciation: { en: 'YES-ter-day', ro: 'YEH-ree', it: 'YEH-ree', fr: 'yehr', ru: 'VCHYEH-rah' } },
+      ],
+      sentences: [
+        { hebrew: 'ביום ראשון אני נח ולא עובד', en: 'On Sunday I rest and don\'t work', ro: 'Duminică mă odihnesc și nu lucrez', it: 'Domenica mi riposo e non lavoro', fr: 'Le dimanche je me repose et ne travaille pas', ru: 'В воскресенье я отдыхаю и не работаю', isSentence: true },
+        { hebrew: 'ביום שני מתחילה השבוע החדש', en: 'On Monday the new week begins', ro: 'Luni începe săptămâna nouă', it: 'Lunedì inizia la nuova settimana', fr: 'Le lundi commence la nouvelle semaine', ru: 'В понедельник начинается новая неделя', isSentence: true },
+        { hebrew: 'מחר יהיה יום רביעי', en: 'Tomorrow will be Wednesday', ro: 'Mâine va fi miercuri', it: 'Domani sarà mercoledì', fr: 'Demain ce sera mercredi', ru: 'Завтра будет среда', isSentence: true },
+        { hebrew: 'אני אוהבת את סוף השבוע כי אני יכולה לנוח', en: 'I love the weekend because I can rest', ro: 'Îmi place weekend-ul pentru că pot să mă odihnesc', it: 'Amo il fine settimana perché posso riposare', fr: 'J\'aime le week-end car je peux me reposer', ru: 'Я люблю выходные, потому что могу отдохнуть', isSentence: true },
       ],
     },
     חלקי_גוף: {
@@ -214,6 +244,12 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'חזה', en: 'Chest', ro: 'Piept', it: 'Petto', fr: 'Poitrine', ru: 'Грудь', pronunciation: { en: 'chest', ro: 'pyehpt', it: 'PEHT-toh', fr: 'pwah-TREEN', ru: 'grood' } },
         { hebrew: 'ברך', en: 'Elbow', ro: 'Cot', it: 'Gomito', fr: 'Coude', ru: 'Локоть', pronunciation: { en: 'EL-boh', ro: 'koht', it: 'GOH-mee-toh', fr: 'kood', ru: 'LOH-kaht' } },
       ],
+      sentences: [
+        { hebrew: 'יש לי כאב ראש ואני צריך לנוח', en: 'I have a headache and I need to rest', ro: 'Am dureri de cap și trebuie să mă odihnesc', it: 'Ho mal di testa e devo riposare', fr: 'J\'ai mal à la tête et je dois me reposer', ru: 'У меня болит голова и мне нужно отдохнуть', isSentence: true },
+        { hebrew: 'העיניים שלי עייפות אחרי יום ארוך', en: 'My eyes are tired after a long day', ro: 'Ochii mei sunt obosiți după o zi lungă', it: 'I miei occhi sono stanchi dopo una lunga giornata', fr: 'Mes yeux sont fatigués après une longue journée', ru: 'Мои глаза устали после долгого дня', isSentence: true },
+        { hebrew: 'אני משתמש בידיים שלי לעבוד', en: 'I use my hands to work', ro: 'Folosesc mâinile mele pentru a lucra', it: 'Uso le mie mani per lavorare', fr: 'J\'utilise mes mains pour travailler', ru: 'Я использую свои руки для работы', isSentence: true },
+        { hebrew: 'הלב שלי פועם מהר כשאני מתרגש', en: 'My heart beats fast when I am excited', ro: 'Inima mea bate repede când sunt emoționat', it: 'Il mio cuore batte veloce quando sono emozionato', fr: 'Mon cœur bat vite quand je suis excité', ru: 'Моё сердце бьётся быстро, когда я взволнован', isSentence: true },
+      ],
     },
     בגדים: {
       title: 'בגדים ואופנה',
@@ -234,6 +270,12 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'שמלה קצרה', en: 'Skirt', ro: 'Fustă', it: 'Gonna', fr: 'Robe', ru: 'Юбка', pronunciation: { en: 'skurt', ro: 'FOOS-tuh', it: 'GOHN-nah', fr: 'rohb', ru: 'YOOP-kah' } },
         { hebrew: 'נעלי ספורט', en: 'Sneakers', ro: 'Adidași', it: 'Scarpe da ginnastica', fr: 'Baskets', ru: 'Кроссовки', pronunciation: { en: 'SNEE-kerz', ro: 'ah-dee-DAHSH', it: 'SKAHR-peh dah jeen-NAH-stee-kah', fr: 'bahs-KAY', ru: 'krah-SOHV-kee' } },
         { hebrew: 'תחתונים', en: 'Underwear', ro: 'Chiloti', it: 'Biancheria intima', fr: 'Sous-vêtements', ru: 'Нижнее бельё', pronunciation: { en: 'UHN-der-wair', ro: 'kee-LOH-tee', it: 'byahn-keh-REE-ah EEN-tee-mah', fr: 'soo-vayt-MAHN', ru: 'NEEZH-nyeh behl-YOH' } },
+      ],
+      sentences: [
+        { hebrew: 'אני לובשת שמלה כחולה למסיבה', en: 'I am wearing a blue dress to the party', ro: 'Port o rochie albastră la petrecere', it: 'Indosso un vestito blu alla festa', fr: 'Je porte une robe bleue à la fête', ru: 'Я надеваю синее платье на вечеринку', isSentence: true },
+        { hebrew: 'החולצה הזו נראית יפה עליך', en: 'This shirt looks good on you', ro: 'Această cămașă ți se potrivește', it: 'Questa camicia ti sta bene', fr: 'Cette chemise te va bien', ru: 'Эта рубашка тебе идёт', isSentence: true },
+        { hebrew: 'אני צריך נעליים חדשות כי הישנות קטנות', en: 'I need new shoes because the old ones are small', ro: 'Am nevoie de pantofi noi pentru că cei vechi sunt mici', it: 'Ho bisogno di scarpe nuove perché quelle vecchie sono piccole', fr: 'J\'ai besoin de nouvelles chaussures car les anciennes sont petites', ru: 'Мне нужна новая обувь, потому что старая мала', isSentence: true },
+        { hebrew: 'המעיל הזה חם מאוד לחורף', en: 'This coat is very warm for winter', ro: 'Acest palton este foarte cald pentru iarnă', it: 'Questo cappotto è molto caldo per l\'inverno', fr: 'Ce manteau est très chaud pour l\'hiver', ru: 'Это пальто очень тёплое для зимы', isSentence: true },
       ],
     },
     מזג_אוויר: {
@@ -259,6 +301,12 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'רוח חזקה', en: 'Strong wind', ro: 'Vânt puternic', it: 'Vento forte', fr: 'Vent fort', ru: 'Сильный ветер', pronunciation: { en: 'strong wind', ro: 'vuhnt poo-TEHR-neek', it: 'VEHN-toh FOR-teh', fr: 'vahn for', ru: 'SEEL-ny veh-TEHR' } },
         { hebrew: 'סופה', en: 'Storm', ro: 'Furtună', it: 'Tempesta', fr: 'Tempête', ru: 'Буря', pronunciation: { en: 'stawrm', ro: 'foor-TOO-nuh', it: 'tehm-PEHS-tah', fr: 'tahn-PEHT', ru: 'BOO-ryah' } },
         { hebrew: 'טיפות גשם', en: 'Raindrops', ro: 'Picături de ploaie', it: 'Gocce di pioggia', fr: 'Gouttes de pluie', ru: 'Капли дождя', pronunciation: { en: 'RAYN-drops', ro: 'pee-kuh-TOO-ree deh PLOY-eh', it: 'GOH-cheh dee PYOHJ-jah', fr: 'goot duh plwee', ru: 'KAH-plee dahzh-DYAH' } },
+      ],
+      sentences: [
+        { hebrew: 'היום מזג האוויר יפה והשמש זורחת', en: 'Today the weather is nice and the sun is shining', ro: 'Astăzi vremea este frumoasă și soarele strălucește', it: 'Oggi il tempo è bello e il sole splende', fr: 'Aujourd\'hui il fait beau et le soleil brille', ru: 'Сегодня хорошая погода и светит солнце', isSentence: true },
+        { hebrew: 'יורד גשם חזק ואני צריך מטריה', en: 'It\'s raining heavily and I need an umbrella', ro: 'Plouă tare și am nevoie de umbrelă', it: 'Piove forte e ho bisogno di un ombrello', fr: 'Il pleut beaucoup et j\'ai besoin d\'un parapluie', ru: 'Идёт сильный дождь и мне нужен зонт', isSentence: true },
+        { hebrew: 'הטמפרטורה היום גבוהה מאוד', en: 'The temperature today is very high', ro: 'Temperatura astăzi este foarte ridicată', it: 'La temperatura oggi è molto alta', fr: 'La température aujourd\'hui est très élevée', ru: 'Температура сегодня очень высокая', isSentence: true },
+        { hebrew: 'בחורף יורד שלג והכל לבן', en: 'In winter it snows and everything is white', ro: 'Iarna ninge și totul este alb', it: 'In inverno nevica e tutto è bianco', fr: 'En hiver il neige et tout est blanc', ru: 'Зимой идёт снег и всё белое', isSentence: true },
       ],
     },
     פעלים: {
@@ -663,6 +711,12 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'סיסמה', en: 'Password', ro: 'Parolă', it: 'Password', fr: 'Mot de passe', ru: 'Пароль', pronunciation: { en: 'PAS-wurd', ro: 'pah-ROH-luh', it: 'PAHS-wurd', fr: 'moh duh pahs', ru: 'pah-ROHL' } },
         { hebrew: 'תוכנית', en: 'Program', ro: 'Program', it: 'Programma', fr: 'Programme', ru: 'Программа', pronunciation: { en: 'PROH-gram', ro: 'proh-GRAHM', it: 'proh-GRAHM-mah', fr: 'proh-GRAHM', ru: 'prah-GRAHM-mah' } },
       ],
+      sentences: [
+        { hebrew: 'אני משתמש במחשב כל יום לעבודה', en: 'I use the computer every day for work', ro: 'Folosesc computerul în fiecare zi pentru muncă', it: 'Uso il computer ogni giorno per lavoro', fr: 'J\'utilise l\'ordinateur tous les jours pour le travail', ru: 'Я использую компьютер каждый день для работы', isSentence: true },
+        { hebrew: 'הטלפון שלי לא עובד ואני צריך לתקן אותו', en: 'My phone is not working and I need to fix it', ro: 'Telefonul meu nu funcționează și trebuie să-l repar', it: 'Il mio telefono non funziona e devo ripararlo', fr: 'Mon téléphone ne fonctionne pas et je dois le réparer', ru: 'Мой телефон не работает и мне нужно его починить', isSentence: true },
+        { hebrew: 'אני שולח אימייל ללקוח כל בוקר', en: 'I send an email to the client every morning', ro: 'Trimit un email clientului în fiecare dimineață', it: 'Invio un\'email al cliente ogni mattina', fr: 'J\'envoie un email au client tous les matins', ru: 'Я отправляю электронное письмо клиенту каждое утро', isSentence: true },
+        { hebrew: 'האינטרנט בבית שלי מהיר מאוד', en: 'The internet at my house is very fast', ro: 'Internetul de la mine acasă este foarte rapid', it: 'L\'internet a casa mia è molto veloce', fr: 'L\'internet chez moi est très rapide', ru: 'Интернет у меня дома очень быстрый', isSentence: true },
+      ],
     },
     רגשות: {
       title: 'רגשות ורגשות',
@@ -687,6 +741,12 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'ייאוש', en: 'Despair', ro: 'Deznădejde', it: 'Disperazione', fr: 'Désespoir', ru: 'Отчаяние', pronunciation: { en: 'di-SPAIR', ro: 'dehz-nuh-DEZH-deh', it: 'dee-speh-rah-TSYOH-neh', fr: 'day-zeh-PWAHR', ru: 'aht-chah-YAH-nyeh' } },
         { hebrew: 'התרגשות', en: 'Excitement', ro: 'Emoție', it: 'Eccitazione', fr: 'Excitation', ru: 'Волнение', pronunciation: { en: 'ik-SAHYT-ment', ro: 'eh-MOH-tsee-eh', it: 'eh-chee-tah-TSYOH-neh', fr: 'ehk-see-tah-SYOHN', ru: 'vahl-NYEH-nyeh' } },
         { hebrew: 'שלווה', en: 'Peace', ro: 'Pace', it: 'Pace', fr: 'Paix', ru: 'Покой', pronunciation: { en: 'pees', ro: 'PAH-cheh', it: 'PAH-cheh', fr: 'pay', ru: 'pah-KOY' } },
+      ],
+      sentences: [
+        { hebrew: 'אני מאוד שמח לראות אותך היום', en: 'I am very happy to see you today', ro: 'Sunt foarte fericit să te văd astăzi', it: 'Sono molto felice di vederti oggi', fr: 'Je suis très heureux de te voir aujourd\'hui', ru: 'Я очень рад видеть тебя сегодня', isSentence: true },
+        { hebrew: 'הוא עצוב כי הוא איבד את הארנק שלו', en: 'He is sad because he lost his wallet', ro: 'Este trist pentru că și-a pierdut portofelul', it: 'È triste perché ha perso il portafoglio', fr: 'Il est triste car il a perdu son portefeuille', ru: 'Он грустный, потому что потерял кошелёк', isSentence: true },
+        { hebrew: 'אני נרגש מאוד מהנסיעה הקרובה', en: 'I am very excited about the upcoming trip', ro: 'Sunt foarte emoționat de călătoria viitoare', it: 'Sono molto emozionato per il viaggio imminente', fr: 'Je suis très excité par le voyage à venir', ru: 'Я очень взволнован предстоящей поездкой', isSentence: true },
+        { hebrew: 'יש לי תקווה שהכל יהיה טוב', en: 'I have hope that everything will be good', ro: 'Am speranță că totul va fi bine', it: 'Ho speranza che tutto andrà bene', fr: 'J\'ai l\'espoir que tout ira bien', ru: 'Я надеюсь, что всё будет хорошо', isSentence: true },
       ],
     },
     מדע: {
