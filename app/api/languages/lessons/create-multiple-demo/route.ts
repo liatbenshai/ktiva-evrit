@@ -45,6 +45,12 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'תיהנה', en: 'Enjoy', ro: 'Bucură-te', it: 'Divertiti', fr: 'Amuse-toi', ru: 'Наслаждайся', pronunciation: { en: 'en-JOY', ro: 'boo-KOO-ruh-teh', it: 'dee-vehr-TEE-tee', fr: 'ah-moo-ZUH-TWAH', ru: 'nahs-lahzh-DAIS-yah' } },
         { hebrew: 'זה בסדר', en: 'It\'s okay', ro: 'E în regulă', it: 'Va bene', fr: 'C\'est bon', ru: 'Всё в порядке', pronunciation: { en: 'its oh-KAY', ro: 'eh uhn reh-GOO-luh', it: 'vah BEH-neh', fr: 'say bohn', ru: 'vsyoh v pah-RYAHD-keh' } },
       ],
+      sentences: [
+        { hebrew: 'שלום, שמי שרה ואני מישראל', en: 'Hello, my name is Sarah and I am from Israel', ro: 'Salut, mă numesc Sarah și sunt din Israel', it: 'Ciao, mi chiamo Sarah e sono di Israele', fr: 'Bonjour, je m\'appelle Sarah et je suis d\'Israël', ru: 'Привет, меня зовут Сара и я из Израиля', isSentence: true },
+        { hebrew: 'נעים להכיר אותך, מה שלומך?', en: 'Nice to meet you, how are you?', ro: 'Îmi pare bine să te cunosc, ce mai faci?', it: 'Piacere di conoscerti, come stai?', fr: 'Enchanté de te rencontrer, comment vas-tu?', ru: 'Приятно познакомиться, как дела?', isSentence: true },
+        { hebrew: 'תודה רבה, אני מרגיש מצוין היום', en: 'Thank you very much, I feel great today', ro: 'Mulțumesc mult, mă simt minunat astăzi', it: 'Grazie mille, mi sento benissimo oggi', fr: 'Merci beaucoup, je me sens très bien aujourd\'hui', ru: 'Большое спасибо, я чувствую себя отлично сегодня', isSentence: true },
+        { hebrew: 'איפה אתה גר ומה אתה עובד?', en: 'Where do you live and what do you do for work?', ro: 'Unde locuiești și la ce lucrezi?', it: 'Dove vivi e cosa fai di lavoro?', fr: 'Où habites-tu et que fais-tu comme travail?', ru: 'Где ты живёшь и кем ты работаешь?', isSentence: true },
+      ],
     },
     אוכל: {
       title: 'אוכל ומסעדות',
@@ -90,6 +96,12 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'משכורת', en: 'Salary', ro: 'Salariu', it: 'Stipendio', fr: 'Salaire', ru: 'Зарплата', pronunciation: { en: 'SAL-uh-ree', ro: 'sah-LAH-ree-oo', it: 'stee-PEHN-dyoh', fr: 'sah-LEHR', ru: 'zahr-PLAH-tah' } },
         { hebrew: 'מזכירה', en: 'Secretary', ro: 'Secretară', it: 'Segretaria', fr: 'Secrétaire', ru: 'Секретарь', pronunciation: { en: 'SEK-ruh-ter-ee', ro: 'seh-kreh-TAH-ruh', it: 'seh-greh-TAH-ree-ah', fr: 'seh-kray-TEHR', ru: 'seh-kreh-TAHR' } },
         { hebrew: 'מנהל', en: 'Manager', ro: 'Manager', it: 'Manager', fr: 'Gestionnaire', ru: 'Менеджер', pronunciation: { en: 'MAN-ij-er', ro: 'MAH-nah-jehr', it: 'MAH-nah-jehr', fr: 'zhees-tee-oh-NAIR', ru: 'meh-nehd-ZHEHR' } },
+      ],
+      sentences: [
+        { hebrew: 'יש לי פגישה חשובה מחר בבוקר', en: 'I have an important meeting tomorrow morning', ro: 'Am o întâlnire importantă mâine dimineață', it: 'Ho un incontro importante domani mattina', fr: 'J\'ai une réunion importante demain matin', ru: 'У меня важная встреча завтра утром', isSentence: true },
+        { hebrew: 'הפרויקט צריך להיות מוכן עד סוף השבוע', en: 'The project needs to be ready by the end of the week', ro: 'Proiectul trebuie să fie gata până la sfârșitul săptămânii', it: 'Il progetto deve essere pronto entro la fine della settimana', fr: 'Le projet doit être prêt avant la fin de la semaine', ru: 'Проект должен быть готов к концу недели', isSentence: true },
+        { hebrew: 'אני עובד במשרד במרכז העיר', en: 'I work in an office in the city center', ro: 'Lucrez într-un birou în centrul orașului', it: 'Lavoro in un ufficio nel centro della città', fr: 'Je travaille dans un bureau au centre-ville', ru: 'Я работаю в офисе в центре города', isSentence: true },
+        { hebrew: 'הלקוח ביקש פגישה דחופה', en: 'The client requested an urgent meeting', ro: 'Clientul a solicitat o întâlnire urgentă', it: 'Il cliente ha richiesto un incontro urgente', fr: 'Le client a demandé une réunion urgente', ru: 'Клиент попросил срочную встречу', isSentence: true },
       ],
     },
     מספרים: {
@@ -282,6 +294,60 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'לסיים', en: 'To finish', ro: 'A termina', it: 'Finire', fr: 'Finir', ru: 'Заканчивать', pronunciation: { en: 'tu FIN-ish', ro: 'ah tehr-mee-NAH', it: 'fee-NEE-reh', fr: 'fee-NEER', ru: 'zah-KAHN-chee-vaht' } },
         { hebrew: 'להפסיק', en: 'To stop', ro: 'A opri', it: 'Fermare', fr: 'Arrêter', ru: 'Останавливать', pronunciation: { en: 'tu stop', ro: 'ah oh-PREE', it: 'fehr-MAH-reh', fr: 'ah-RAY-tay', ru: 'ah-stah-NAV-lee-vaht' } },
         { hebrew: 'להמשיך', en: 'To continue', ro: 'A continua', it: 'Continuare', fr: 'Continuer', ru: 'Продолжать', pronunciation: { en: 'tu kun-TIN-yoo', ro: 'ah kohn-tee-NOO-ah', it: 'kohn-tee-NOO-ah-reh', fr: 'kohn-tee-NOO-ay', ru: 'prah-dahl-ZHAHT' } },
+      ],
+      sentences: [
+        { hebrew: 'אני הולך לעבודה כל בוקר בשמונה', en: 'I go to work every morning at eight', ro: 'Merg la muncă în fiecare dimineață la opt', it: 'Vado al lavoro ogni mattina alle otto', fr: 'Je vais au travail tous les matins à huit heures', ru: 'Я иду на работу каждое утро в восемь', isSentence: true },
+        { hebrew: 'הוא אוהב לקרוא ספרים בערב', en: 'He likes to read books in the evening', ro: 'Îi place să citească cărți seara', it: 'Gli piace leggere libri la sera', fr: 'Il aime lire des livres le soir', ru: 'Он любит читать книги вечером', isSentence: true },
+        { hebrew: 'אנחנו לומדים שפה חדשה ביחד', en: 'We are learning a new language together', ro: 'Învățăm o limbă nouă împreună', it: 'Stiamo imparando una nuova lingua insieme', fr: 'Nous apprenons une nouvelle langue ensemble', ru: 'Мы изучаем новый язык вместе', isSentence: true },
+        { hebrew: 'היא רוצה לקנות בית חדש', en: 'She wants to buy a new house', ro: 'Vrea să cumpere o casă nouă', it: 'Vuole comprare una casa nuova', fr: 'Elle veut acheter une nouvelle maison', ru: 'Она хочет купить новый дом', isSentence: true },
+      ],
+    },
+    נסיעות: {
+      title: 'נסיעות ותיירות',
+      description: 'מילים שימושיות לנסיעות',
+      vocabulary: [
+        { hebrew: 'נסיעה', en: 'Trip', ro: 'Călătorie', it: 'Viaggio', fr: 'Voyage', ru: 'Поездка', pronunciation: { en: 'trip', ro: 'kuh-luh-TOH-ree-eh', it: 'VYAHJ-joh', fr: 'vwah-YAHZH', ru: 'pah-YEZD-kah' } },
+        { hebrew: 'מלון', en: 'Hotel', ro: 'Hotel', it: 'Hotel', fr: 'Hôtel', ru: 'Отель', pronunciation: { en: 'hoh-TEL', ro: 'hoh-TEHL', it: 'oh-TEHL', fr: 'oh-TEHL', ru: 'ah-TEHL' } },
+        { hebrew: 'תעודת זהות', en: 'ID card', ro: 'Carte de identitate', it: 'Carta d\'identità', fr: 'Carte d\'identité', ru: 'Удостоверение личности', pronunciation: { en: 'ahy dee kard', ro: 'KAHR-teh deh ee-dehn-tee-TAH-teh', it: 'KAHR-tah dee-dehn-tee-TAH', fr: 'kahrt dee-dehn-tee-TAY', ru: 'oo-dah-stah-veh-REH-nyeh leech-NOHS-tee' } },
+        { hebrew: 'דרכון', en: 'Passport', ro: 'Pașaport', it: 'Passaporto', fr: 'Passeport', ru: 'Паспорт', pronunciation: { en: 'PAS-port', ro: 'pah-shah-POHRT', it: 'pahs-sah-POR-toh', fr: 'pahs-POR', ru: 'pahs-PORT' } },
+        { hebrew: 'כרטיס טיסה', en: 'Flight ticket', ro: 'Bilet de avion', it: 'Biglietto aereo', fr: 'Billet d\'avion', ru: 'Авиабилет', pronunciation: { en: 'flahyt TIK-it', ro: 'bee-LEHT deh ah-vee-OHN', it: 'bee-LYEHT-toh ah-EH-reh-oh', fr: 'bee-YAY dee-ah-VYOHN', ru: 'ah-vee-ah-bee-LYET' } },
+        { hebrew: 'תיק נסיעות', en: 'Suitcase', ro: 'Valiză', it: 'Valigia', fr: 'Valise', ru: 'Чемодан', pronunciation: { en: 'SOOT-kays', ro: 'vah-LEE-zuh', it: 'vah-LEE-jah', fr: 'vah-LEEZ', ru: 'cheh-mah-DAHN' } },
+        { hebrew: 'מפה', en: 'Map', ro: 'Hartă', it: 'Mappa', fr: 'Carte', ru: 'Карта', pronunciation: { en: 'map', ro: 'HAHR-tuh', it: 'MAHP-pah', fr: 'kahrt', ru: 'KAHR-tah' } },
+        { hebrew: 'מדריך', en: 'Guide', ro: 'Ghid', it: 'Guida', fr: 'Guide', ru: 'Гид', pronunciation: { en: 'gahyd', ro: 'geed', it: 'GWEE-dah', fr: 'geed', ru: 'geed' } },
+        { hebrew: 'אתר תיירות', en: 'Tourist attraction', ro: 'Atracție turistică', it: 'Attrazione turistica', fr: 'Attraction touristique', ru: 'Туристическая достопримечательность', pronunciation: { en: 'TOOR-ist uh-TRAK-shun', ro: 'ah-TRAHK-tsee-eh too-REES-tee-kuh', it: 'aht-trah-TSYOH-neh too-REES-tee-kah', fr: 'ah-trahk-SYOHN too-REES-teek', ru: 'too-REES-tee-cheh-skah-yah dah-stah-pree-meh-CHAH-tehl-NOST' } },
+        { hebrew: 'צילום', en: 'Photo', ro: 'Fotografie', it: 'Foto', fr: 'Photo', ru: 'Фото', pronunciation: { en: 'FOH-toh', ro: 'foh-toh-grah-FEE-eh', it: 'FOH-toh', fr: 'foh-TOH', ru: 'foh-TOH' } },
+      ],
+      sentences: [
+        { hebrew: 'אני צריך להזמין חדר במלון לשלושה לילות', en: 'I need to book a hotel room for three nights', ro: 'Trebuie să rezerv o cameră de hotel pentru trei nopți', it: 'Devo prenotare una camera d\'hotel per tre notti', fr: 'Je dois réserver une chambre d\'hôtel pour trois nuits', ru: 'Мне нужно забронировать номер в отеле на три ночи', isSentence: true },
+        { hebrew: 'איפה אפשר לקנות כרטיס טיסה?', en: 'Where can I buy a flight ticket?', ro: 'Unde pot cumpăra un bilet de avion?', it: 'Dove posso comprare un biglietto aereo?', fr: 'Où puis-je acheter un billet d\'avion?', ru: 'Где я могу купить авиабилет?', isSentence: true },
+        { hebrew: 'המדריך הסביר לנו על ההיסטוריה של המקום', en: 'The guide explained to us about the history of the place', ro: 'Ghidul ne-a explicat despre istoria locului', it: 'La guida ci ha spiegato la storia del luogo', fr: 'Le guide nous a expliqué l\'histoire du lieu', ru: 'Гид объяснил нам историю этого места', isSentence: true },
+        { hebrew: 'אנחנו רוצים לצלם הרבה תמונות במהלך הנסיעה', en: 'We want to take many photos during the trip', ro: 'Vrem să facem multe fotografii în timpul călătoriei', it: 'Vogliamo fare molte foto durante il viaggio', fr: 'Nous voulons prendre beaucoup de photos pendant le voyage', ru: 'Мы хотим сделать много фотографий во время поездки', isSentence: true },
+      ],
+    },
+    בית: {
+      title: 'בית ומשפחה',
+      description: 'מילים הקשורות לבית ולמשפחה',
+      vocabulary: [
+        { hebrew: 'דירה', en: 'Apartment', ro: 'Apartament', it: 'Appartamento', fr: 'Appartement', ru: 'Квартира', pronunciation: { en: 'uh-PAHRT-ment', ro: 'ah-pahr-tah-MENT', it: 'ahp-pahr-tah-MEHN-toh', fr: 'ah-pahr-tuh-MAHN', ru: 'kvahr-TEE-rah' } },
+        { hebrew: 'חדר', en: 'Room', ro: 'Cameră', it: 'Stanza', fr: 'Chambre', ru: 'Комната', pronunciation: { en: 'room', ro: 'kah-MEH-ruh', it: 'STAHN-zah', fr: 'shahmbr', ru: 'KOHM-nah-tah' } },
+        { hebrew: 'מטבח', en: 'Kitchen', ro: 'Bucătărie', it: 'Cucina', fr: 'Cuisine', ru: 'Кухня', pronunciation: { en: 'KICH-en', ro: 'boo-kuh-tuh-REE-eh', it: 'koo-CHEE-nah', fr: 'kwee-ZEEN', ru: 'KOOKH-nyah' } },
+        { hebrew: 'סלון', en: 'Living room', ro: 'Sufragerie', it: 'Salotto', fr: 'Salon', ru: 'Гостиная', pronunciation: { en: 'LIV-ing room', ro: 'soo-frah-jeh-REE-eh', it: 'sah-LOHT-toh', fr: 'sah-LOHN', ru: 'gah-STEE-nah-yah' } },
+        { hebrew: 'שולחן', en: 'Table', ro: 'Masă', it: 'Tavolo', fr: 'Table', ru: 'Стол', pronunciation: { en: 'TAY-bul', ro: 'MAH-suh', it: 'TAH-voh-loh', fr: 'tahbl', ru: 'stol' } },
+        { hebrew: 'כיסא', en: 'Chair', ro: 'Scaun', it: 'Sedia', fr: 'Chaise', ru: 'Стул', pronunciation: { en: 'chair', ro: 'skah-OON', it: 'SEH-dyah', fr: 'shehz', ru: 'stool' } },
+        { hebrew: 'מיטה', en: 'Bed', ro: 'Pat', it: 'Letto', fr: 'Lit', ru: 'Кровать', pronunciation: { en: 'bed', ro: 'paht', it: 'LEHT-toh', fr: 'lee', ru: 'krah-VAHT' } },
+        { hebrew: 'חלון', en: 'Window', ro: 'Fereastră', it: 'Finestra', fr: 'Fenêtre', ru: 'Окно', pronunciation: { en: 'WIN-doh', ro: 'feh-reh-AHS-truh', it: 'fee-NEHS-trah', fr: 'fuh-NEHTR', ru: 'ahk-NOH' } },
+        { hebrew: 'דלת', en: 'Door', ro: 'Ușă', it: 'Porta', fr: 'Porte', ru: 'Дверь', pronunciation: { en: 'dor', ro: 'OO-shuh', it: 'POR-tah', fr: 'port', ru: 'dvyer' } },
+        { hebrew: 'משפחה', en: 'Family', ro: 'Familie', it: 'Famiglia', fr: 'Famille', ru: 'Семья', pronunciation: { en: 'FAM-uh-lee', ro: 'fah-MEE-lee-eh', it: 'fah-MEE-lyah', fr: 'fah-MEE-yuh', ru: 'seh-MYAH' } },
+        { hebrew: 'אבא', en: 'Father', ro: 'Tată', it: 'Padre', fr: 'Père', ru: 'Отец', pronunciation: { en: 'FAH-ther', ro: 'TAH-tuh', it: 'PAH-dreh', fr: 'pehr', ru: 'ah-TYETS' } },
+        { hebrew: 'אמא', en: 'Mother', ro: 'Mamă', it: 'Madre', fr: 'Mère', ru: 'Мать', pronunciation: { en: 'MUH-ther', ro: 'MAH-muh', it: 'MAH-dreh', fr: 'mehr', ru: 'maht' } },
+        { hebrew: 'אח', en: 'Brother', ro: 'Frate', it: 'Fratello', fr: 'Frère', ru: 'Брат', pronunciation: { en: 'BRUH-ther', ro: 'FRAH-teh', it: 'frah-TEHL-loh', fr: 'frehr', ru: 'braht' } },
+        { hebrew: 'אחות', en: 'Sister', ro: 'Soră', it: 'Sorella', fr: 'Sœur', ru: 'Сестра', pronunciation: { en: 'SIS-ter', ro: 'SOH-ruh', it: 'soh-REHL-lah', fr: 'suhr', ru: 'seh-STRAH' } },
+      ],
+      sentences: [
+        { hebrew: 'הבית שלנו גדול ויש בו שלושה חדרים', en: 'Our house is big and has three rooms', ro: 'Casa noastră este mare și are trei camere', it: 'La nostra casa è grande e ha tre stanze', fr: 'Notre maison est grande et a trois chambres', ru: 'Наш дом большой и в нём три комнаты', isSentence: true },
+        { hebrew: 'אני אוהב לבלות זמן עם המשפחה שלי', en: 'I love spending time with my family', ro: 'Îmi place să petrec timp cu familia mea', it: 'Mi piace passare il tempo con la mia famiglia', fr: 'J\'aime passer du temps avec ma famille', ru: 'Я люблю проводить время с семьёй', isSentence: true },
+        { hebrew: 'המטבח הוא המקום הכי נעים בבית', en: 'The kitchen is the most pleasant place in the house', ro: 'Bucătăria este locul cel mai plăcut din casă', it: 'La cucina è il posto più piacevole della casa', fr: 'La cuisine est l\'endroit le plus agréable de la maison', ru: 'Кухня - самое приятное место в доме', isSentence: true },
+        { hebrew: 'אחי ואני גרים באותה דירה', en: 'My brother and I live in the same apartment', ro: 'Fratele meu și eu locuim în același apartament', it: 'Mio fratello e io viviamo nello stesso appartamento', fr: 'Mon frère et moi vivons dans le même appartement', ru: 'Мой брат и я живём в одной квартире', isSentence: true },
       ],
     },
   },
@@ -1038,16 +1104,35 @@ export async function POST(req: NextRequest) {
                 notes: notesContent,
               };
               
-              // Only include isSentence if the field exists in the database
-              // This will be added after prisma db push runs successfully in Vercel
-              // For now, we'll skip it to avoid errors
-              // TODO: Uncomment after migration is complete
-              // if (isSentence) {
-              //   vocabData.isSentence = true;
-              // }
+              // Include isSentence field
+              if (isSentence) {
+                vocabData.isSentence = true;
+              }
               
               return vocabData;
             });
+
+            // Add sentences if they exist
+            const sentences = template.sentences || [];
+            const sentencesData = sentences.map((sentence: any, index: number) => {
+              const mainTranslation = getTranslation(sentence, lang);
+              return {
+                hebrewTerm: sentence.hebrew,
+                translatedTerm: mainTranslation,
+                pronunciation: getPronunciation(sentence, lang) || '',
+                difficulty: 'MEDIUM' as const,
+                partOfSpeech: 'OTHER' as const,
+                order: vocabularyData.length + index + 1,
+                usageExample: JSON.stringify({
+                  target: mainTranslation,
+                  hebrew: sentence.hebrew,
+                }),
+                notes: 'משפט שלם',
+                isSentence: true,
+              };
+            });
+
+            const allVocabularyData = [...vocabularyData, ...sentencesData];
 
             // Create exercises
             const exercisesData = [
@@ -1107,7 +1192,7 @@ export async function POST(req: NextRequest) {
                 order: nextOrder,
                 isPublished: true,
                 vocabulary: {
-                  create: vocabularyData,
+                  create: allVocabularyData,
                 },
                 exercises: {
                   create: exercisesData,
