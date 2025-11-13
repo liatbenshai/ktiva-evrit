@@ -159,7 +159,7 @@ export default function StructuredLessons({
     } finally {
       setIsLoading(false);
     }
-  }, [targetLanguage]);
+  }, [targetLanguage, selectedLevel]);
 
   const fetchProgress = useCallback(async () => {
     try {
