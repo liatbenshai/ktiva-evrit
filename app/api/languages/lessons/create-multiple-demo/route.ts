@@ -512,6 +512,8 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'אבא', en: 'Dad', ro: 'Tată', it: 'Papà', fr: 'Papa', ru: 'Папа', pronunciation: { en: 'dad', ro: 'TAH-tuh', it: 'pah-PAH', fr: 'pah-PAH', ru: 'PAH-pah' } },
         { hebrew: 'אמא', en: 'Mom', ro: 'Mamă', it: 'Mamma', fr: 'Maman', ru: 'Мама', pronunciation: { en: 'mom', ro: 'MAH-muh', it: 'MAHM-mah', fr: 'mah-MAHN', ru: 'MAH-mah' } },
         { hebrew: 'בעלי', en: 'My husband', ro: 'Soțul meu', it: 'Mio marito', fr: 'Mon mari', ru: 'Мой муж', pronunciation: { en: 'my HUZ-bund', ro: 'SOHT-sool meh-OO', it: 'MEE-oh mah-REE-toh', fr: 'mohn mah-REE', ru: 'moy moozh' } },
+        { hebrew: 'מה שלומך, אמא?', en: 'How are you, Mom?', ro: 'Ce mai faci, mamă?', it: 'Come stai, mamma?', fr: 'Comment vas-tu, maman?', ru: 'Как дела, мама?', pronunciation: { en: 'how ar yoo mom', ro: 'cheh mai FAH-chee MAH-muh', it: 'KOH-meh STAH-ee MAHM-mah', fr: 'koh-MAHN vah-TOO mah-MAHN', ru: 'kak dee-LAH MAH-mah' }, isSentence: true },
+        { hebrew: 'אני רוצה לאכול חביתה בלחמניה', en: 'I want to eat an omelet in a bun', ro: 'Vreau să mănânc o omletă într-o chiflă', it: 'Voglio mangiare una frittata in un panino', fr: 'Je veux manger une omelette dans un petit pain', ru: 'Я хочу съесть омлет в булочке', pronunciation: { en: 'ay want tu eet an OM-let in a bun', ro: 'vreh-OO suh muh-NUHNK oh ohm-LEH-tuh uhn-TROH KEE-fluh', it: 'VOH-lyoh mahn-JAH-reh OO-nah free-TAH-tah een oon pah-NEE-noh', fr: 'zhuh vuh mah-ZHAY oon oh-meh-LEHT dahnz uhn puh-TEE pan', ru: 'yah kho-CHOO s-YEST ohm-LYET v boo-LOCH-keh' }, isSentence: true },
         { hebrew: 'בן', en: 'Son', ro: 'Fiu', it: 'Figlio', fr: 'Fils', ru: 'Сын', pronunciation: { en: 'suhn', ro: 'fee-OO', it: 'FEE-lyoh', fr: 'fees', ru: 'syn' } },
         { hebrew: 'בת', en: 'Daughter', ro: 'Fiică', it: 'Figlia', fr: 'Fille', ru: 'Дочь', pronunciation: { en: 'DAW-ter', ro: 'FEE-kuh', it: 'FEE-lyah', fr: 'feey', ru: 'doch' } },
         { hebrew: 'דוד', en: 'Uncle', ro: 'Unchi', it: 'Zio', fr: 'Oncle', ru: 'Дядя', pronunciation: { en: 'UHNG-kul', ro: 'OON-kee', it: 'TSEE-oh', fr: 'ohnkl', ru: 'DYAH-dyah' } },
@@ -785,6 +787,7 @@ export async function POST(req: NextRequest) {
                   const notesContent = alternatives.length > 0 
                     ? `תרגומים חלופיים: ${alternatives.join(', ')}`
                     : null;
+                  const isSentence = term.isSentence || false;
                   
                   return {
                     hebrewTerm: term.hebrew,
@@ -798,6 +801,7 @@ export async function POST(req: NextRequest) {
                       hebrew: term.hebrew,
                     }),
                     notes: notesContent,
+                    isSentence: isSentence,
                   };
                 });
 
@@ -911,6 +915,7 @@ export async function POST(req: NextRequest) {
               const notesContent = alternatives.length > 0 
                 ? `תרגומים חלופיים: ${alternatives.join(', ')}`
                 : null;
+              const isSentence = term.isSentence || false;
               
               return {
                 hebrewTerm: term.hebrew,
@@ -924,6 +929,7 @@ export async function POST(req: NextRequest) {
                   hebrew: term.hebrew,
                 }),
                 notes: notesContent,
+                isSentence: isSentence,
               };
             });
 

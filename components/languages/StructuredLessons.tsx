@@ -338,35 +338,6 @@ export default function StructuredLessons({
           </div>
         )}
         
-        {/* Update or Delete existing lessons */}
-        {lessons.length > 0 && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            <p className="mb-3">יש שיעורים קיימים. כדי לעדכן שיעורים קיימים עם התרגומים החדשים:</p>
-            <div className="space-y-2">
-              <button
-                onClick={() => handleCreateDemo(true, true)}
-                disabled={isCreatingDemo}
-                className="block w-full rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isCreatingDemo ? 'מעדכן שיעורים...' : 'עדכני את כל השיעורים הקיימים'}
-              </button>
-              <p className="text-xs text-amber-700 mt-2 mb-3">פעולה זו תעדכן את השיעורים הקיימים עם התרגומים החדשים (כולל רוסית) מבלי למחוק אותם</p>
-              
-              <div className="border-t border-amber-300 pt-3 mt-3">
-                <p className="text-xs text-amber-700 mb-2">או אם את מעדיפה למחוק הכל ולהתחיל מחדש:</p>
-                <button
-                  onClick={handleDeleteAll}
-                  disabled={isDeleting}
-                  className="block w-full rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isDeleting ? 'מוחק שיעורים...' : 'מחקי את כל השיעורים הקיימים'}
-                </button>
-                <p className="text-xs text-red-600 mt-2">לאחר המחיקה, לחצי על "צרי כל השיעורים" כדי ליצור שיעורים חדשים בשפות הנכונות</p>
-              </div>
-            </div>
-          </div>
-        )}
-        
         {/* Always show create buttons if no lessons for current language */}
         {!error && lessons.filter((l: Lesson) => l.targetLanguage === targetLanguage).length === 0 && (
           <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-800">
@@ -417,6 +388,34 @@ export default function StructuredLessons({
             );
           })}
         </div>
+
+        {/* Update or Delete existing lessons - moved to bottom */}
+        {lessons.length > 0 && (
+          <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm">
+            <p className="mb-3 text-slate-700">ניהול שיעורים:</p>
+            <div className="space-y-2">
+              <button
+                onClick={() => handleCreateDemo(true, true)}
+                disabled={isCreatingDemo}
+                className="block w-full rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isCreatingDemo ? 'מעדכן שיעורים...' : 'עדכני את כל השיעורים הקיימים'}
+              </button>
+              <p className="text-xs text-slate-600 mt-1">פעולה זו תעדכן את השיעורים הקיימים עם התרגומים החדשים (כולל רוסית) מבלי למחוק אותם</p>
+              
+              <div className="border-t border-slate-300 pt-3 mt-3">
+                <button
+                  onClick={handleDeleteAll}
+                  disabled={isDeleting}
+                  className="block w-full rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isDeleting ? 'מוחק שיעורים...' : 'מחקי את כל השיעורים הקיימים'}
+                </button>
+                <p className="text-xs text-red-600 mt-1">לאחר המחיקה, לחצי על "צרי כל השיעורים" כדי ליצור שיעורים חדשים</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

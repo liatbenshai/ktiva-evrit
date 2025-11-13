@@ -14,6 +14,7 @@ interface VocabularyItem {
   pronunciation?: string;
   usageExample?: { target: string; hebrew: string };
   notes?: string;
+  isSentence?: boolean;
 }
 
 interface Exercise {
@@ -127,18 +128,34 @@ export default function LessonView({
           <h2 className="text-xl font-semibold text-slate-900">אוצר מילים</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {lesson.vocabulary.map((vocab) => (
-              <div key={vocab.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div 
+                key={vocab.id} 
+                className={`rounded-2xl border p-4 ${
+                  vocab.isSentence 
+                    ? 'border-emerald-300 bg-gradient-to-br from-emerald-50 to-teal-50' 
+                    : 'border-slate-200 bg-white'
+                }`}
+              >
+                {vocab.isSentence && (
+                  <div className="mb-2 inline-block rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
+                    משפט שלם
+                  </div>
+                )}
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-lg font-semibold text-slate-900" dir="rtl">{vocab.hebrewTerm}</p>
+                  <p className={`font-semibold text-slate-900 ${vocab.isSentence ? 'text-lg' : 'text-lg'}`} dir="rtl">{vocab.hebrewTerm}</p>
                   <button
                     type="button"
                     onClick={() => speakText(vocab.translatedTerm, targetLanguage)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 transition hover:bg-indigo-200"
+                    className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition ${
+                      vocab.isSentence 
+                        ? 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200' 
+                        : 'bg-indigo-100 text-indigo-600 hover:bg-indigo-200'
+                    }`}
                   >
                     <Volume2 className="h-4 w-4" />
                   </button>
                 </div>
-                <p className="text-base text-indigo-700" dir="ltr">{vocab.translatedTerm}</p>
+                <p className={`text-base ${vocab.isSentence ? 'text-emerald-700' : 'text-indigo-700'}`} dir="ltr">{vocab.translatedTerm}</p>
                 {vocab.pronunciation && (
                   <p className="mt-1 text-xs text-slate-500">{vocab.pronunciation}</p>
                 )}

@@ -267,6 +267,7 @@ model LessonVocabulary {
   gender          GrammaticalGender?
   usageExample    String?  // JSON object with target and hebrew
   notes           String?
+  isSentence      Boolean  @default(false)  // האם זה משפט שלם ולא רק מילה
   
   order           Int      // סדר הצגה בשיעור
   
