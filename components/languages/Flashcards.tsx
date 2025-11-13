@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, ArrowRight, RotateCcw, Volume2, Check, X } from 'lucide-react';
 
-type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french';
+type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french' | 'russian';
 
 interface Flashcard {
   id: string;

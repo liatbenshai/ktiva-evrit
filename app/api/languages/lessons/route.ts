@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french';
+type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french' | 'russian';
 type LanguageLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 
 export async function GET(req: NextRequest) {

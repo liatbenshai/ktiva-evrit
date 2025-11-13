@@ -6,7 +6,7 @@ import LessonCard from './LessonCard';
 import LessonView from './LessonView';
 import Flashcards from './Flashcards';
 
-type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french';
+type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french' | 'russian';
 type LanguageLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 
 const LEVEL_CONFIG: Record<LanguageLevel, { label: string; color: string; gradient: string }> = {
@@ -214,6 +214,7 @@ export default function StructuredLessons({
       romanian: 'ro-RO',
       italian: 'it-IT',
       french: 'fr-FR',
+      russian: 'ru-RU',
     };
     return map[lang];
   };
@@ -353,7 +354,7 @@ export default function StructuredLessons({
         {/* Always show create buttons if no lessons for current language */}
         {!error && lessons.filter((l: Lesson) => l.targetLanguage === targetLanguage).length === 0 && (
           <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-800">
-            <p className="mb-3">אין שיעורים זמינים לשפה {targetLanguage === 'english' ? 'אנגלית' : targetLanguage === 'romanian' ? 'רומנית' : targetLanguage === 'italian' ? 'איטלקית' : 'צרפתית'} כרגע.</p>
+            <p className="mb-3">אין שיעורים זמינים לשפה {targetLanguage === 'english' ? 'אנגלית' : targetLanguage === 'romanian' ? 'רומנית' : targetLanguage === 'italian' ? 'איטלקית' : targetLanguage === 'french' ? 'צרפתית' : 'רוסית'} כרגע.</p>
             <div className="space-y-2">
               <button
                 onClick={() => handleCreateDemo(false)}

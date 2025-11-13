@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import StructuredLessons from '@/components/languages/StructuredLessons'
 
-type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french'
+type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french' | 'russian'
 
 interface LanguageMeta {
   label: string
@@ -41,6 +41,10 @@ const SUPPORTED_LANGUAGES: Record<SupportedLanguageKey, LanguageMeta> = {
     label: 'צרפתית',
     description: 'שיחות יומיומיות, תרבות, עסקים ולימודים',
   },
+  russian: {
+    label: 'רוסית',
+    description: 'שיחות יומיומיות, תרבות, עסקים ולימודים',
+  },
 }
 
 const SPEECH_LANG_MAP: Record<SupportedLanguageKey, string> = {
@@ -48,9 +52,10 @@ const SPEECH_LANG_MAP: Record<SupportedLanguageKey, string> = {
   romanian: 'ro-RO',
   italian: 'it-IT',
   french: 'fr-FR',
+  russian: 'ru-RU',
 }
 
-const FALLBACK_LANG_CODES = ['it', 'en', 'fr', 'es']
+const FALLBACK_LANG_CODES = ['it', 'en', 'fr', 'es', 'ru']
 
 interface UsageExample {
   target: string
@@ -464,7 +469,7 @@ export default function LanguagesPage() {
               <Sparkles className="h-4 w-4" /> לימוד שפות מותאם לדוברי עברית
             </span>
             <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
-              גשר בין עברית לאנגלית, רומנית ואיטלקית
+              גשר בין עברית לאנגלית, רומנית, איטלקית, צרפתית ורוסית
             </h1>
             <p className="text-sm text-white/85 sm:text-base">
               הזיני ביטוי בעברית, בחרי שפה רצויה וקבלי תרגום טבעי, הגייה ודוגמאות שימוש. את המונחים שתשמרי נגיש לך בכל כלי הכתיבה.

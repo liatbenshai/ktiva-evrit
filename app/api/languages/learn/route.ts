@@ -6,6 +6,7 @@ const SUPPORTED_LANGUAGES = {
   romanian: { label: 'רומנית', targetName: 'Romanian' },
   italian: { label: 'איטלקית', targetName: 'Italian' },
   french: { label: 'צרפתית', targetName: 'French' },
+  russian: { label: 'רוסית', targetName: 'Russian' },
 } as const
 
 type SupportedLanguageKey = keyof typeof SUPPORTED_LANGUAGES

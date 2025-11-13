@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french';
+type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french' | 'russian';
 type LanguageLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 
 // Lesson templates for different topics and levels
@@ -508,6 +508,7 @@ function getTranslation(term: any, lang: SupportedLanguageKey): string {
     romanian: 'ro',
     italian: 'it',
     english: 'en',
+    russian: 'ru',
   };
   
   // Try short code first (en, ro, it, fr) - this is what's in the templates
@@ -528,6 +529,7 @@ function getPronunciation(term: any, lang: SupportedLanguageKey): string {
     romanian: 'ro',
     italian: 'it',
     english: 'en',
+    russian: 'ru',
   };
   const templateKey = langMap[lang];
   
@@ -551,7 +553,7 @@ export async function POST(req: NextRequest) {
 
     // If createAll, create lessons for all languages, levels and topics
     const languagesToCreate = createAll 
-      ? (['english', 'romanian', 'italian', 'french'] as SupportedLanguageKey[])
+      ? (['english', 'romanian', 'italian', 'french', 'russian'] as SupportedLanguageKey[])
       : ([targetLanguage] as SupportedLanguageKey[]);
     
     const levelsToCreate = createAll 
