@@ -890,9 +890,108 @@ export async function POST(req: NextRequest) {
                 console.log(`Successfully updated lesson: ${template.title} (${lang})`);
                 continue;
               } else {
-              console.log(`Skipping existing lesson: ${template.title} (${lang}, ${level}, ${topic})`);
-              errors.push(`שיעור "${template.title}" (${lang}) כבר קיים`);
-              continue;
+                // If overwrite is false but lesson exists, update it anyway (auto-update mode)
+                // This allows users to update lessons without explicitly clicking "overwrite"
+                console.log(`Auto-updating existing lesson: ${template.title} (${lang}, ${level}, ${topic})`);
+                
+                // Delete existing vocabulary and exercises
+                await prisma.lessonVocabulary.deleteMany({
+                  where: { lessonId: existing.id },
+                });
+                await prisma.lessonExercise.deleteMany({
+                  where: { lessonId: existing.id },
+                });
+                
+                // Prepare new vocabulary data (same as overwrite case)
+                const vocabularyData = template.vocabulary.map((term: any, index: number) => {
+                  const mainTranslation = getTranslation(term, lang);
+                  const alternatives = term.alternatives?.[lang] || [];
+                  const notesContent = alternatives.length > 0 
+                    ? `תרגומים חלופיים: ${alternatives.join(', ')}`
+                    : null;
+                  const isSentence = term.isSentence || false;
+                  
+                  const vocabData: any = {
+                    hebrewTerm: term.hebrew,
+                    translatedTerm: mainTranslation,
+                    pronunciation: getPronunciation(term, lang),
+                    difficulty: 'EASY' as const,
+                    partOfSpeech: 'NOUN' as const,
+                    order: index + 1,
+                    usageExample: JSON.stringify({
+                      target: `${mainTranslation} - ${term.hebrew}`,
+                      hebrew: term.hebrew,
+                    }),
+                    notes: notesContent,
+                  };
+                  
+                  return vocabData;
+                });
+
+                // Create exercises (same as overwrite case)
+                const exercisesData = [
+                  {
+                    type: 'MATCHING' as const,
+                    title: 'התאם את המילה',
+                    instructions: `בחרי את התרגום הנכון למילה "${template.vocabulary[0]?.hebrew}"`,
+                    question: `מה התרגום של "${template.vocabulary[0]?.hebrew}"?`,
+                    correctAnswer: getTranslation(template.vocabulary[0], lang),
+                    points: 10,
+                    order: 1,
+                    options: {
+                      create: [
+                        {
+                          text: getTranslation(template.vocabulary[0], lang),
+                          isCorrect: true,
+                          explanation: `נכון! "${template.vocabulary[0]?.hebrew}" מתרגם ל-${getTranslation(template.vocabulary[0], lang)}`,
+                          order: 1,
+                        },
+                        {
+                          text: getTranslation(template.vocabulary[1] || template.vocabulary[0], lang),
+                          isCorrect: false,
+                          explanation: 'זה לא התרגום הנכון',
+                          order: 2,
+                        },
+                        {
+                          text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang),
+                          isCorrect: false,
+                          explanation: 'זה לא התרגום הנכון',
+                          order: 3,
+                        },
+                      ],
+                    },
+                  },
+                  {
+                    type: 'FILL_BLANK' as const,
+                    title: 'השלמי את המשפט',
+                    instructions: 'השלמי את המילה החסרה',
+                    question: `The word "${getTranslation(template.vocabulary[1] || template.vocabulary[0], lang)}" means "[BLANK]" in Hebrew`,
+                    correctAnswer: template.vocabulary[1]?.hebrew || template.vocabulary[0].hebrew,
+                    points: 10,
+                    order: 2,
+                  },
+                ];
+
+                // Update lesson with new vocabulary and exercises
+                const updatedLesson = await prisma.lesson.update({
+                  where: { id: existing.id },
+                  data: {
+                    description: template.description,
+                    duration: template.vocabulary.length * 2,
+                    grammarNotes: `דקדוק בסיסי ל-${lang === 'english' ? 'אנגלית' : lang === 'romanian' ? 'רומנית' : lang === 'italian' ? 'איטלקית' : lang === 'french' ? 'צרפתית' : lang === 'russian' ? 'רוסית' : lang}.`,
+                    culturalTips: `מילים אלה שימושיות מאוד ב-${lang === 'english' ? 'אנגלית' : lang === 'romanian' ? 'רומנית' : lang === 'italian' ? 'איטלקית' : lang === 'french' ? 'צרפתית' : lang === 'russian' ? 'רוסית' : lang}.`,
+                    vocabulary: {
+                      create: vocabularyData,
+                    },
+                    exercises: {
+                      create: exercisesData,
+                    },
+                  },
+                });
+
+                updatedLessons.push(updatedLesson);
+                console.log(`Successfully auto-updated lesson: ${template.title} (${lang})`);
+                continue;
               }
             }
 
