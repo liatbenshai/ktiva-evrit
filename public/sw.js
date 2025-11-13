@@ -1,5 +1,5 @@
 // Service Worker for PWA
-const CACHE_NAME = 'ktiva-evrit-v1';
+const CACHE_NAME = 'ktiva-evrit-v2';
 const urlsToCache = [
   '/',
   '/dashboard',
