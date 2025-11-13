@@ -17,10 +17,12 @@ export async function POST(req: NextRequest) {
     const {
       hebrewTerm,
       targetLanguage,
+      contentType = 'word',
       userId = 'default-user',
     }: {
       hebrewTerm?: string
       targetLanguage?: SupportedLanguageKey
+      contentType?: 'word' | 'sentence' | 'linking_word'
       userId?: string
     } = body
 
@@ -42,9 +44,71 @@ export async function POST(req: NextRequest) {
 
     const languageMeta = SUPPORTED_LANGUAGES[languageKey]
 
-    const prompt = `אתה מומחה לשפות שמדבר עברית שוטפת ועוזר לדוברי עברית ללמוד מילים בשפה ${languageMeta.label}.
+    let prompt = ''
+    let systemPrompt = ''
 
-המשימה שלך: עבור המילה או הביטוי הבא בעברית: "${hebrewTerm.trim()}" – תן הסבר מפורט באנגלית ${languageMeta.targetName}, כולל תרגום, הגייה, דוגמאות שימוש והסברים בעברית.
+    if (contentType === 'sentence') {
+      prompt = `אתה מומחה לשפות שמדבר עברית שוטפת ועוזר לדוברי עברית ללמוד משפטים שלמים בשפה ${languageMeta.label}.
+
+המשימה שלך: עבור המשפט הבא בעברית: "${hebrewTerm.trim()}" – תן הסבר מפורט ב-${languageMeta.targetName}, כולל:
+- תרגום מדויק של המשפט
+- פירוט המבנה הדקדוקי (נושא, נשוא, מושא)
+- הסבר על סדר המילים והדקדוק
+- דוגמאות למשפטים דומים עם מבנה זהה
+- טיפים לשימוש במבנה הזה
+
+בבקשה החזר JSON תקין בלבד במבנה הבא:
+{
+  "translatedTerm": "...", // תרגום מדויק של המשפט בשפה ${languageMeta.label}
+  "pronunciation": "...", // הגייה של המשפט (אופציונלי)
+  "usageExamples": [
+    {
+      "target": "...", // משפט דומה בשפה ${languageMeta.label}
+      "hebrew": "..." // תרגום חופשי לעברית
+    }
+  ],
+  "culturalNotes": "...", // הסבר על המבנה הדקדוקי, סדר המילים, וטיפים לשימוש (בעברית)
+  "extraSuggestions": [
+    "..." // משפטים נוספים עם מבנה דומה או מילות קישור רלוונטיות
+  ]
+}
+
+הקפד שהמשפטים יהיו טבעיים ומציאותיים. צרף לפחות שלושה משפטי דוגמה עם מבנה דומה.`
+
+      systemPrompt = `אתה מורה לשפות שמדבר עברית ומלמד דוברי עברית כיצד לבנות משפטים שלמים בשפה זרה בצורה טבעית. הקפד להסביר את המבנה הדקדוקי בעברית ברורה ופשוטה.`
+    } else if (contentType === 'linking_word') {
+      prompt = `אתה מומחה לשפות שמדבר עברית שוטפת ועוזר לדוברי עברית ללמוד מילות קישור בשפה ${languageMeta.label}.
+
+המשימה שלך: עבור מילת הקישור הבאה בעברית: "${hebrewTerm.trim()}" – תן הסבר מפורט ב-${languageMeta.targetName}, כולל:
+- תרגום מדויק של מילת הקישור
+- הסבר על השימוש (מתי משתמשים בה)
+- מילות קישור דומות או חלופיות
+- דוגמאות שימוש במשפטים שלמים
+
+בבקשה החזר JSON תקין בלבד במבנה הבא:
+{
+  "translatedTerm": "...", // תרגום מדויק של מילת הקישור בשפה ${languageMeta.label}
+  "pronunciation": "...", // הגייה (אופציונלי)
+  "usageExamples": [
+    {
+      "target": "...", // משפט עם מילת הקישור בשפה ${languageMeta.label}
+      "hebrew": "..." // תרגום חופשי לעברית
+    }
+  ],
+  "culturalNotes": "...", // הסבר מתי משתמשים במילת הקישור, מה ההבדל בינה לבין מילים דומות, וטיפים לשימוש (בעברית)
+  "extraSuggestions": [
+    "..." // מילות קישור דומות או חלופיות
+  ]
+}
+
+הקפד שהמשפטים יהיו טבעיים ומציאותיים. צרף לפחות ארבעה משפטי דוגמה שמראים את השימוש במילת הקישור.`
+
+      systemPrompt = `אתה מורה לשפות שמדבר עברית ומלמד דוברי עברית כיצד להשתמש במילות קישור בשפה זרה בצורה טבעית. הקפד להסביר מתי משתמשים בכל מילת קישור ומה ההבדל בינה לבין מילים דומות.`
+    } else {
+      // Default: word/phrase
+      prompt = `אתה מומחה לשפות שמדבר עברית שוטפת ועוזר לדוברי עברית ללמוד מילים בשפה ${languageMeta.label}.
+
+המשימה שלך: עבור המילה או הביטוי הבא בעברית: "${hebrewTerm.trim()}" – תן הסבר מפורט ב-${languageMeta.targetName}, כולל תרגום, הגייה, דוגמאות שימוש והסברים בעברית.
 
 בבקשה החזר JSON תקין בלבד במבנה הבא, בלי טקסט מיותר ובלי מרכאות כפולות מיותרות:
 {
@@ -64,7 +128,8 @@ export async function POST(req: NextRequest) {
 
 הקפד שהמשפטים יהיו טבעיים ומציאותיים. צרף לפחות שני משפטי דוגמה. אם יש ביטויים שכדאי להימנע מהם, ציין זאת בהערות.`
 
-    const systemPrompt = `אתה מורה לשפות שמדבר עברית ומלמד דוברי עברית כיצד להשתמש במילים ובביטויים בשפה זרה בצורה טבעית. הקפד להסביר בעברית ברורה ופשוטה.`
+      systemPrompt = `אתה מורה לשפות שמדבר עברית ומלמד דוברי עברית כיצד להשתמש במילים ובביטויים בשפה זרה בצורה טבעית. הקפד להסביר בעברית ברורה ופשוטה.`
+    }
 
     const aiResponse = await generateText({
       prompt,
@@ -101,6 +166,7 @@ export async function POST(req: NextRequest) {
           : parsed.extraSuggestions
           ? [parsed.extraSuggestions]
           : [],
+        contentType: contentType,
         userId,
       },
     })

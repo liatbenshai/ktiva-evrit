@@ -169,11 +169,13 @@ model LanguageEntry {
   usageExamples    String?  // JSON array of examples
   notes            String?  // Additional cultural/contextual notes
   extraSuggestions String?  // JSON array of tips or related phrases
+  contentType      String   @default("word") // "word", "sentence", "linking_word"
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   @@index([userId])
   @@index([targetLanguage])
+  @@index([contentType])
 }
 
 // Enums for language learning system

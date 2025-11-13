@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
       usageExamples,
       culturalNotes,
       extraSuggestions,
+      contentType = 'word',
       userId = 'default-user',
     } = body
 
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
         usageExamples: usageExamples ? JSON.stringify(usageExamples) : null,
         notes: culturalNotes?.trim() || null,
         extraSuggestions: extraSuggestions ? JSON.stringify(extraSuggestions) : null,
+        contentType: contentType,
       },
     })
 

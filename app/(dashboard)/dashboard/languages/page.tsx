@@ -70,6 +70,7 @@ interface LearnResult {
   usageExamples: UsageExample[]
   culturalNotes: string
   extraSuggestions: string[]
+  contentType?: string
 }
 
 interface SavedEntry extends LearnResult {
@@ -103,11 +104,13 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 type TabType = 'free' | 'structured';
+type ContentType = 'word' | 'sentence' | 'linking_word';
 
 export default function LanguagesPage() {
   const [activeTab, setActiveTab] = useState<TabType>('free');
   const [targetLanguage, setTargetLanguage] = useState<SupportedLanguageKey>('english')
   const [hebrewTerm, setHebrewTerm] = useState('')
+  const [contentType, setContentType] = useState<ContentType>('word')
   const [result, setResult] = useState<LearnResult | null>(null)
   const [history, setHistory] = useState<SavedEntry[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -177,7 +180,7 @@ export default function LanguagesPage() {
       const response = await fetch('/api/languages/learn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hebrewTerm, targetLanguage }),
+        body: JSON.stringify({ hebrewTerm, targetLanguage, contentType }),
       })
 
       const data = await response.json()
@@ -213,6 +216,7 @@ export default function LanguagesPage() {
           usageExamples: result.usageExamples,
           culturalNotes: result.culturalNotes,
           extraSuggestions: result.extraSuggestions,
+          contentType: contentType,
         }),
       })
 
@@ -598,25 +602,76 @@ export default function LanguagesPage() {
           )}
 
           <div className="mt-8 space-y-4">
-            <label className="block text-sm font-medium text-slate-700">ביטוי בעברית שתרצי ללמוד בשפה {getCurrentLanguageMeta.label}</label>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <input
-                type="text"
-                value={hebrewTerm}
-                onChange={(e) => setHebrewTerm(e.target.value)}
-                placeholder="לדוגמה: מה שלומך?"
-                className="flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-              />
-              <button
-                onClick={handleLearn}
-                disabled={disableActions}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                למד מונח
-              </button>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-700">סוג תוכן</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setContentType('word')}
+                  className={`flex-1 rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                    contentType === 'word'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-200'
+                  }`}
+                >
+                  מילה/ביטוי
+                </button>
+                <button
+                  onClick={() => setContentType('sentence')}
+                  className={`flex-1 rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                    contentType === 'sentence'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-200'
+                  }`}
+                >
+                  משפט שלם
+                </button>
+                <button
+                  onClick={() => setContentType('linking_word')}
+                  className={`flex-1 rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                    contentType === 'linking_word'
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-200'
+                  }`}
+                >
+                  מילת קישור
+                </button>
+              </div>
             </div>
-            <p className="text-xs text-slate-500">טיפ: אפשר להזין גם ביטויים שלמים או משפטי פתיחה/סיום.</p>
+            <div>
+              <label className="block text-sm font-medium text-slate-700">
+                {contentType === 'word' && 'מילה או ביטוי בעברית שתרצי ללמוד בשפה ' + getCurrentLanguageMeta.label}
+                {contentType === 'sentence' && 'משפט שלם בעברית שתרצי ללמוד בשפה ' + getCurrentLanguageMeta.label}
+                {contentType === 'linking_word' && 'מילת קישור בעברית שתרצי ללמוד בשפה ' + getCurrentLanguageMeta.label}
+              </label>
+              <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <input
+                  type="text"
+                  value={hebrewTerm}
+                  onChange={(e) => setHebrewTerm(e.target.value)}
+                  placeholder={
+                    contentType === 'word'
+                      ? 'לדוגמה: מה שלומך?'
+                      : contentType === 'sentence'
+                      ? 'לדוגמה: אני רוצה ללמוד שפות חדשות'
+                      : 'לדוגמה: אבל, אולם, בנוסף'
+                  }
+                  className="flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                />
+                <button
+                  onClick={handleLearn}
+                  disabled={disableActions}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  למד
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-slate-500">
+                {contentType === 'word' && 'טיפ: אפשר להזין מילים בודדות או ביטויים קצרים.'}
+                {contentType === 'sentence' && 'טיפ: הזיני משפט שלם בעברית כדי ללמוד איך לבנות משפטים דומים בשפה הזרה.'}
+                {contentType === 'linking_word' && 'טיפ: מילות קישור כמו "אבל", "אולם", "בנוסף", "לכן" עוזרות לחבר רעיונות.'}
+              </p>
+            </div>
           </div>
 
           {feedback && (
@@ -739,7 +794,14 @@ export default function LanguagesPage() {
                   {history.slice(0, 6).map((entry) => (
                     <div key={entry.id} className="rounded-2xl border border-slate-200 p-4">
                       <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-slate-400">
-                        <span>{SUPPORTED_LANGUAGES[entry.targetLanguage].label}</span>
+                        <div className="flex items-center gap-2">
+                          <span>{SUPPORTED_LANGUAGES[entry.targetLanguage].label}</span>
+                          {entry.contentType && (
+                            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] text-indigo-600">
+                              {entry.contentType === 'sentence' ? 'משפט' : entry.contentType === 'linking_word' ? 'קישור' : 'מילה'}
+                            </span>
+                          )}
+                        </div>
                         <span>{new Date(entry.updatedAt).toLocaleDateString('he-IL')}</span>
                       </div>
                       <div className="mt-2 text-sm text-slate-600" dir="rtl">{entry.hebrewTerm}</div>
