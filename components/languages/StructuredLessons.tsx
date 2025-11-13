@@ -248,7 +248,7 @@ export default function StructuredLessons({
     }
   };
 
-  const handleCreateDemo = async (createAll = false) => {
+  const handleCreateDemo = async (createAll = false, overwrite = false) => {
     setIsCreatingDemo(true);
     setError(null);
     try {
@@ -258,14 +258,18 @@ export default function StructuredLessons({
         body: JSON.stringify({
           targetLanguage,
           createAll,
+          overwrite,
         }),
       });
       const data = await response.json();
       if (data.success) {
         await fetchLessons(selectedLevel || undefined);
         setError(null);
-        if (data.created > 0) {
-          setSuccess(`נוצרו ${data.created} שיעורים בהצלחה!`);
+        if (data.created > 0 || data.updated > 0) {
+          const messages = [];
+          if (data.created > 0) messages.push(`נוצרו ${data.created} שיעורים`);
+          if (data.updated > 0) messages.push(`עודכנו ${data.updated} שיעורים`);
+          setSuccess(`${messages.join(' ו-')} בהצלחה!`);
           setTimeout(() => setSuccess(null), 5000);
         }
         if (data.errors && data.errors.length > 0) {
@@ -334,19 +338,31 @@ export default function StructuredLessons({
           </div>
         )}
         
-        {/* Delete and Recreate buttons */}
+        {/* Update or Delete existing lessons */}
         {lessons.length > 0 && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-            <p className="mb-3">יש שיעורים קיימים. כדי ליצור שיעורים חדשים בשפות הנכונות:</p>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <p className="mb-3">יש שיעורים קיימים. כדי לעדכן שיעורים קיימים עם התרגומים החדשים:</p>
             <div className="space-y-2">
               <button
-                onClick={handleDeleteAll}
-                disabled={isDeleting}
-                className="block w-full rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => handleCreateDemo(true, true)}
+                disabled={isCreatingDemo}
+                className="block w-full rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isDeleting ? 'מוחק שיעורים...' : 'מחקי את כל השיעורים הקיימים'}
+                {isCreatingDemo ? 'מעדכן שיעורים...' : 'עדכני את כל השיעורים הקיימים'}
               </button>
-              <p className="text-xs text-red-600 mt-2">לאחר המחיקה, לחצי על "צרי כל השיעורים" כדי ליצור שיעורים חדשים בשפות הנכונות</p>
+              <p className="text-xs text-amber-700 mt-2 mb-3">פעולה זו תעדכן את השיעורים הקיימים עם התרגומים החדשים (כולל רוסית) מבלי למחוק אותם</p>
+              
+              <div className="border-t border-amber-300 pt-3 mt-3">
+                <p className="text-xs text-amber-700 mb-2">או אם את מעדיפה למחוק הכל ולהתחיל מחדש:</p>
+                <button
+                  onClick={handleDeleteAll}
+                  disabled={isDeleting}
+                  className="block w-full rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isDeleting ? 'מוחק שיעורים...' : 'מחקי את כל השיעורים הקיימים'}
+                </button>
+                <p className="text-xs text-red-600 mt-2">לאחר המחיקה, לחצי על "צרי כל השיעורים" כדי ליצור שיעורים חדשים בשפות הנכונות</p>
+              </div>
             </div>
           </div>
         )}
