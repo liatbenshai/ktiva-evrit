@@ -790,24 +790,44 @@ export async function POST(req: NextRequest) {
                 // Create exercises
                 const exercisesData = [
                   {
-                    type: 'MULTIPLE_CHOICE',
-                    title: 'בחרי את התרגום הנכון',
-                    instructions: 'בחרי את התרגום הנכון למילה',
+                    type: 'MATCHING' as const,
+                    title: 'התאם את המילה',
+                    instructions: `בחרי את התרגום הנכון למילה "${template.vocabulary[0]?.hebrew}"`,
                     question: `מה התרגום של "${template.vocabulary[0]?.hebrew}"?`,
                     correctAnswer: getTranslation(template.vocabulary[0], lang),
-                    options: {
-                      create: [
-                        { text: getTranslation(template.vocabulary[0], lang), isCorrect: true },
-                        { text: getTranslation(template.vocabulary[1] || template.vocabulary[0], lang), isCorrect: false },
-                        { text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang), isCorrect: false },
-                        { text: getTranslation(template.vocabulary[3] || template.vocabulary[0], lang), isCorrect: false },
-                      ],
-                    },
                     points: 10,
                     order: 1,
+                    options: {
+                      create: [
+                        {
+                          text: getTranslation(template.vocabulary[0], lang),
+                          isCorrect: true,
+                          explanation: `נכון! "${template.vocabulary[0]?.hebrew}" מתרגם ל-${getTranslation(template.vocabulary[0], lang)}`,
+                          order: 1,
+                        },
+                        {
+                          text: getTranslation(template.vocabulary[1] || template.vocabulary[0], lang),
+                          isCorrect: false,
+                          explanation: 'זה לא התרגום הנכון',
+                          order: 2,
+                        },
+                        {
+                          text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang),
+                          isCorrect: false,
+                          explanation: 'זה לא התרגום הנכון',
+                          order: 3,
+                        },
+                        {
+                          text: getTranslation(template.vocabulary[3] || template.vocabulary[0], lang),
+                          isCorrect: false,
+                          explanation: 'זה לא התרגום הנכון',
+                          order: 4,
+                        },
+                      ],
+                    },
                   },
                   {
-                    type: 'FILL_BLANK',
+                    type: 'FILL_BLANK' as const,
                     title: 'השלמי את המשפט',
                     instructions: 'השלמי את המשפט הנכון',
                     question: `המילה "${template.vocabulary[0]?.hebrew}" מתרגמת ל-"[BLANK]"`,
