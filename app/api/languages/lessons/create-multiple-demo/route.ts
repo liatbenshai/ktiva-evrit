@@ -720,9 +720,10 @@ function getPronunciation(term: any, lang: SupportedLanguageKey): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { targetLanguage = 'english', createAll = false } = body;
+    const { targetLanguage = 'english', createAll = false, overwrite = false } = body;
 
     const createdLessons: any[] = [];
+    const updatedLessons: any[] = [];
     const errors: string[] = [];
 
     // If createAll, create lessons for all languages, levels and topics
@@ -737,6 +738,7 @@ export async function POST(req: NextRequest) {
     console.log('Creating lessons for languages:', languagesToCreate);
     console.log('Creating lessons for levels:', levelsToCreate);
     console.log('createAll flag:', createAll);
+    console.log('overwrite flag:', overwrite);
 
     for (const lang of languagesToCreate) {
       console.log(`Processing language: ${lang}`);
@@ -753,12 +755,100 @@ export async function POST(req: NextRequest) {
                 topic,
                 title: template.title,
               },
+              include: {
+                vocabulary: true,
+                exercises: true,
+              },
             });
 
             if (existing) {
-              console.log(`Skipping existing lesson: ${template.title} (${lang}, ${level}, ${topic})`);
-              errors.push(`שיעור "${template.title}" (${lang}) כבר קיים`);
-              continue;
+              if (overwrite) {
+                console.log(`Updating existing lesson: ${template.title} (${lang}, ${level}, ${topic})`);
+                
+                // Delete existing vocabulary and exercises
+                await prisma.lessonVocabulary.deleteMany({
+                  where: { lessonId: existing.id },
+                });
+                await prisma.lessonExercise.deleteMany({
+                  where: { lessonId: existing.id },
+                });
+                
+                // Prepare new vocabulary data
+                const vocabularyData = template.vocabulary.map((term: any, index: number) => ({
+                  hebrewTerm: term.hebrew,
+                  translatedTerm: getTranslation(term, lang),
+                  pronunciation: getPronunciation(term, lang),
+                  difficulty: 'EASY' as const,
+                  partOfSpeech: 'NOUN' as const,
+                  order: index + 1,
+                  usageExample: JSON.stringify({
+                    target: `${getTranslation(term, lang)} - ${term.hebrew}`,
+                    hebrew: term.hebrew,
+                  }),
+                }));
+
+                // Create exercises
+                const exercisesData = [
+                  {
+                    type: 'MULTIPLE_CHOICE',
+                    title: 'בחרי את התרגום הנכון',
+                    instructions: 'בחרי את התרגום הנכון למילה',
+                    question: `מה התרגום של "${template.vocabulary[0]?.hebrew}"?`,
+                    correctAnswer: getTranslation(template.vocabulary[0], lang),
+                    options: {
+                      create: [
+                        { text: getTranslation(template.vocabulary[0], lang), isCorrect: true },
+                        { text: getTranslation(template.vocabulary[1] || template.vocabulary[0], lang), isCorrect: false },
+                        { text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang), isCorrect: false },
+                        { text: getTranslation(template.vocabulary[3] || template.vocabulary[0], lang), isCorrect: false },
+                      ],
+                    },
+                    points: 10,
+                    order: 1,
+                  },
+                  {
+                    type: 'FILL_BLANK',
+                    title: 'השלמי את המשפט',
+                    instructions: 'השלמי את המשפט הנכון',
+                    question: `המילה "${template.vocabulary[0]?.hebrew}" מתרגמת ל-"[BLANK]"`,
+                    correctAnswer: getTranslation(template.vocabulary[0], lang),
+                    points: 10,
+                    order: 2,
+                  },
+                ];
+
+                // Update the lesson
+                const updatedLesson = await prisma.lesson.update({
+                  where: { id: existing.id },
+                  data: {
+                    description: template.description,
+                    grammarNotes: `<p>בשיעור זה נלמד מילים הקשורות ל-${topic}.</p>`,
+                    culturalTips: `מילים אלה שימושיות מאוד ב-${lang === 'english' ? 'אנגלית' : lang === 'romanian' ? 'רומנית' : lang === 'italian' ? 'איטלקית' : lang === 'french' ? 'צרפתית' : lang === 'russian' ? 'רוסית' : lang}.`,
+                    vocabulary: {
+                      create: vocabularyData,
+                    },
+                    exercises: {
+                      create: exercisesData,
+                    },
+                  },
+                  include: {
+                    vocabulary: true,
+                    exercises: {
+                      include: {
+                        options: true,
+                      },
+                    },
+                  },
+                });
+
+                updatedLessons.push(updatedLesson);
+                console.log(`Successfully updated lesson: ${template.title} (${lang})`);
+                continue;
+              } else {
+                console.log(`Skipping existing lesson: ${template.title} (${lang}, ${level}, ${topic})`);
+                errors.push(`שיעור "${template.title}" (${lang}) כבר קיים`);
+                continue;
+              }
             }
 
             console.log(`Creating lesson: ${template.title} for ${lang}, ${level}, ${topic}`);
@@ -879,14 +969,15 @@ export async function POST(req: NextRequest) {
       console.log(`Finished processing language: ${lang}. Created: ${createdLessons.filter(l => l.targetLanguage === lang).length}`);
     }
 
-    console.log(`Total created: ${createdLessons.length}, Errors: ${errors.length}`);
+    console.log(`Total created: ${createdLessons.length}, Updated: ${updatedLessons.length}, Errors: ${errors.length}`);
 
     return NextResponse.json({
       success: true,
-      message: `נוצרו ${createdLessons.length} שיעורים`,
+      message: `נוצרו ${createdLessons.length} שיעורים${updatedLessons.length > 0 ? ` ועודכנו ${updatedLessons.length} שיעורים` : ''}`,
       created: createdLessons.length,
+      updated: updatedLessons.length,
       errors: errors.length > 0 ? errors : undefined,
-      lessons: createdLessons,
+      lessons: [...createdLessons, ...updatedLessons],
     });
   } catch (error: any) {
     console.error('Error creating demo lessons:', error);
