@@ -149,7 +149,22 @@ export default function LessonView({
                   </div>
                 )}
                 {vocab.notes && (
-                  <p className="mt-2 text-xs text-slate-500">{vocab.notes}</p>
+                  <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    {vocab.notes.startsWith('תרגומים חלופיים:') ? (
+                      <div>
+                        <p className="text-xs font-semibold text-amber-800 mb-1">תרגומים חלופיים:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {vocab.notes.replace('תרגומים חלופיים: ', '').split(', ').map((alt: string, idx: number) => (
+                            <span key={idx} className="inline-block rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-900" dir="ltr">
+                              {alt}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-500">{vocab.notes}</p>
+                    )}
+                  </div>
                 )}
               </div>
             ))}

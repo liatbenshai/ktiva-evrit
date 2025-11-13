@@ -291,7 +291,7 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'שדה תעופה', en: 'Airport', ro: 'Aeroport', it: 'Aeroporto', fr: 'Aéroport', ru: 'Аэропорт', pronunciation: { en: 'AIR-port', ro: 'ah-eh-roh-PORT', it: 'ah-eh-roh-POR-toh', fr: 'ah-ay-roh-POR', ru: 'ah-eh-rah-PORT' } },
         { hebrew: 'מלון', en: 'Hotel', ro: 'Hotel', it: 'Hotel', fr: 'Hôtel', ru: 'Отель', pronunciation: { en: 'hoh-TEL', ro: 'hoh-TEL', it: 'oh-TEL', fr: 'oh-TEL', ru: 'ah-TEL' } },
         { hebrew: 'כרטיס', en: 'Ticket', ro: 'Bilet', it: 'Biglietto', fr: 'Billet', ru: 'Билет', pronunciation: { en: 'TIK-et', ro: 'bee-LET', it: 'bee-LYET-toh', fr: 'bee-YAY', ru: 'bee-LYET' } },
-        { hebrew: 'תיק', en: 'Suitcase', ro: 'Valiză', it: 'Valigia', fr: 'Valise', ru: 'Чемодан', pronunciation: { en: 'SOOT-kays', ro: 'vah-LEE-zuh', it: 'vah-LEE-jah', fr: 'vah-LEEZ', ru: 'cheh-mah-DAHN' } },
+        { hebrew: 'תיק', en: 'Suitcase', ro: 'Valiză', it: 'Valigia', fr: 'Valise', ru: 'Чемодан', pronunciation: { en: 'SOOT-kays', ro: 'vah-LEE-zuh', it: 'vah-LEE-jah', fr: 'vah-LEEZ', ru: 'cheh-mah-DAHN' }, alternatives: { ru: ['Сумка'] } },
         { hebrew: 'מפה', en: 'Map', ro: 'Hartă', it: 'Mappa', fr: 'Carte', ru: 'Карта', pronunciation: { en: 'map', ro: 'HAHR-tuh', it: 'MAHP-pah', fr: 'kahrt', ru: 'KAR-tah' } },
         { hebrew: 'דרכון', en: 'Passport', ro: 'Pașaport', it: 'Passaporto', fr: 'Passeport', ru: 'Паспорт', pronunciation: { en: 'PAS-port', ro: 'pah-shah-PORT', it: 'pahs-sah-POR-toh', fr: 'pahs-POR', ru: 'pahs-PORT' } },
         { hebrew: 'ויזה', en: 'Visa', ro: 'Viză', it: 'Visto', fr: 'Visa', ru: 'Виза', pronunciation: { en: 'VEE-zuh', ro: 'VEE-zuh', it: 'VEE-stoh', fr: 'VEE-zah', ru: 'VEE-zah' } },
@@ -774,18 +774,27 @@ export async function POST(req: NextRequest) {
                 });
                 
                 // Prepare new vocabulary data
-                const vocabularyData = template.vocabulary.map((term: any, index: number) => ({
-                  hebrewTerm: term.hebrew,
-                  translatedTerm: getTranslation(term, lang),
-                  pronunciation: getPronunciation(term, lang),
-                  difficulty: 'EASY' as const,
-                  partOfSpeech: 'NOUN' as const,
-                  order: index + 1,
-                  usageExample: JSON.stringify({
-                    target: `${getTranslation(term, lang)} - ${term.hebrew}`,
-                    hebrew: term.hebrew,
-                  }),
-                }));
+                const vocabularyData = template.vocabulary.map((term: any, index: number) => {
+                  const mainTranslation = getTranslation(term, lang);
+                  const alternatives = term.alternatives?.[lang] || [];
+                  const notesContent = alternatives.length > 0 
+                    ? `תרגומים חלופיים: ${alternatives.join(', ')}`
+                    : null;
+                  
+                  return {
+                    hebrewTerm: term.hebrew,
+                    translatedTerm: mainTranslation,
+                    pronunciation: getPronunciation(term, lang),
+                    difficulty: 'EASY' as const,
+                    partOfSpeech: 'NOUN' as const,
+                    order: index + 1,
+                    usageExample: JSON.stringify({
+                      target: `${mainTranslation} - ${term.hebrew}`,
+                      hebrew: term.hebrew,
+                    }),
+                    notes: notesContent,
+                  };
+                });
 
                 // Create exercises
                 const exercisesData = [
@@ -865,9 +874,9 @@ export async function POST(req: NextRequest) {
                 console.log(`Successfully updated lesson: ${template.title} (${lang})`);
                 continue;
               } else {
-                console.log(`Skipping existing lesson: ${template.title} (${lang}, ${level}, ${topic})`);
-                errors.push(`שיעור "${template.title}" (${lang}) כבר קיים`);
-                continue;
+              console.log(`Skipping existing lesson: ${template.title} (${lang}, ${level}, ${topic})`);
+              errors.push(`שיעור "${template.title}" (${lang}) כבר קיים`);
+              continue;
               }
             }
 
@@ -891,18 +900,27 @@ export async function POST(req: NextRequest) {
             const nextOrder = (maxOrder?.order || 0) + 1;
 
             // Create lesson with vocabulary
-            const vocabularyData = template.vocabulary.map((term: any, index: number) => ({
-              hebrewTerm: term.hebrew,
-              translatedTerm: getTranslation(term, lang),
-              pronunciation: getPronunciation(term, lang),
-              difficulty: 'EASY' as const,
-              partOfSpeech: 'NOUN' as const,
-              order: index + 1,
-              usageExample: JSON.stringify({
-                target: `${getTranslation(term, lang)} - ${term.hebrew}`,
-                hebrew: term.hebrew,
-              }),
-            }));
+            const vocabularyData = template.vocabulary.map((term: any, index: number) => {
+              const mainTranslation = getTranslation(term, lang);
+              const alternatives = term.alternatives?.[lang] || [];
+              const notesContent = alternatives.length > 0 
+                ? `תרגומים חלופיים: ${alternatives.join(', ')}`
+                : null;
+              
+              return {
+                hebrewTerm: term.hebrew,
+                translatedTerm: mainTranslation,
+                pronunciation: getPronunciation(term, lang),
+                difficulty: 'EASY' as const,
+                partOfSpeech: 'NOUN' as const,
+                order: index + 1,
+                usageExample: JSON.stringify({
+                  target: `${mainTranslation} - ${term.hebrew}`,
+                  hebrew: term.hebrew,
+                }),
+                notes: notesContent,
+              };
+            });
 
             // Create exercises
             const exercisesData = [
