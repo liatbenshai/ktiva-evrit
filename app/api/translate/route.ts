@@ -23,9 +23,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const supportedLanguages = ['hebrew', 'english', 'russian', 'french', 'romanian', 'italian'];
     if (
-      (fromLang !== 'hebrew' && fromLang !== 'english' && fromLang !== 'russian') ||
-      (toLang !== 'hebrew' && toLang !== 'english' && toLang !== 'russian') ||
+      !supportedLanguages.includes(fromLang) ||
+      !supportedLanguages.includes(toLang) ||
       fromLang === toLang
     ) {
       return NextResponse.json(
@@ -49,6 +50,63 @@ export async function POST(req: NextRequest) {
       // ממשיכים בלי idioms אם יש בעיה במסד הנתונים
       idioms = [];
     }
+
+    // טעינת מילים שנשמרו בלימוד שפות (LanguageEntry)
+    // המילים האלה ישמשו כמילון תרגומים מועדף
+    let savedLanguageEntries: Array<{ hebrew: string; target: string }> = [];
+    try {
+      // קביעת השפה הרלוונטית לפי כיוון התרגום
+      let relevantTargetLanguage: string | undefined;
+      
+      if (fromLang === 'hebrew') {
+        // מתרגמים מעברית - השפה היא toLang
+        relevantTargetLanguage = toLang === 'english' ? 'english' :
+                                 toLang === 'russian' ? 'russian' :
+                                 toLang === 'french' ? 'french' :
+                                 toLang === 'romanian' ? 'romanian' :
+                                 toLang === 'italian' ? 'italian' : undefined;
+      } else if (toLang === 'hebrew') {
+        // מתרגמים לעברית - השפה היא fromLang
+        relevantTargetLanguage = fromLang === 'english' ? 'english' :
+                                 fromLang === 'russian' ? 'russian' :
+                                 fromLang === 'french' ? 'french' :
+                                 fromLang === 'romanian' ? 'romanian' :
+                                 fromLang === 'italian' ? 'italian' : undefined;
+      } else {
+        // תרגום בין שתי שפות זרות - לא רלוונטי כרגע
+        relevantTargetLanguage = undefined;
+      }
+
+      if (relevantTargetLanguage) {
+        const entries = await prisma.languageEntry.findMany({
+          where: {
+            userId,
+            targetLanguage: relevantTargetLanguage,
+          },
+          select: {
+            hebrewTerm: true,
+            translatedTerm: true,
+          },
+          take: 100, // מגבילים ל-100 מילים כדי לא להכביד על ה-prompt
+        });
+
+        // המרה לפורמט של idioms
+        savedLanguageEntries = entries.map(entry => ({
+          hebrew: entry.hebrewTerm,
+          target: entry.translatedTerm,
+        }));
+      }
+    } catch (dbError) {
+      console.warn('Failed to load saved language entries, continuing without them:', dbError);
+      savedLanguageEntries = [];
+    }
+
+    // שילוב idioms עם המילים שנשמרו בלימוד שפות
+    // פורמט אחיד: { hebrew, target } או { english, hebrew }
+    const allPreferredTranslations = [
+      ...idioms.map(id => ({ english: id.english, hebrew: id.hebrew })),
+      ...savedLanguageEntries.map(entry => ({ hebrew: entry.hebrew, target: entry.target })),
+    ];
 
     // טעינת העדפות המשתמש ממערכת הלמידה
     let userPreferences: {
@@ -83,24 +141,33 @@ export async function POST(req: NextRequest) {
     }
 
     // בניית ה-prompt המתוחכם
+    // משתמשים ב-allPreferredTranslations במקום idioms בלבד
     const prompt = translationPrompt(
       text,
-      fromLang as 'hebrew' | 'english' | 'russian',
-      toLang as 'hebrew' | 'english' | 'russian',
-      idioms,
+      fromLang as 'hebrew' | 'english' | 'russian' | 'french' | 'romanian' | 'italian',
+      toLang as 'hebrew' | 'english' | 'russian' | 'french' | 'romanian' | 'italian',
+      allPreferredTranslations,
       userPreferences,
       context
     );
 
     const getSystemPrompt = () => {
+      const languageNames: Record<string, string> = {
+        hebrew: 'עברית',
+        english: 'אנגלית',
+        russian: 'רוסית',
+        french: 'צרפתית',
+        romanian: 'רומנית',
+        italian: 'איטלקית',
+      };
+      
+      const targetLanguageName = languageNames[toLang] || toLang;
+      
       if (toLang === 'hebrew') {
         return 'אתה מתרגם מקצועי ומומחה בתרגום לעברית. אתה כותב בעברית תקנית, טבעית וזורמת - לא תרגום מילולי. אתה פתוח ללמוד ולשפר מעריכות המשתמש ומשוב שלו. **חשוב מאוד:** החזר תמיד JSON תקין בלבד, ללא טקסט נוסף, ללא הסברים, ללא markdown code blocks.';
-      } else if (toLang === 'english') {
-        return 'אתה מתרגם מקצועי ומומחה בתרגום לאנגלית. אתה כותב אנגלית תקנית, טבעית וזורמת - לא תרגום מילולי. אתה פתוח ללמוד ולשפר מעריכות המשתמש ומשוב שלו. **חשוב מאוד:** החזר תמיד JSON תקין בלבד, ללא טקסט נוסף, ללא הסברים, ללא markdown code blocks.';
-      } else if (toLang === 'russian') {
-        return 'אתה מתרגם מקצועי ומומחה בתרגום לרוסית. אתה כותב רוסית תקנית, טבעית וזורמת - לא תרגום מילולי. אתה פתוח ללמוד ולשפר מעריכות המשתמש ומשוב שלו. **חשוב מאוד:** החזר תמיד JSON תקין בלבד, ללא טקסט נוסף, ללא הסברים, ללא markdown code blocks.';
+      } else {
+        return `אתה מתרגם מקצועי ומומחה בתרגום ל${targetLanguageName}. אתה כותב ${targetLanguageName} תקנית, טבעית וזורמת - לא תרגום מילולי. אתה פתוח ללמוד ולשפר מעריכות המשתמש ומשוב שלו. **חשוב מאוד:** החזר תמיד JSON תקין בלבד, ללא טקסט נוסף, ללא הסברים, ללא markdown code blocks.`;
       }
-      return 'אתה מתרגם מקצועי. **חשוב מאוד:** החזר תמיד JSON תקין בלבד, ללא טקסט נוסף.';
     };
     
     const systemPrompt = getSystemPrompt();

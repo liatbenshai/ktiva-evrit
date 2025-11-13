@@ -1137,9 +1137,9 @@ ${additionalRequirements ? `דרישות: ${additionalRequirements}` : ''}
 // Translation Prompt - מתוחכם עם למידה
 export const translationPrompt = (
   text: string,
-  fromLang: 'hebrew' | 'english' | 'russian',
-  toLang: 'hebrew' | 'english' | 'russian',
-  idioms?: Array<{ english: string; hebrew: string }>,
+  fromLang: 'hebrew' | 'english' | 'russian' | 'french' | 'romanian' | 'italian',
+  toLang: 'hebrew' | 'english' | 'russian' | 'french' | 'romanian' | 'italian',
+  preferredTranslations?: Array<{ english?: string; hebrew: string; target?: string }>,
   userPreferences?: {
     forbiddenWords?: string[];
     preferredWords?: { [key: string]: string };
@@ -1156,18 +1156,45 @@ export const translationPrompt = (
   const isRussianToEnglish = fromLang === 'russian' && toLang === 'english';
   const isHebrewToRussian = fromLang === 'hebrew' && toLang === 'russian';
   const isRussianToHebrew = fromLang === 'russian' && toLang === 'hebrew';
+  const isHebrewToFrench = fromLang === 'hebrew' && toLang === 'french';
+  const isFrenchToHebrew = fromLang === 'french' && toLang === 'hebrew';
+  const isEnglishToFrench = fromLang === 'english' && toLang === 'french';
+  const isFrenchToEnglish = fromLang === 'french' && toLang === 'english';
+  const isHebrewToRomanian = fromLang === 'hebrew' && toLang === 'romanian';
+  const isRomanianToHebrew = fromLang === 'romanian' && toLang === 'hebrew';
+  const isEnglishToRomanian = fromLang === 'english' && toLang === 'romanian';
+  const isRomanianToEnglish = fromLang === 'romanian' && toLang === 'english';
+  const isHebrewToItalian = fromLang === 'hebrew' && toLang === 'italian';
+  const isItalianToHebrew = fromLang === 'italian' && toLang === 'hebrew';
+  const isEnglishToItalian = fromLang === 'english' && toLang === 'italian';
+  const isItalianToEnglish = fromLang === 'italian' && toLang === 'english';
   
-  const idiomsSection = idioms && idioms.length > 0 ? `
+  // תמיכה בשני פורמטים: idioms (english + hebrew) או savedLanguageEntries (hebrew + target)
+  const idiomsSection = preferredTranslations && preferredTranslations.length > 0 ? `
 **מילון תרגומים מועדפים (חשוב מאוד!):**
-${idioms.map(idiom => {
-  if (isEnglishToHebrew || isEnglishToRussian) {
-    return `- "${idiom.english}" → "${idiom.hebrew}"`;
-  } else if (isHebrewToEnglish || isHebrewToRussian) {
-    return `- "${idiom.hebrew}" → "${idiom.english}"`;
-  } else {
-    return `- "${idiom.english}" → "${idiom.hebrew}"`;
+${preferredTranslations.map(item => {
+  // פורמט ישן: idioms עם english ו-hebrew
+  if (item.english) {
+    if (isEnglishToHebrew || isEnglishToRussian || isEnglishToFrench || isEnglishToRomanian || isEnglishToItalian) {
+      return `- "${item.english}" → "${item.hebrew}"`;
+    } else if (isHebrewToEnglish || isHebrewToRussian || isHebrewToFrench || isHebrewToRomanian || isHebrewToItalian) {
+      return `- "${item.hebrew}" → "${item.english}"`;
+    } else {
+      return `- "${item.english}" → "${item.hebrew}"`;
+    }
   }
-}).join('\n')}
+  // פורמט חדש: savedLanguageEntries עם hebrew ו-target
+  else if (item.target) {
+    if (isHebrewToEnglish || isHebrewToRussian || isHebrewToFrench || isHebrewToRomanian || isHebrewToItalian) {
+      return `- "${item.hebrew}" → "${item.target}"`;
+    } else if (isEnglishToHebrew || isRussianToHebrew || isFrenchToHebrew || isRomanianToHebrew || isItalianToHebrew) {
+      return `- "${item.target}" → "${item.hebrew}"`;
+    } else {
+      return `- "${item.hebrew}" → "${item.target}"`;
+    }
+  }
+  return '';
+}).filter(line => line).join('\n')}
 
 **חוק ברזל:** כאשר אתה נתקל בביטוי או מילה מהמילון לעיל, חובה להשתמש בתרגום מהמילון. אל תמציא תרגום חדש!
 ` : '';
@@ -1630,6 +1657,327 @@ ${contextSection}
       "alternative 2"
     ]
   }
+}
+
+כתוב תרגום מקצועי, טבעי ומדויק עם אפשרויות חלופיות!`;
+  } else if (isHebrewToFrench) {
+    return `אתה מתרגם מקצועי ומומחה בתרגום מעברית לצרפתית תקנית וזורמת.
+תפקידך לתרגם טקסט מעברית לצרפתית בצורה טבעית, מדויקת ומקצועית.
+
+**הטקסט לתרגום:**
+${text}
+
+${idiomsSection}
+
+${preferencesSection}
+
+${contextSection}
+
+**עקרונות תרגום מעברית לצרפתית:**
+
+✅ **תרגום טבעי, לא מילולי:**
+- "לקחת בחשבון" → "prendre en compte" (לא "prendre dans compte")
+- "לוודא" → "s'assurer" / "vérifier" (לא "faire sûr")
+- "כדי" → "pour" / "afin de" (לא "pour à")
+
+✅ **מבנה משפטים צרפתי:**
+- עברית: נושא → מושא → פועל
+- צרפתית: נושא → פועל → מושא (בדרך כלל)
+- דוגמה: "אני אשלח את המסמך" → "Je vais envoyer le document"
+
+✅ **ביטויים וניבים:**
+- "מובן מאליו" → "évidemment" / "bien sûr"
+- "לשבור את הקרח" → "briser la glace"
+- "לחשוב מחוץ לקופסה" → "penser hors des sentiers battus"
+
+✅ **שפה טבעית:**
+- הימנע מתרגום מילה-במילה
+- חפש את המשמעות מאחורי המילים
+- התאם את השפה להקשר (עסקי, טכני, ספרותי)
+
+✅ **דקדוק צרפתי:**
+- שימוש נכון ב-articles (le, la, les, un, une, des)
+- מבנה זמנים נכון (présent, passé, futur)
+- שימוש נכון ב-prepositions
+
+**פורמט הפלט - JSON עם אפשרויות חלופיות:**
+חזור JSON עם הפורמט הבא (חשוב מאוד - רק JSON, ללא טקסט נוסף):
+
+{
+  "main": "La traduction principale recommandée",
+  "alternatives": [
+    {
+      "text": "Option alternative 1",
+      "explanation": "Brève explication de pourquoi cette option est différente",
+      "context": "Quand utiliser (par exemple: formel, informel, technique)"
+    }
+  ],
+  "wordAlternatives": {}
+}
+
+כתוב תרגום מקצועי, טבעי ומדויק עם אפשרויות חלופיות!`;
+  } else if (isFrenchToHebrew) {
+    return `אתה מתרגם מקצועי ומומחה בתרגום מצרפתית לעברית תקנית וזורמת.
+תפקידך לתרגם טקסט מצרפתית לעברית בצורה טבעית, מדויקת ומקצועית.
+
+**הטקסט לתרגום:**
+${text}
+
+${idiomsSection}
+
+${preferencesSection}
+
+${contextSection}
+
+**עקרונות תרגום מצרפתית לעברית:**
+
+✅ **תרגום טבעי, לא מילולי:**
+- "prendre en compte" → "לקחת בחשבון" (לא "לקחת למחשבה")
+- "s'assurer" → "לוודא" (לא "להתאמת")
+- "pour" → "כדי" / "על מנת" (לא "בשביל ל")
+
+✅ **מבנה משפטים עברי:**
+- צרפתית: נושא → פועל → מושא
+- עברית: נושא → מושא → פועל (בדרך כלל)
+- דוגמה: "Je vais envoyer le document" → "אני אשלח את המסמך"
+
+✅ **ביטויים וניבים:**
+- "évidemment" → "מובן מאליו" / "ברור"
+- "briser la glace" → "לשבור את הקרח"
+- "penser hors des sentiers battus" → "לחשוב מחוץ לקופסה"
+
+✅ **שפה טבעית:**
+- הימנע מתרגום מילה-במילה
+- חפש את המשמעות מאחורי המילים
+- התאם את השפה להקשר (עסקי, טכני, ספרותי)
+
+**פורמט הפלט - JSON עם אפשרויות חלופיות:**
+חזור JSON עם הפורמט הבא (חשוב מאוד - רק JSON, ללא טקסט נוסף):
+
+{
+  "main": "התרגום הראשי והמומלץ",
+  "alternatives": [
+    {
+      "text": "אפשרות חלופית 1",
+      "explanation": "הסבר קצר למה אפשרות זו שונה",
+      "context": "מתי להשתמש (למשל: רשמי, לא פורמלי, טכני)"
+    }
+  ],
+  "wordAlternatives": {}
+}
+
+כתוב תרגום מקצועי, טבעי ומדויק עם אפשרויות חלופיות!`;
+  } else if (isHebrewToRomanian) {
+    return `אתה מתרגם מקצועי ומומחה בתרגום מעברית לרומנית תקנית וזורמת.
+תפקידך לתרגם טקסט מעברית לרומנית בצורה טבעית, מדויקת ומקצועית.
+
+**הטקסט לתרגום:**
+${text}
+
+${idiomsSection}
+
+${preferencesSection}
+
+${contextSection}
+
+**עקרונות תרגום מעברית לרומנית:**
+
+✅ **תרגום טבעי, לא מילולי:**
+- "לקחת בחשבון" → "a lua în considerare" (לא "a lua în calcul")
+- "לוודא" → "a se asigura" / "a verifica" (לא "a face sigur")
+- "כדי" → "pentru" / "ca să" (לא "pentru la")
+
+✅ **מבנה משפטים רומני:**
+- עברית: נושא → מושא → פועל
+- רומנית: נושא → פועל → מושא (בדרך כלל)
+- דוגמה: "אני אשלח את המסמך" → "Voi trimite documentul"
+
+✅ **ביטויים וניבים:**
+- "מובן מאליו" → "evident" / "desigur"
+- "לשבור את הקרח" → "a sparge gheața"
+- "לחשוב מחוץ לקופסה" → "a gândi în afara cutiei"
+
+✅ **שפה טבעית:**
+- הימנע מתרגום מילה-במילה
+- חפש את המשמעות מאחורי המילים
+- התאם את השפה להקשר (עסקי, טכני, ספרותי)
+
+✅ **דקדוק רומני:**
+- שימוש נכון ב-articles (un, o, niște)
+- מבנה זמנים נכון (prezent, trecut, viitor)
+- שימוש נכון ב-prepositions
+
+**פורמט הפלט - JSON עם אפשרויות חלופיות:**
+חזור JSON עם הפורמט הבא (חשוב מאוד - רק JSON, ללא טקסט נוסף):
+
+{
+  "main": "Traducerea principală recomandată",
+  "alternatives": [
+    {
+      "text": "Opțiune alternativă 1",
+      "explanation": "Explicație scurtă de ce această opțiune este diferită",
+      "context": "Când să folosești (de exemplu: formal, informal, tehnic)"
+    }
+  ],
+  "wordAlternatives": {}
+}
+
+כתוב תרגום מקצועי, טבעי ומדויק עם אפשרויות חלופיות!`;
+  } else if (isRomanianToHebrew) {
+    return `אתה מתרגם מקצועי ומומחה בתרגום מרומנית לעברית תקנית וזורמת.
+תפקידך לתרגם טקסט מרומנית לעברית בצורה טבעית, מדויקת ומקצועית.
+
+**הטקסט לתרגום:**
+${text}
+
+${idiomsSection}
+
+${preferencesSection}
+
+${contextSection}
+
+**עקרונות תרגום מרומנית לעברית:**
+
+✅ **תרגום טבעי, לא מילולי:**
+- "a lua în considerare" → "לקחת בחשבון" (לא "לקבל למחשבה")
+- "a se asigura" → "לוודא" (לא "להתאמת")
+- "pentru" → "כדי" / "על מנת" (לא "בשביל ל")
+
+✅ **מבנה משפטים עברי:**
+- רומנית: נושא → פועל → מושא
+- עברית: נושא → מושא → פועל (בדרך כלל)
+- דוגמה: "Voi trimite documentul" → "אני אשלח את המסמך"
+
+✅ **ביטויים וניבים:**
+- "evident" → "מובן מאליו" / "ברור"
+- "a sparge gheața" → "לשבור את הקרח"
+- "a gândi în afara cutiei" → "לחשוב מחוץ לקופסה"
+
+✅ **שפה טבעית:**
+- הימנע מתרגום מילה-במילה
+- חפש את המשמעות מאחורי המילים
+- התאם את השפה להקשר (עסקי, טכני, ספרותי)
+
+**פורמט הפלט - JSON עם אפשרויות חלופיות:**
+חזור JSON עם הפורמט הבא (חשוב מאוד - רק JSON, ללא טקסט נוסף):
+
+{
+  "main": "התרגום הראשי והמומלץ",
+  "alternatives": [
+    {
+      "text": "אפשרות חלופית 1",
+      "explanation": "הסבר קצר למה אפשרות זו שונה",
+      "context": "מתי להשתמש (למשל: רשמי, לא פורמלי, טכני)"
+    }
+  ],
+  "wordAlternatives": {}
+}
+
+כתוב תרגום מקצועי, טבעי ומדויק עם אפשרויות חלופיות!`;
+  } else if (isHebrewToItalian) {
+    return `אתה מתרגם מקצועי ומומחה בתרגום מעברית לאיטלקית תקנית וזורמת.
+תפקידך לתרגם טקסט מעברית לאיטלקית בצורה טבעית, מדויקת ומקצועית.
+
+**הטקסט לתרגום:**
+${text}
+
+${idiomsSection}
+
+${preferencesSection}
+
+${contextSection}
+
+**עקרונות תרגום מעברית לאיטלקית:**
+
+✅ **תרגום טבעי, לא מילולי:**
+- "לקחת בחשבון" → "prendere in considerazione" (לא "prendere in conto")
+- "לוודא" → "assicurarsi" / "verificare" (לא "fare sicuro")
+- "כדי" → "per" / "al fine di" (לא "per a")
+
+✅ **מבנה משפטים איטלקי:**
+- עברית: נושא → מושא → פועל
+- איטלקית: נושא → פועל → מושא (בדרך כלל)
+- דוגמה: "אני אשלח את המסמך" → "Invierò il documento"
+
+✅ **ביטויים וניבים:**
+- "מובן מאליו" → "ovviamente" / "naturalmente"
+- "לשבור את הקרח" → "rompere il ghiaccio"
+- "לחשוב מחוץ לקופסה" → "pensare fuori dagli schemi"
+
+✅ **שפה טבעית:**
+- הימנע מתרגום מילה-במילה
+- חפש את המשמעות מאחורי המילים
+- התאם את השפה להקשר (עסקי, טכני, ספרותי)
+
+✅ **דקדוק איטלקי:**
+- שימוש נכון ב-articles (il, la, gli, le, un, una)
+- מבנה זמנים נכון (presente, passato, futuro)
+- שימוש נכון ב-prepositions
+
+**פורמט הפלט - JSON עם אפשרויות חלופיות:**
+חזור JSON עם הפורמט הבא (חשוב מאוד - רק JSON, ללא טקסט נוסף):
+
+{
+  "main": "La traduzione principale raccomandata",
+  "alternatives": [
+    {
+      "text": "Opzione alternativa 1",
+      "explanation": "Breve spiegazione del perché questa opzione è diversa",
+      "context": "Quando usare (ad esempio: formale, informale, tecnico)"
+    }
+  ],
+  "wordAlternatives": {}
+}
+
+כתוב תרגום מקצועי, טבעי ומדויק עם אפשרויות חלופיות!`;
+  } else if (isItalianToHebrew) {
+    return `אתה מתרגם מקצועי ומומחה בתרגום מאיטלקית לעברית תקנית וזורמת.
+תפקידך לתרגם טקסט מאיטלקית לעברית בצורה טבעית, מדויקת ומקצועית.
+
+**הטקסט לתרגום:**
+${text}
+
+${idiomsSection}
+
+${preferencesSection}
+
+${contextSection}
+
+**עקרונות תרגום מאיטלקית לעברית:**
+
+✅ **תרגום טבעי, לא מילולי:**
+- "prendere in considerazione" → "לקחת בחשבון" (לא "לקבל למחשבה")
+- "assicurarsi" → "לוודא" (לא "להתאמת")
+- "per" → "כדי" / "על מנת" (לא "בשביל ל")
+
+✅ **מבנה משפטים עברי:**
+- איטלקית: נושא → פועל → מושא
+- עברית: נושא → מושא → פועל (בדרך כלל)
+- דוגמה: "Invierò il documento" → "אני אשלח את המסמך"
+
+✅ **ביטויים וניבים:**
+- "ovviamente" → "מובן מאליו" / "ברור"
+- "rompere il ghiaccio" → "לשבור את הקרח"
+- "pensare fuori dagli schemi" → "לחשוב מחוץ לקופסה"
+
+✅ **שפה טבעית:**
+- הימנע מתרגום מילה-במילה
+- חפש את המשמעות מאחורי המילים
+- התאם את השפה להקשר (עסקי, טכני, ספרותי)
+
+**פורמט הפלט - JSON עם אפשרויות חלופיות:**
+חזור JSON עם הפורמט הבא (חשוב מאוד - רק JSON, ללא טקסט נוסף):
+
+{
+  "main": "התרגום הראשי והמומלץ",
+  "alternatives": [
+    {
+      "text": "אפשרות חלופית 1",
+      "explanation": "הסבר קצר למה אפשרות זו שונה",
+      "context": "מתי להשתמש (למשל: רשמי, לא פורמלי, טכני)"
+    }
+  ],
+  "wordAlternatives": {}
 }
 
 כתוב תרגום מקצועי, טבעי ומדויק עם אפשרויות חלופיות!`;

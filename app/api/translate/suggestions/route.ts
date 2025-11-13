@@ -15,10 +15,11 @@ export async function POST(req: NextRequest) {
       userId = 'default-user',
     } = body;
 
+    const supportedLanguages = ['hebrew', 'english', 'russian', 'french', 'romanian', 'italian'];
     if (
       !selectedText || !fullText || !fromLang || !toLang ||
-      (fromLang !== 'hebrew' && fromLang !== 'english' && fromLang !== 'russian') ||
-      (toLang !== 'hebrew' && toLang !== 'english' && toLang !== 'russian')
+      !supportedLanguages.includes(fromLang) ||
+      !supportedLanguages.includes(toLang)
     ) {
       return NextResponse.json(
         { error: 'Invalid parameters' },
@@ -99,7 +100,7 @@ ${context ? `**הקשר:** ${context}` : ''}
 **כיוון התרגום המקורי:** ${fromLang} → ${toLang}
 
 **בקשה:**
-צור 5-7 אפשרויות ניסוח חלופיות לטקסט הנבחר "${selectedText}" בשפה ${toLang === 'hebrew' ? 'עברית' : 'אנגלית'}. כל אפשרות צריכה להיות:
+צור 5-7 אפשרויות ניסוח חלופיות לטקסט הנבחר "${selectedText}" בשפה ${toLang === 'hebrew' ? 'עברית' : toLang === 'english' ? 'אנגלית' : toLang === 'russian' ? 'רוסית' : toLang === 'french' ? 'צרפתית' : toLang === 'romanian' ? 'רומנית' : toLang === 'italian' ? 'איטלקית' : toLang}. כל אפשרות צריכה להיות:
 - טבעית ונשמעת טוב
 - שונה מהאחרות (גישות שונות לתרגום)
 - מתאימה להקשר של הטקסט המלא
@@ -126,14 +127,22 @@ ${context ? `**הקשר:** ${context}` : ''}
 **חשוב מאוד:** החזר רק JSON תקין, ללא markdown, ללא הסברים נוספים.`;
 
     const getSystemPrompt = () => {
+      const languageNames: Record<string, string> = {
+        hebrew: 'עברית',
+        english: 'אנגלית',
+        russian: 'רוסית',
+        french: 'צרפתית',
+        romanian: 'רומנית',
+        italian: 'איטלקית',
+      };
+      
+      const targetLanguageName = languageNames[toLang] || toLang;
+      
       if (toLang === 'hebrew') {
         return 'אתה מומחה בעברית תקנית וטבעית. אתה מספק הצעות חלופיות לניסוח בעברית שמשפרות את התרגום. **חשוב מאוד:** החזר תמיד JSON תקין בלבד, ללא טקסט נוסף.';
-      } else if (toLang === 'english') {
-        return 'אתה מומחה באנגלית תקנית וטבעית. אתה מספק הצעות חלופיות לניסוח באנגלית שמשפרות את התרגום. **חשוב מאוד:** החזר תמיד JSON תקין בלבד, ללא טקסט נוסף.';
-      } else if (toLang === 'russian') {
-        return 'אתה מומחה ברוסית תקנית וטבעית. אתה מספק הצעות חלופיות לניסוח ברוסית שמשפרות את התרגום. **חשוב מאוד:** החזר תמיד JSON תקין בלבד, ללא טקסט נוסף.';
+      } else {
+        return `אתה מומחה ב${targetLanguageName} תקנית וטבעית. אתה מספק הצעות חלופיות לניסוח ב${targetLanguageName} שמשפרות את התרגום. **חשוב מאוד:** החזר תמיד JSON תקין בלבד, ללא טקסט נוסף.`;
       }
-      return 'אתה מומחה בתרגום. **חשוב מאוד:** החזר תמיד JSON תקין בלבד, ללא טקסט נוסף.';
     };
     
     const systemPrompt = getSystemPrompt();

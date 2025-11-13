@@ -88,6 +88,8 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'משרד', en: 'Office', ro: 'Birou', it: 'Ufficio', fr: 'Bureau', ru: 'Офис', pronunciation: { en: 'OF-is', ro: 'bee-ROO', it: 'oof-FEE-choh', fr: 'byoo-ROH', ru: 'OH-fees' } },
         { hebrew: 'כסף', en: 'Money', ro: 'Bani', it: 'Denaro', fr: 'Argent', ru: 'Деньги', pronunciation: { en: 'MUH-nee', ro: 'BAH-nee', it: 'deh-NAH-roh', fr: 'ahr-ZHAHN', ru: 'DYEN-gee' } },
         { hebrew: 'משכורת', en: 'Salary', ro: 'Salariu', it: 'Stipendio', fr: 'Salaire', ru: 'Зарплата', pronunciation: { en: 'SAL-uh-ree', ro: 'sah-LAH-ree-oo', it: 'stee-PEHN-dyoh', fr: 'sah-LEHR', ru: 'zahr-PLAH-tah' } },
+        { hebrew: 'מזכירה', en: 'Secretary', ro: 'Secretară', it: 'Segretaria', fr: 'Secrétaire', ru: 'Секретарь', pronunciation: { en: 'SEK-ruh-ter-ee', ro: 'seh-kreh-TAH-ruh', it: 'seh-greh-TAH-ree-ah', fr: 'seh-kray-TEHR', ru: 'seh-kreh-TAHR' } },
+        { hebrew: 'מנהל', en: 'Manager', ro: 'Manager', it: 'Manager', fr: 'Gestionnaire', ru: 'Менеджер', pronunciation: { en: 'MAN-ij-er', ro: 'MAH-nah-jehr', it: 'MAH-nah-jehr', fr: 'zhees-tee-oh-NAIR', ru: 'meh-nehd-ZHEHR' } },
       ],
     },
     מספרים: {
@@ -507,6 +509,9 @@ const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'סבים', en: 'Grandparents', ro: 'Bunici', it: 'Nonni', fr: 'Grands-parents', ru: 'Бабушка и дедушка', pronunciation: { en: 'GRAND-pair-ents', ro: 'BOO-nee-chee', it: 'NOHN-nee', fr: 'grahn pah-RAHN', ru: 'BAH-boosh-kah eed deh-DOOSH-kah' } },
         { hebrew: 'אב', en: 'Father', ro: 'Tată', it: 'Padre', fr: 'Père', ru: 'Отец', pronunciation: { en: 'FAH-ther', ro: 'TAH-tuh', it: 'PAH-dreh', fr: 'pehr', ru: 'ah-TYETS' } },
         { hebrew: 'אם', en: 'Mother', ro: 'Mamă', it: 'Madre', fr: 'Mère', ru: 'Мать', pronunciation: { en: 'MUH-ther', ro: 'MAH-muh', it: 'MAH-dreh', fr: 'mehr', ru: 'mat' } },
+        { hebrew: 'אבא', en: 'Dad', ro: 'Tată', it: 'Papà', fr: 'Papa', ru: 'Папа', pronunciation: { en: 'dad', ro: 'TAH-tuh', it: 'pah-PAH', fr: 'pah-PAH', ru: 'PAH-pah' } },
+        { hebrew: 'אמא', en: 'Mom', ro: 'Mamă', it: 'Mamma', fr: 'Maman', ru: 'Мама', pronunciation: { en: 'mom', ro: 'MAH-muh', it: 'MAHM-mah', fr: 'mah-MAHN', ru: 'MAH-mah' } },
+        { hebrew: 'בעלי', en: 'My husband', ro: 'Soțul meu', it: 'Mio marito', fr: 'Mon mari', ru: 'Мой муж', pronunciation: { en: 'my HUZ-bund', ro: 'SOHT-sool meh-OO', it: 'MEE-oh mah-REE-toh', fr: 'mohn mah-REE', ru: 'moy moozh' } },
         { hebrew: 'בן', en: 'Son', ro: 'Fiu', it: 'Figlio', fr: 'Fils', ru: 'Сын', pronunciation: { en: 'suhn', ro: 'fee-OO', it: 'FEE-lyoh', fr: 'fees', ru: 'syn' } },
         { hebrew: 'בת', en: 'Daughter', ro: 'Fiică', it: 'Figlia', fr: 'Fille', ru: 'Дочь', pronunciation: { en: 'DAW-ter', ro: 'FEE-kuh', it: 'FEE-lyah', fr: 'feey', ru: 'doch' } },
         { hebrew: 'דוד', en: 'Uncle', ro: 'Unchi', it: 'Zio', fr: 'Oncle', ru: 'Дядя', pronunciation: { en: 'UHNG-kul', ro: 'OON-kee', it: 'TSEE-oh', fr: 'ohnkl', ru: 'DYAH-dyah' } },
