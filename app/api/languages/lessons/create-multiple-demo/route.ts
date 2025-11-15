@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { generateText } from '@/lib/ai/claude';
 
 type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french' | 'russian';
 type LanguageLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 
 // Lesson templates for different topics and levels
-const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
+export const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
   BEGINNER: {
     היכרות: {
       title: 'היכרות בסיסית',
@@ -937,20 +938,128 @@ function getPronunciation(term: any, lang: SupportedLanguageKey): string {
   return term.pronunciation?.en || '';
 }
 
+async function generateGrammarNotes(
+  topic: string,
+  level: LanguageLevel,
+  targetLanguage: SupportedLanguageKey,
+  vocabulary: any[],
+  sentences: any[]
+): Promise<string> {
+  const languageNames: Record<SupportedLanguageKey, string> = {
+    english: 'אנגלית',
+    romanian: 'רומנית',
+    italian: 'איטלקית',
+    french: 'צרפתית',
+    russian: 'רוסית',
+  };
+
+  const levelNames: Record<LanguageLevel, string> = {
+    BEGINNER: 'מתחיל',
+    INTERMEDIATE: 'בינוני',
+    ADVANCED: 'מתקדם',
+  };
+
+  const langName = languageNames[targetLanguage];
+  const levelName = levelNames[level];
+
+  // Extract key vocabulary terms for context
+  const vocabTerms = vocabulary.slice(0, 10).map((v: any) => v.hebrew).join(', ');
+  const sentenceExamples = sentences.slice(0, 3).map((s: any) => s.hebrew).join('; ');
+
+  const prompt = `אתה מורה מקצועי לשפות שמלמד דוברי עברית את השפה ${langName}.
+
+הנושא של השיעור: ${topic}
+רמת הלימוד: ${levelName}
+השפה הנלמדת: ${langName}
+
+מילים מרכזיות בשיעור: ${vocabTerms}
+${sentenceExamples ? `דוגמאות משפטים: ${sentenceExamples}` : ''}
+
+צור הסבר דקדוקי מפורט ומעשי בעברית לשיעור זה. ההסבר צריך להיות ברור, קונקרטי ומעשי.
+
+**ההסבר חייב לכלול:**
+
+1. **כללי דקדוק ספציפיים** - לא רק "יש מילות יחס", אלא הסבר מפורט:
+   - איך משתמשים בכלל הזה בפועל?
+   - מה המבנה המדויק של המשפט?
+   - איך מטים פעלים/שמות עצם/תארים?
+   - איפה מניחים את המילה במשפט?
+
+2. **דוגמאות קונקרטיות מהשיעור** - לכל כלל דקדוק, תן דוגמה מהמילים/משפטים בשיעור:
+   - "במשפט '${sentenceExamples.split(';')[0] || 'דוגמה'}' אנו רואים ש..."
+   - "המילה '${vocabTerms.split(',')[0] || 'דוגמה'}' משתמשת בכלל..."
+
+3. **הבדלים קריטיים בין עברית ל-${langName}**:
+   - מה שונה בסדר המילים?
+   - מה שונה בהטיות?
+   - מה שונה בשימוש במילות יחס?
+   - תן דוגמאות ספציפיות!
+
+4. **שגיאות נפוצות של דוברי עברית**:
+   - מה דוברי עברית עושים לא נכון?
+   - איך להימנע מהשגיאה?
+   - תן דוגמה של שגיאה נפוצה + התיקון הנכון
+
+5. **טיפים מעשיים לשימוש**:
+   - איך לזכור את הכלל?
+   - מתי להשתמש בו?
+   - מה הדרך הקלה ביותר ליישם אותו?
+
+**חשוב מאוד:**
+- אל תכתוב הסברים כלליים כמו "בשיעור זה נלמד מילים הקשורות ל-${topic}"
+- תן הסברים ספציפיים עם דוגמאות מהשיעור
+- השתמש במילים ובמשפטים מהשיעור כדוגמאות
+- הסבר בעברית, ברור ומובן
+- השתמש ב-HTML בסיסי לפורמט (p, strong, ul, li, h3, h4)
+
+**דוגמה להסבר טוב:**
+במקום: "בשיעור זה נלמד על מילות יחס"
+כתוב: "במשפט '${sentenceExamples.split(';')[0] || 'דוגמה'}' המילה 'X' היא מילת יחס. ב-${langName}, מילות יחס מופיעות לפני שם העצם (בניגוד לעברית שבה הן יכולות להופיע אחרי). למשל: 'אני הולך אל הבית' ב-${langName} אומרים 'I go TO the house' ולא 'I go the house TO'."`;
+
+  const systemPrompt = `אתה מורה מקצועי לשפות שמסביר דקדוק בצורה ברורה ומובנת לדוברי עברית. אתה יוצר הסברים מפורטים עם דוגמאות מעשיות.`;
+
+  try {
+    const grammarNotes = await generateText({
+      prompt,
+      systemPrompt,
+      maxTokens: 2000,
+      temperature: 0.7,
+    });
+
+    // Ensure it's valid HTML
+    if (!grammarNotes.trim().startsWith('<')) {
+      return `<p>${grammarNotes}</p>`;
+    }
+
+    return grammarNotes;
+  } catch (error) {
+    console.error('Error generating grammar notes:', error);
+    // Fallback to basic explanation
+    return `<p>בשיעור זה נלמד מילים ומשפטים הקשורים ל-${topic} בשפה ${langName}. נדגיש כללי דקדוק חשובים ונעסוק בשימוש מעשי במילים.</p>`;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { targetLanguage = 'english', createAll = false, overwrite = false } = body;
+    const { targetLanguage, createAll = false, overwrite = false } = body;
+
+    // REQUIRE targetLanguage - only allow updating one language at a time
+    if (!targetLanguage) {
+      return NextResponse.json({
+        success: false,
+        error: 'targetLanguage is required. Only one language can be updated at a time.',
+      }, { status: 400 });
+    }
 
     const createdLessons: any[] = [];
     const updatedLessons: any[] = [];
     const errors: string[] = [];
 
-    // If createAll, create lessons for all languages, levels and topics
-    const languagesToCreate = createAll 
-      ? (['english', 'romanian', 'italian', 'french', 'russian'] as SupportedLanguageKey[])
-      : ([targetLanguage] as SupportedLanguageKey[]);
+    // Only create/update for the specified targetLanguage
+    const languagesToCreate = [targetLanguage] as SupportedLanguageKey[];
     
+    // If createAll is true, update all levels, otherwise only BEGINNER
     const levelsToCreate = createAll 
       ? (['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] as LanguageLevel[])
       : (['BEGINNER'] as LanguageLevel[]);
@@ -960,12 +1069,29 @@ export async function POST(req: NextRequest) {
     console.log('createAll flag:', createAll);
     console.log('overwrite flag:', overwrite);
 
+    // Calculate total number of lessons to process
+    let totalLessons = 0;
+    for (const level of levelsToCreate) {
+      const topicsForLevel = LESSON_TEMPLATES[level] || {};
+      totalLessons += Object.keys(topicsForLevel).length;
+    }
+    console.log(`📊 Total lessons to process: ${totalLessons} (estimated time: ${Math.ceil(totalLessons * 0.5)}-${Math.ceil(totalLessons * 0.8)} minutes)`);
+
+    let processedLessons = 0;
+    const startTime = Date.now();
+
     for (const lang of languagesToCreate) {
       console.log(`Processing language: ${lang}`);
       for (const level of levelsToCreate) {
         const topicsForLevel = LESSON_TEMPLATES[level] || {};
         
         for (const [topic, template] of Object.entries(topicsForLevel)) {
+          processedLessons++;
+          const elapsed = Math.floor((Date.now() - startTime) / 1000);
+          const avgTimePerLesson = processedLessons > 0 ? elapsed / processedLessons : 0;
+          const remainingLessons = totalLessons - processedLessons;
+          const estimatedRemaining = Math.ceil(remainingLessons * avgTimePerLesson);
+          console.log(`📈 Progress: ${processedLessons}/${totalLessons} lessons (${Math.round(processedLessons / totalLessons * 100)}%) - Elapsed: ${elapsed}s - Estimated remaining: ~${estimatedRemaining}s`);
           try {
             // Check if lesson already exists (by title, language, level, topic)
             // Don't include vocabulary/exercises to avoid loading fields that might not exist yet (like isSentence)
@@ -978,17 +1104,21 @@ export async function POST(req: NextRequest) {
               },
             });
 
+            console.log(`Checking lesson: ${template.title} (${lang}, ${level}, ${topic}) - exists: ${!!existing}, overwrite: ${overwrite}`);
+
             if (existing) {
-              if (overwrite) {
-                console.log(`Updating existing lesson: ${template.title} (${lang}, ${level}, ${topic})`);
-                
-                // Delete existing vocabulary and exercises
-                await prisma.lessonVocabulary.deleteMany({
-                  where: { lessonId: existing.id },
-                });
-                await prisma.lessonExercise.deleteMany({
-                  where: { lessonId: existing.id },
-                });
+              // Always update existing lessons (both overwrite and auto-update modes)
+              console.log(`🔄 Updating existing lesson: ${template.title} (${lang}, ${level}, ${topic}) - ID: ${existing.id}`);
+              
+              // Delete existing vocabulary and exercises
+              console.log(`  Deleting old vocabulary and exercises for lesson ${existing.id}...`);
+              const deletedVocab = await prisma.lessonVocabulary.deleteMany({
+                where: { lessonId: existing.id },
+              });
+              const deletedExercises = await prisma.lessonExercise.deleteMany({
+                where: { lessonId: existing.id },
+              });
+              console.log(`  ✅ Deleted ${deletedVocab.count} vocabulary items and ${deletedExercises.count} exercises`);
                 
                 // Prepare new vocabulary data
                 const vocabularyData = template.vocabulary.map((term: any, index: number) => {
@@ -1014,22 +1144,43 @@ export async function POST(req: NextRequest) {
                     notes: notesContent,
                   };
                   
-                  // Only include isSentence if the field exists in the database
-                  // This will be added after prisma db push runs successfully in Vercel
-                  // For now, we'll skip it to avoid errors
-                  // TODO: Uncomment after migration is complete
-                  // if (isSentence) {
-                  //   vocabData.isSentence = true;
-                  // }
+                  if (isSentence) {
+                    vocabData.isSentence = true;
+                  }
                   
                   return vocabData;
                 });
 
-                // Create exercises
-                const exercisesData = [
-                  {
+                // Add sentences if they exist
+                const sentences = template.sentences || [];
+                const sentencesData = sentences.map((sentence: any, index: number) => {
+                  const mainTranslation = getTranslation(sentence, lang);
+                  return {
+                    hebrewTerm: sentence.hebrew,
+                    translatedTerm: mainTranslation,
+                    pronunciation: getPronunciation(sentence, lang) || '',
+                    difficulty: 'MEDIUM' as const,
+                    partOfSpeech: 'OTHER' as const,
+                    order: vocabularyData.length + index + 1,
+                    usageExample: JSON.stringify({
+                      target: mainTranslation,
+                      hebrew: sentence.hebrew,
+                    }),
+                    notes: 'משפט שלם',
+                    isSentence: true,
+                  };
+                });
+
+                const allVocabularyData = [...vocabularyData, ...sentencesData];
+
+                // Create exercises - more complex and interesting exercises
+                const exercisesData: any[] = [];
+
+                // Exercise 1: Matching - match multiple words (always create if we have vocabulary)
+                if (template.vocabulary.length > 0) {
+                  exercisesData.push({
                     type: 'MATCHING' as const,
-                    title: 'התאם את המילה',
+                    title: 'התאמת מילים',
                     instructions: `בחרי את התרגום הנכון למילה "${template.vocabulary[0]?.hebrew}"`,
                     question: `מה התרגום של "${template.vocabulary[0]?.hebrew}"?`,
                     correctAnswer: getTranslation(template.vocabulary[0], lang),
@@ -1063,27 +1214,162 @@ export async function POST(req: NextRequest) {
                         },
                       ],
                     },
-                  },
-                  {
+                  });
+                }
+
+                // Add sentence building exercise if we have sentences
+                if (template.sentences && template.sentences.length > 0) {
+                  const sentence = template.sentences[0];
+                  const sentenceTranslation = getTranslation(sentence, lang);
+                  const sentenceWords = sentenceTranslation.split(' ').filter(w => w.length > 1 && !['the', 'a', 'an', 'is', 'are', 'am', 'was', 'were'].includes(w.toLowerCase()));
+                  
+                  // Create WORD_ORDER exercise if we have at least 2 words (reduced from 3)
+                  if (sentenceWords.length >= 2) {
+                    exercisesData.push({
+                      type: 'WORD_ORDER' as const,
+                      title: 'הרכיבי משפט',
+                      instructions: 'סדרי את המילים בסדר הנכון כדי ליצור משפט',
+                      question: `הרכיבי משפט מהמילים הבאות: ${sentenceWords.join(', ')}`,
+                      correctAnswer: sentenceTranslation,
+                      exerciseData: JSON.stringify({
+                        words: sentenceWords,
+                        correctOrder: sentenceTranslation.split(' '),
+                        hebrewSentence: sentence.hebrew,
+                      }),
+                      points: 20,
+                      order: exercisesData.length + 1,
+                    });
+                  }
+
+                  // Translation exercise - word in target language → Hebrew
+                  // Use first word from the sentence translation
+                  const firstWord = sentenceTranslation.split(' ')[0];
+                  const firstWordHebrew = sentence.hebrew.split(' ')[0];
+                  
+                  exercisesData.push({
                     type: 'FILL_BLANK' as const,
-                    title: 'השלמי את המשפט',
-                    instructions: 'השלמי את המשפט הנכון',
-                    question: `המילה "${template.vocabulary[0]?.hebrew}" מתרגמת ל-"[BLANK]"`,
-                    correctAnswer: getTranslation(template.vocabulary[0], lang),
-                    points: 10,
-                    order: 2,
-                  },
-                ];
+                    title: 'תרגום מילה',
+                    instructions: 'מה התרגום בעברית של המילה בשפה הנלמדת?',
+                    question: `מה התרגום בעברית של המילה "${firstWord}"?`,
+                    correctAnswer: firstWordHebrew,
+                    exerciseData: JSON.stringify({
+                      hebrewSentence: firstWordHebrew,
+                      targetWord: firstWord,
+                      targetLanguage: lang,
+                    }),
+                    points: 15,
+                    order: exercisesData.length + 1,
+                  });
+
+                  // Add another matching with a different word
+                  if (template.vocabulary.length >= 2) {
+                    exercisesData.push({
+                      type: 'MATCHING' as const,
+                      title: 'התאמת מילה נוספת',
+                      instructions: `בחרי את התרגום הנכון למילה "${template.vocabulary[1].hebrew}"`,
+                      question: `מה התרגום של "${template.vocabulary[1].hebrew}"?`,
+                      correctAnswer: getTranslation(template.vocabulary[1], lang),
+                      points: 10,
+                      order: exercisesData.length + 1,
+                      options: {
+                        create: [
+                          {
+                            text: getTranslation(template.vocabulary[1], lang),
+                            isCorrect: true,
+                            explanation: `נכון! "${template.vocabulary[1].hebrew}" מתרגם ל-${getTranslation(template.vocabulary[1], lang)}`,
+                            order: 1,
+                          },
+                          {
+                            text: getTranslation(template.vocabulary[0], lang),
+                            isCorrect: false,
+                            explanation: 'זה לא התרגום הנכון',
+                            order: 2,
+                          },
+                          {
+                            text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang),
+                            isCorrect: false,
+                            explanation: 'זה לא התרגום הנכון',
+                            order: 3,
+                          },
+                          {
+                            text: getTranslation(template.vocabulary[3] || template.vocabulary[0], lang),
+                            isCorrect: false,
+                            explanation: 'זה לא התרגום הנכון',
+                            order: 4,
+                          },
+                        ],
+                      },
+                    });
+                  }
+                } else {
+                  // If no sentences, add more matching exercises
+                  if (template.vocabulary.length >= 2) {
+                    exercisesData.push({
+                      type: 'MATCHING' as const,
+                      title: 'התאמת מילה נוספת',
+                      instructions: `בחרי את התרגום הנכון למילה "${template.vocabulary[1].hebrew}"`,
+                      question: `מה התרגום של "${template.vocabulary[1].hebrew}"?`,
+                      correctAnswer: getTranslation(template.vocabulary[1], lang),
+                      points: 10,
+                      order: exercisesData.length + 1,
+                      options: {
+                        create: [
+                          {
+                            text: getTranslation(template.vocabulary[1], lang),
+                            isCorrect: true,
+                            explanation: `נכון! "${template.vocabulary[1].hebrew}" מתרגם ל-${getTranslation(template.vocabulary[1], lang)}`,
+                            order: 1,
+                          },
+                          {
+                            text: getTranslation(template.vocabulary[0], lang),
+                            isCorrect: false,
+                            explanation: 'זה לא התרגום הנכון',
+                            order: 2,
+                          },
+                          {
+                            text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang),
+                            isCorrect: false,
+                            explanation: 'זה לא התרגום הנכון',
+                            order: 3,
+                          },
+                        ],
+                      },
+                    });
+                  }
+                }
+
+                console.log(`  📊 Total exercises created: ${exercisesData.length} (vocabulary: ${template.vocabulary.length}, sentences: ${template.sentences?.length || 0})`);
+
+                // Generate detailed grammar notes using AI (with timeout)
+                let grammarNotes: string;
+                try {
+                  // Set a timeout for grammar generation (30 seconds)
+                  const grammarPromise = generateGrammarNotes(
+                    topic,
+                    level,
+                    lang,
+                    template.vocabulary || [],
+                    template.sentences || []
+                  );
+                  const timeoutPromise = new Promise<string>((_, reject) => 
+                    setTimeout(() => reject(new Error('Grammar generation timeout')), 30000)
+                  );
+                  grammarNotes = await Promise.race([grammarPromise, timeoutPromise]);
+                } catch (error) {
+                  console.error(`Error generating grammar notes for ${template.title} (${lang}):`, error);
+                  grammarNotes = `<p>בשיעור זה נלמד מילים ומשפטים הקשורים ל-${topic} בשפה ${lang === 'english' ? 'אנגלית' : lang === 'romanian' ? 'רומנית' : lang === 'italian' ? 'איטלקית' : lang === 'french' ? 'צרפתית' : 'רוסית'}. נדגיש כללי דקדוק חשובים ונעסוק בשימוש מעשי במילים.</p>`;
+                }
 
                 // Update the lesson
+                console.log(`  📝 Creating ${exercisesData.length} exercises and ${allVocabularyData.length} vocabulary items...`);
                 const updatedLesson = await prisma.lesson.update({
                   where: { id: existing.id },
                   data: {
                     description: template.description,
-                    grammarNotes: `<p>בשיעור זה נלמד מילים הקשורות ל-${topic}.</p>`,
+                    grammarNotes: grammarNotes,
                     culturalTips: `מילים אלה שימושיות מאוד ב-${lang === 'english' ? 'אנגלית' : lang === 'romanian' ? 'רומנית' : lang === 'italian' ? 'איטלקית' : lang === 'french' ? 'צרפתית' : lang === 'russian' ? 'רוסית' : lang}.`,
                     vocabulary: {
-                      create: vocabularyData,
+                      create: allVocabularyData,
                     },
                     exercises: {
                       create: exercisesData,
@@ -1100,112 +1386,8 @@ export async function POST(req: NextRequest) {
                 });
 
                 updatedLessons.push(updatedLesson);
-                console.log(`Successfully updated lesson: ${template.title} (${lang})`);
+                console.log(`✅ Successfully updated lesson: ${template.title} (${lang}) - ${updatedLesson.exercises.length} exercises, ${updatedLesson.vocabulary.length} vocabulary items`);
                 continue;
-              } else {
-                // If overwrite is false but lesson exists, update it anyway (auto-update mode)
-                // This allows users to update lessons without explicitly clicking "overwrite"
-                console.log(`Auto-updating existing lesson: ${template.title} (${lang}, ${level}, ${topic})`);
-                
-                // Delete existing vocabulary and exercises
-                await prisma.lessonVocabulary.deleteMany({
-                  where: { lessonId: existing.id },
-                });
-                await prisma.lessonExercise.deleteMany({
-                  where: { lessonId: existing.id },
-                });
-                
-                // Prepare new vocabulary data (same as overwrite case)
-                const vocabularyData = template.vocabulary.map((term: any, index: number) => {
-                  const mainTranslation = getTranslation(term, lang);
-                  const alternatives = term.alternatives?.[lang] || [];
-                  const notesContent = alternatives.length > 0 
-                    ? `תרגומים חלופיים: ${alternatives.join(', ')}`
-                    : null;
-                  const isSentence = term.isSentence || false;
-                  
-                  const vocabData: any = {
-                    hebrewTerm: term.hebrew,
-                    translatedTerm: mainTranslation,
-                    pronunciation: getPronunciation(term, lang),
-                    difficulty: 'EASY' as const,
-                    partOfSpeech: 'NOUN' as const,
-                    order: index + 1,
-                    usageExample: JSON.stringify({
-                      target: `${mainTranslation} - ${term.hebrew}`,
-                      hebrew: term.hebrew,
-                    }),
-                    notes: notesContent,
-                  };
-                  
-                  return vocabData;
-                });
-
-                // Create exercises (same as overwrite case)
-                const exercisesData = [
-                  {
-                    type: 'MATCHING' as const,
-                    title: 'התאם את המילה',
-                    instructions: `בחרי את התרגום הנכון למילה "${template.vocabulary[0]?.hebrew}"`,
-                    question: `מה התרגום של "${template.vocabulary[0]?.hebrew}"?`,
-                    correctAnswer: getTranslation(template.vocabulary[0], lang),
-                    points: 10,
-                    order: 1,
-                    options: {
-                      create: [
-                        {
-                          text: getTranslation(template.vocabulary[0], lang),
-                          isCorrect: true,
-                          explanation: `נכון! "${template.vocabulary[0]?.hebrew}" מתרגם ל-${getTranslation(template.vocabulary[0], lang)}`,
-                          order: 1,
-                        },
-                        {
-                          text: getTranslation(template.vocabulary[1] || template.vocabulary[0], lang),
-                          isCorrect: false,
-                          explanation: 'זה לא התרגום הנכון',
-                          order: 2,
-                        },
-                        {
-                          text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang),
-                          isCorrect: false,
-                          explanation: 'זה לא התרגום הנכון',
-                          order: 3,
-                        },
-                      ],
-                    },
-                  },
-                  {
-                    type: 'FILL_BLANK' as const,
-                    title: 'השלמי את המשפט',
-                    instructions: 'השלמי את המילה החסרה',
-                    question: `The word "${getTranslation(template.vocabulary[1] || template.vocabulary[0], lang)}" means "[BLANK]" in Hebrew`,
-                    correctAnswer: template.vocabulary[1]?.hebrew || template.vocabulary[0].hebrew,
-                    points: 10,
-                    order: 2,
-                  },
-                ];
-
-                // Update lesson with new vocabulary and exercises
-                const updatedLesson = await prisma.lesson.update({
-                  where: { id: existing.id },
-                  data: {
-                    description: template.description,
-                    duration: template.vocabulary.length * 2,
-                    grammarNotes: `דקדוק בסיסי ל-${lang === 'english' ? 'אנגלית' : lang === 'romanian' ? 'רומנית' : lang === 'italian' ? 'איטלקית' : lang === 'french' ? 'צרפתית' : lang === 'russian' ? 'רוסית' : lang}.`,
-                    culturalTips: `מילים אלה שימושיות מאוד ב-${lang === 'english' ? 'אנגלית' : lang === 'romanian' ? 'רומנית' : lang === 'italian' ? 'איטלקית' : lang === 'french' ? 'צרפתית' : lang === 'russian' ? 'רוסית' : lang}.`,
-                    vocabulary: {
-                      create: vocabularyData,
-                    },
-                    exercises: {
-                      create: exercisesData,
-                    },
-                  },
-                });
-
-                updatedLessons.push(updatedLesson);
-                console.log(`Successfully auto-updated lesson: ${template.title} (${lang})`);
-                continue;
-              }
             }
 
             console.log(`Creating lesson: ${template.title} for ${lang}, ${level}, ${topic}`);
@@ -1281,11 +1463,30 @@ export async function POST(req: NextRequest) {
 
             const allVocabularyData = [...vocabularyData, ...sentencesData];
 
-            // Create exercises
-            const exercisesData = [
-              {
+            // Generate detailed grammar notes using AI
+            let grammarNotes: string;
+            try {
+              grammarNotes = await generateGrammarNotes(
+                topic,
+                level,
+                lang,
+                template.vocabulary || [],
+                template.sentences || []
+              );
+            } catch (error) {
+              console.error(`Error generating grammar notes for ${template.title} (${lang}):`, error);
+              // Fallback to basic explanation
+              grammarNotes = `<p>בשיעור זה נלמד מילים ומשפטים הקשורים ל-${topic}.</p>`;
+            }
+
+            // Create exercises - more complex and interesting exercises
+            const exercisesData: any[] = [];
+
+            // Exercise 1: Matching - match multiple words (always create if we have vocabulary)
+            if (template.vocabulary.length > 0) {
+              exercisesData.push({
                 type: 'MATCHING' as const,
-                title: 'התאם את המילה',
+                title: 'התאמת מילים',
                 instructions: `בחרי את התרגום הנכון למילה "${template.vocabulary[0].hebrew}"`,
                 question: `מה התרגום של "${template.vocabulary[0].hebrew}"?`,
                 correctAnswer: getTranslation(template.vocabulary[0], lang),
@@ -1311,19 +1512,133 @@ export async function POST(req: NextRequest) {
                       explanation: 'זה לא התרגום הנכון',
                       order: 3,
                     },
+                    {
+                      text: getTranslation(template.vocabulary[3] || template.vocabulary[0], lang),
+                      isCorrect: false,
+                      explanation: 'זה לא התרגום הנכון',
+                      order: 4,
+                    },
                   ],
                 },
-              },
-              {
+              });
+            }
+
+            // Exercise 2: Sentence building - if we have sentences
+            if (template.sentences && template.sentences.length > 0) {
+              const sentence = template.sentences[0];
+              const sentenceTranslation = getTranslation(sentence, lang);
+              
+              // Extract words from the sentence for word order exercise
+              const sentenceWords = sentenceTranslation.split(' ').filter(w => w.length > 1 && !['the', 'a', 'an', 'is', 'are', 'am', 'was', 'were'].includes(w.toLowerCase()));
+              
+              if (sentenceWords.length >= 3) {
+                exercisesData.push({
+                  type: 'WORD_ORDER' as const,
+                  title: 'הרכיבי משפט',
+                  instructions: 'סדרי את המילים בסדר הנכון כדי ליצור משפט',
+                  question: `הרכיבי משפט מהמילים הבאות: ${sentenceWords.join(', ')}`,
+                  correctAnswer: sentenceTranslation,
+                  exerciseData: JSON.stringify({
+                    words: sentenceWords,
+                    correctOrder: sentenceTranslation.split(' '),
+                    hebrewSentence: sentence.hebrew,
+                  }),
+                  points: 20,
+                  order: exercisesData.length + 1,
+                });
+              }
+
+              // Exercise 3: Translation - translate sentence from Hebrew
+              exercisesData.push({
                 type: 'FILL_BLANK' as const,
-                title: 'השלמי את המשפט',
-                instructions: 'השלמי את המילה החסרה',
-                question: `The word "${getTranslation(template.vocabulary[1] || template.vocabulary[0], lang)}" means "[BLANK]" in Hebrew`,
-                correctAnswer: template.vocabulary[1]?.hebrew || template.vocabulary[0].hebrew,
-                points: 10,
-                order: 2,
-              },
-            ];
+                title: 'תרגומי משפט',
+                instructions: 'תרגמי את המשפט הבא מעברית',
+                question: `תרגמי את המשפט: "${sentence.hebrew}"`,
+                correctAnswer: sentenceTranslation,
+                exerciseData: JSON.stringify({
+                  hebrewSentence: sentence.hebrew,
+                  targetLanguage: lang,
+                }),
+                points: 25,
+                order: exercisesData.length + 1,
+              });
+
+              // Exercise 4: Another matching with a different word
+              if (template.vocabulary.length >= 2) {
+                exercisesData.push({
+                  type: 'MATCHING' as const,
+                  title: 'התאמת מילה נוספת',
+                  instructions: `בחרי את התרגום הנכון למילה "${template.vocabulary[1].hebrew}"`,
+                  question: `מה התרגום של "${template.vocabulary[1].hebrew}"?`,
+                  correctAnswer: getTranslation(template.vocabulary[1], lang),
+                  points: 10,
+                  order: exercisesData.length + 1,
+                  options: {
+                    create: [
+                      {
+                        text: getTranslation(template.vocabulary[1], lang),
+                        isCorrect: true,
+                        explanation: `נכון! "${template.vocabulary[1].hebrew}" מתרגם ל-${getTranslation(template.vocabulary[1], lang)}`,
+                        order: 1,
+                      },
+                      {
+                        text: getTranslation(template.vocabulary[0], lang),
+                        isCorrect: false,
+                        explanation: 'זה לא התרגום הנכון',
+                        order: 2,
+                      },
+                      {
+                        text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang),
+                        isCorrect: false,
+                        explanation: 'זה לא התרגום הנכון',
+                        order: 3,
+                      },
+                      {
+                        text: getTranslation(template.vocabulary[3] || template.vocabulary[0], lang),
+                        isCorrect: false,
+                        explanation: 'זה לא התרגום הנכון',
+                        order: 4,
+                      },
+                    ],
+                  },
+                });
+              }
+            } else {
+              // If no sentences, add more matching exercises
+              if (template.vocabulary.length >= 2) {
+                exercisesData.push({
+                  type: 'MATCHING' as const,
+                  title: 'התאמת מילה נוספת',
+                  instructions: `בחרי את התרגום הנכון למילה "${template.vocabulary[1].hebrew}"`,
+                  question: `מה התרגום של "${template.vocabulary[1].hebrew}"?`,
+                  correctAnswer: getTranslation(template.vocabulary[1], lang),
+                  points: 10,
+                  order: exercisesData.length + 1,
+                  options: {
+                    create: [
+                      {
+                        text: getTranslation(template.vocabulary[1], lang),
+                        isCorrect: true,
+                        explanation: `נכון! "${template.vocabulary[1].hebrew}" מתרגם ל-${getTranslation(template.vocabulary[1], lang)}`,
+                        order: 1,
+                      },
+                      {
+                        text: getTranslation(template.vocabulary[0], lang),
+                        isCorrect: false,
+                        explanation: 'זה לא התרגום הנכון',
+                        order: 2,
+                      },
+                      {
+                        text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang),
+                        isCorrect: false,
+                        explanation: 'זה לא התרגום הנכון',
+                        order: 3,
+                      },
+                    ],
+                  },
+                });
+              }
+            }
 
             const lesson = await prisma.lesson.create({
               data: {
@@ -1333,8 +1648,8 @@ export async function POST(req: NextRequest) {
                 title: template.title,
                 description: template.description,
                 duration: 15,
-                objectives: JSON.stringify(['ללמוד מילים בסיסיות', 'להבין שימוש במילים']),
-                grammarNotes: `<p>בשיעור זה נלמד מילים הקשורות ל-${topic}.</p>`,
+                objectives: JSON.stringify(['ללמוד מילים בסיסיות', 'להבין שימוש במילים', 'ללמוד כללי דקדוק חשובים']),
+                grammarNotes: grammarNotes,
                 culturalTips: `מילים אלה שימושיות מאוד ב-${lang === 'english' ? 'אנגלית' : lang === 'romanian' ? 'רומנית' : lang === 'italian' ? 'איטלקית' : lang === 'french' ? 'צרפתית' : lang === 'russian' ? 'רוסית' : lang}.`,
                 order: nextOrder,
                 isPublished: true,

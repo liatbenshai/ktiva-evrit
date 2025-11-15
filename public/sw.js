@@ -21,6 +21,13 @@ self.addEventListener('install', (event) => {
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const method = request.method;
+  const url = new URL(request.url);
+  
+  // Skip service worker for API routes - always fetch from network
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(request));
+    return;
+  }
   
   // Only cache GET requests - skip POST, DELETE, PUT, PATCH
   if (method !== 'GET') {

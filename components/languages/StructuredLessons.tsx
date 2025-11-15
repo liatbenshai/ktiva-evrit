@@ -103,8 +103,6 @@ export default function StructuredLessons({
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [isCreatingDemo, setIsCreatingDemo] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchLessons = useCallback(async (level?: LanguageLevel) => {
     setIsLoading(true);
@@ -128,15 +126,14 @@ export default function StructuredLessons({
         const uniqueTopics = Array.from(new Set(fetchedLessons.map((l: Lesson) => l.topic)));
         setTopics(uniqueTopics as string[]);
         
-        // Only set error on main page (when no level is selected)
         // Check if we have lessons for the current target language
         const lessonsForCurrentLanguage = fetchedLessons.filter((l: Lesson) => l.targetLanguage === targetLanguage);
         if (!selectedLevel) {
           // Only show error on main page
           if (lessonsForCurrentLanguage.length === 0) {
-            setError('אין שיעורים זמינים לשפה זו כרגע. לחצי על הכפתור למטה כדי ליצור שיעורים.');
+            setError('אין שיעורים זמינים לשפה זו כרגע.');
           } else if (fetchedLessons.length === 0) {
-            setError('אין שיעורים זמינים כרגע. שיעורים יופיעו כאן ברגע שייווצרו.');
+            setError('אין שיעורים זמינים כרגע.');
           } else {
             setError(null); // Clear error if lessons exist
           }
@@ -234,72 +231,6 @@ export default function StructuredLessons({
     return map[lang];
   };
 
-  const handleDeleteAll = async () => {
-    if (!confirm('האם את בטוחה שברצונך למחוק את כל השיעורים? פעולה זו לא ניתנת לביטול.')) {
-      return;
-    }
-
-    setIsDeleting(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/languages/lessons/delete-all', {
-        method: 'DELETE',
-      });
-      const data = await response.json();
-      if (data.success) {
-        setSuccess(`נמחקו ${data.deletedCount} שיעורים בהצלחה`);
-        setLessons([]); // Clear lessons immediately
-        setTopics([]); // Clear topics
-        await fetchLessons(selectedLevel || undefined);
-        setTimeout(() => setSuccess(null), 5000);
-      } else {
-        setError(data.error || 'שגיאה במחיקת שיעורים');
-      }
-    } catch (error: any) {
-      console.error('Error deleting lessons:', error);
-      setError('שגיאה במחיקת שיעורים');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleCreateDemo = async (createAll = false, overwrite = false) => {
-    setIsCreatingDemo(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/languages/lessons/create-multiple-demo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          targetLanguage,
-          createAll,
-          overwrite,
-        }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        await fetchLessons(selectedLevel || undefined);
-        setError(null);
-        if (data.created > 0 || data.updated > 0) {
-          const messages = [];
-          if (data.created > 0) messages.push(`נוצרו ${data.created} שיעורים`);
-          if (data.updated > 0) messages.push(`עודכנו ${data.updated} שיעורים`);
-          setSuccess(`${messages.join(' ו-')} בהצלחה!`);
-          setTimeout(() => setSuccess(null), 5000);
-        }
-        if (data.errors && data.errors.length > 0) {
-          setError(`${data.message}. שגיאות: ${data.errors.join(', ')}`);
-        }
-      } else {
-        setError(data.error || 'שגיאה ביצירת שיעורים');
-      }
-    } catch (error: any) {
-      console.error('Error creating demo lessons:', error);
-      setError('שגיאה ביצירת שיעורים');
-    } finally {
-      setIsCreatingDemo(false);
-    }
-  };
 
   // If viewing flashcards
   if (practiceMode === 'flashcards') {
@@ -332,47 +263,6 @@ export default function StructuredLessons({
         {error && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             {error}
-            {(error.includes('אין שיעורים') || error.includes('לחצי על הכפתור')) && (
-              <div className="mt-3 space-y-2">
-                <button
-                  onClick={() => handleCreateDemo(false)}
-                  disabled={isCreatingDemo}
-                  className="block w-full rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isCreatingDemo ? 'יוצר שיעור דוגמה...' : 'צרי שיעור דוגמה אחד'}
-                </button>
-                <button
-                  onClick={() => handleCreateDemo(true)}
-                  disabled={isCreatingDemo}
-                  className="block w-full rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isCreatingDemo ? 'יוצר שיעורים...' : 'צרי כל השיעורים (כל הרמות והנושאים - לכל השפות)'}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {/* Always show create buttons if no lessons for current language */}
-        {!error && lessons.filter((l: Lesson) => l.targetLanguage === targetLanguage).length === 0 && (
-          <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-800">
-            <p className="mb-3">אין שיעורים זמינים לשפה {targetLanguage === 'english' ? 'אנגלית' : targetLanguage === 'romanian' ? 'רומנית' : targetLanguage === 'italian' ? 'איטלקית' : targetLanguage === 'french' ? 'צרפתית' : 'רוסית'} כרגע.</p>
-            <div className="space-y-2">
-              <button
-                onClick={() => handleCreateDemo(false)}
-                disabled={isCreatingDemo}
-                className="block w-full rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isCreatingDemo ? 'יוצר שיעור דוגמה...' : 'צרי שיעור דוגמה אחד'}
-              </button>
-              <button
-                onClick={() => handleCreateDemo(true)}
-                disabled={isCreatingDemo}
-                className="block w-full rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isCreatingDemo ? 'יוצר שיעורים...' : 'צרי כל השיעורים (כל הרמות והנושאים - לכל השפות)'}
-              </button>
-            </div>
           </div>
         )}
         {isLoading && (
@@ -404,33 +294,6 @@ export default function StructuredLessons({
           })}
         </div>
 
-        {/* Update or Delete existing lessons - moved to bottom */}
-        {lessons.length > 0 && (
-          <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm">
-            <p className="mb-3 text-slate-700">ניהול שיעורים:</p>
-            <div className="space-y-2">
-              <button
-                onClick={() => handleCreateDemo(true, true)}
-                disabled={isCreatingDemo}
-                className="block w-full rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isCreatingDemo ? 'מעדכן שיעורים...' : 'עדכני את כל השיעורים הקיימים'}
-              </button>
-              <p className="text-xs text-slate-600 mt-1">פעולה זו תעדכן את השיעורים הקיימים עם התרגומים החדשים (כולל רוסית) מבלי למחוק אותם</p>
-              
-              <div className="border-t border-slate-300 pt-3 mt-3">
-                <button
-                  onClick={handleDeleteAll}
-                  disabled={isDeleting}
-                  className="block w-full rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isDeleting ? 'מוחק שיעורים...' : 'מחקי את כל השיעורים הקיימים'}
-                </button>
-                <p className="text-xs text-red-600 mt-1">לאחר המחיקה, לחצי על "צרי כל השיעורים" כדי ליצור שיעורים חדשים</p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -522,23 +385,7 @@ export default function StructuredLessons({
             </div>
           ) : topics.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center">
-              <p className="mb-4 text-slate-600">אין נושאים זמינים ברמה זו כרגע.</p>
-              <div className="space-y-2">
-                <button
-                  onClick={() => handleCreateDemo(false)}
-                  disabled={isCreatingDemo}
-                  className="block w-full rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isCreatingDemo ? 'יוצר שיעור דוגמה...' : 'צרי שיעור דוגמה אחד'}
-                </button>
-                <button
-                  onClick={() => handleCreateDemo(true)}
-                  disabled={isCreatingDemo}
-                  className="block w-full rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isCreatingDemo ? 'יוצר שיעורים...' : 'צרי כל השיעורים לרמה זו'}
-                </button>
-              </div>
+              <p className="text-slate-600">אין נושאים זמינים ברמה זו כרגע.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

@@ -239,22 +239,83 @@ export default function LessonView({
                     targetLanguage={targetLanguage}
                   />
                 )}
-                {exercise.type === 'FILL_BLANK' && exercise.correctAnswer && (
+                {exercise.type === 'FILL_BLANK' && exercise.correctAnswer && exercise.exerciseData && (() => {
+                  try {
+                    const exerciseData = JSON.parse(exercise.exerciseData);
+                    // If it's a translation exercise (has targetWord), show word in target language and ask for Hebrew
+                    if (exerciseData.targetWord) {
+                      return (
+                        <ExerciseFillBlank
+                          question={`מה התרגום בעברית של המילה "${exerciseData.targetWord}"?`}
+                          sentence={`המילה "${exerciseData.targetWord}" מתרגמת ל-[BLANK]`}
+                          correctAnswer={exerciseData.hebrewSentence || exercise.correctAnswer}
+                          onAnswer={(isCorrect) => handleExerciseAnswer(exercise.id, isCorrect, exercisePoints)}
+                        />
+                      );
+                    }
+                    // Regular fill blank
+                    return (
+                      <ExerciseFillBlank
+                        question={exercise.question}
+                        sentence={exercise.question.includes('[BLANK]') ? exercise.question : `${exercise.question} [BLANK]`}
+                        correctAnswer={exercise.correctAnswer}
+                        onAnswer={(isCorrect) => handleExerciseAnswer(exercise.id, isCorrect, exercisePoints)}
+                      />
+                    );
+                  } catch (error) {
+                    // Fallback to regular fill blank
+                    return (
+                      <ExerciseFillBlank
+                        question={exercise.question}
+                        sentence={exercise.question.includes('[BLANK]') ? exercise.question : `${exercise.question} [BLANK]`}
+                        correctAnswer={exercise.correctAnswer}
+                        onAnswer={(isCorrect) => handleExerciseAnswer(exercise.id, isCorrect, exercisePoints)}
+                      />
+                    );
+                  }
+                })()}
+                {exercise.type === 'FILL_BLANK' && exercise.correctAnswer && !exercise.exerciseData && (
                   <ExerciseFillBlank
                     question={exercise.question}
-                    sentence={exercise.question} // This might need adjustment
+                    sentence={exercise.question.includes('[BLANK]') ? exercise.question : `${exercise.question} [BLANK]`}
                     correctAnswer={exercise.correctAnswer}
                     onAnswer={(isCorrect) => handleExerciseAnswer(exercise.id, isCorrect, exercisePoints)}
                   />
                 )}
-                {exercise.type === 'WORD_ORDER' && exercise.exerciseData && (
-                  <ExerciseWordOrder
-                    question={exercise.question}
-                    words={JSON.parse(exercise.exerciseData)}
-                    correctOrder={exercise.correctAnswer ? JSON.parse(exercise.correctAnswer) : []}
-                    onAnswer={(isCorrect) => handleExerciseAnswer(exercise.id, isCorrect, exercisePoints)}
-                  />
-                )}
+                {exercise.type === 'WORD_ORDER' && exercise.exerciseData && (() => {
+                  try {
+                    const exerciseData = JSON.parse(exercise.exerciseData);
+                    return (
+                      <ExerciseWordOrder
+                        question="הרכיבי את המשפט בשפה הנלמדת:"
+                        words={exerciseData.words || []}
+                        correctOrder={exerciseData.correctOrder || (exercise.correctAnswer ? exercise.correctAnswer.split(' ') : [])}
+                        hebrewSentence={exerciseData.hebrewSentence || exercise.question}
+                        onAnswer={(isCorrect) => handleExerciseAnswer(exercise.id, isCorrect, exercisePoints)}
+                      />
+                    );
+                  } catch (error) {
+                    console.error('Error parsing exercise data:', error);
+                    // Fallback: use correctAnswer as a string and split it
+                    const fallbackWords = exercise.exerciseData ? (() => {
+                      try {
+                        const parsed = JSON.parse(exercise.exerciseData);
+                        return parsed.words || [];
+                      } catch {
+                        return [];
+                      }
+                    })() : [];
+                    return (
+                      <ExerciseWordOrder
+                        question="הרכיבי את המשפט בשפה הנלמדת:"
+                        words={fallbackWords}
+                        correctOrder={exercise.correctAnswer ? exercise.correctAnswer.split(' ') : []}
+                        hebrewSentence={exercise.question}
+                        onAnswer={(isCorrect) => handleExerciseAnswer(exercise.id, isCorrect, exercisePoints)}
+                      />
+                    );
+                  }
+                })()}
                 {exercise.type === 'LISTENING' && exercise.correctAnswer && (
                   <ExerciseListening
                     question={exercise.question}

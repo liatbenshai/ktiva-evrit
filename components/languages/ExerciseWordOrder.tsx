@@ -7,6 +7,7 @@ interface ExerciseWordOrderProps {
   question: string;
   words: string[]; // Words to arrange
   correctOrder: string[]; // Correct order (array of word IDs or indices)
+  hebrewSentence?: string; // Hebrew sentence to show as reference
   onAnswer: (isCorrect: boolean) => void;
 }
 
@@ -14,6 +15,7 @@ export default function ExerciseWordOrder({
   question,
   words,
   correctOrder,
+  hebrewSentence,
   onAnswer,
 }: ExerciseWordOrderProps) {
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
@@ -53,7 +55,13 @@ export default function ExerciseWordOrder({
 
   return (
     <div className="rounded-2xl border border-indigo-100 bg-white p-6 shadow-sm">
-      <p className="text-sm font-medium text-indigo-700 mb-4">{question}</p>
+      {hebrewSentence && (
+        <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+          <p className="text-xs font-medium text-emerald-700 mb-1">המשפט בעברית:</p>
+          <p className="text-lg font-semibold text-emerald-800">{hebrewSentence}</p>
+        </div>
+      )}
+      <p className="text-sm font-medium text-indigo-700 mb-4">{question || 'הרכיבי את המשפט בשפה הנלמדת:'}</p>
 
       <div className="mb-4">
         <p className="text-xs text-slate-500 mb-2">לחצי על המילים לפי הסדר הנכון:</p>

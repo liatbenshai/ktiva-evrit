@@ -421,6 +421,18 @@ export default function CreateWorksheet() {
                 .content > div:first-child {
                   page-break-before: avoid;
                 }
+                
+                .answer-space {
+                  min-height: 100px !important;
+                  height: 100px !important;
+                  border-bottom: 2px solid #adb5bd !important;
+                  border: 2px solid #adb5bd !important;
+                  width: 100% !important;
+                  box-sizing: border-box !important;
+                  line-height: 2.8 !important;
+                  padding: 12px !important;
+                  margin: 8px 0 !important;
+                }
               }
               
               .print-header {
@@ -506,15 +518,16 @@ export default function CreateWorksheet() {
               }
               
               .answer-space {
-                margin-top: 6px;
-                min-height: 140px;
-                border: 1px dashed #adb5bd;
-                padding: 14px;
+                margin-top: 8px;
+                min-height: 100px;
+                border: 2px solid #adb5bd;
+                padding: 12px;
                 background: white;
                 margin: 0;
-                line-height: 1.5;
-                border-radius: 12px;
+                line-height: 2.8;
+                border-radius: 0;
                 width: 100%;
+                box-sizing: border-box;
               }
               
               .answer-space::before {

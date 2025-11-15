@@ -25,6 +25,8 @@
     "@types/react-dom": "^19.2.2",
     "autoprefixer": "^10.4.21",
     "clsx": "^2.1.1",
+    "docx": "^9.5.1",
+    "file-saver": "^2.0.5",
     "jspdf": "^3.0.3",
     "lucide-react": "^0.546.0",
     "mammoth": "^1.11.0",

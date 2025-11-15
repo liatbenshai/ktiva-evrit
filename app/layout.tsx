@@ -1,7 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Heebo } from "next/font/google";
 import "./globals.css";
-import PWAInstaller from "@/components/PWAInstaller";
 
 const heebo = Heebo({ 
   subsets: ["hebrew"],
@@ -12,17 +11,10 @@ export const metadata: Metadata = {
   title: "כתיבה בעברית - פלטפורמה לשיפור כתיבה וניסוח",
   description: "פלטפורמה חכמה לכתיבת מאמרים, מיילים, פוסטים, סיפורים, סיכומים ופרוטוקולים בעברית תקנית",
   manifest: "/manifest.json",
-  themeColor: "#6366f1",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "כתיבה עברית",
-  },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
   },
   icons: {
     icon: [
@@ -36,6 +28,14 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: "#6366f1",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -45,7 +45,6 @@ export default function RootLayout({
     <html lang="he" dir="rtl">
       <body className={heebo.className}>
         {children}
-        <PWAInstaller />
         <script
           dangerouslySetInnerHTML={{
             __html: `

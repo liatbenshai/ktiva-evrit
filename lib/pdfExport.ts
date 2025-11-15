@@ -79,15 +79,15 @@ export async function exportWorksheetToPDF(worksheetText: string) {
     const line = contentLines[i].trim();
     const nextLine = i < contentLines.length - 1 ? contentLines[i + 1].trim() : '';
     
-    if (!line) {
-      if (inVerticalMath) {
-        inVerticalMath = false;
-        htmlParts.push(`<div class="answer-space"></div>`);
-        htmlParts.push('</div>');
+      if (!line) {
+        if (inVerticalMath) {
+          inVerticalMath = false;
+          htmlParts.push(`<div class="answer-space" style="min-height: 80px; height: 80px; width: 100%; line-height: 2.5;"></div>`);
+          htmlParts.push('</div>');
+        }
+        htmlParts.push('<div style="height: 3px;"></div>');
+        continue;
       }
-      htmlParts.push('<div style="height: 3px;"></div>');
-      continue;
-    }
     
     // בדיקה אם זה תרגיל מאונך - אם השורה היא מספר והשורה הקודמת לא הייתה חלק מתרגיל
     if (/^\d+$/.test(line) && !inVerticalMath) {
@@ -119,7 +119,7 @@ export async function exportWorksheetToPDF(worksheetText: string) {
       
       // אם זה מספר (שורה ראשונה של התרגיל) - מיושר ימינה (או שמאלה בעברית)
       if (/^\d+$/.test(line)) {
-        htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: ${isHebrew ? 'right' : 'left'}; padding-${isHebrew ? 'right' : 'left'}: 40px;">${escapedLine}</div>`);
+        htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; direction: ltr; text-align: right; padding-${isHebrew ? 'right' : 'left'}: 40px; font-family: 'Courier New', monospace;">${escapedLine}</div>`);
         continue;
       }
       
@@ -128,20 +128,20 @@ export async function exportWorksheetToPDF(worksheetText: string) {
       if (signMatch) {
         const sign = signMatch[1];
         const number = signMatch[2];
-        htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: ${isHebrew ? 'right' : 'left'}; padding-${isHebrew ? 'right' : 'left'}: 40px;"><span style="display: inline-block; ${isHebrew ? 'margin-left' : 'margin-right'}: 5px;">${sign}</span><span>${number}</span></div>`);
+        htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; direction: ltr; text-align: right; padding-${isHebrew ? 'right' : 'left'}: 40px; font-family: 'Courier New', monospace;"><span style="display: inline-block; margin-left: 5px;">${sign}</span><span>${number}</span></div>`);
         continue;
       }
       
       // אם זה קו הפרדה - מיושר כמו המספרים
       if (/^-{2,}/.test(line)) {
-        htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; border-bottom: 1px solid #333; width: 80px; ${isHebrew ? 'margin-right' : 'margin-left'}: 40px;"></div>`);
+        htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; border-bottom: 1px solid #333; width: 80px; margin-right: 40px; direction: ltr;"></div>`);
         continue;
       }
       
       // אם זה "תשובה:" - סיום התרגיל
       if (/תשובה:/.test(line) || /Answer:/.test(line)) {
         inVerticalMath = false;
-        htmlParts.push(`<div class="answer-space"></div>`);
+        htmlParts.push(`<div class="answer-space" style="min-height: 80px; height: 80px; width: 100%; line-height: 2.5;"></div>`);
         htmlParts.push('</div>');
         continue;
       }
@@ -149,7 +149,7 @@ export async function exportWorksheetToPDF(worksheetText: string) {
       // אם השורה הבאה לא חלק מהתרגיל - סיום
       if (!/^\d+$/.test(nextLine) && !/^[+\-×*÷]\s*\d+/.test(nextLine) && !/^-{2,}/.test(nextLine) && nextLine && !/^\(?\d+\)?\s*$/.test(nextLine)) {
         inVerticalMath = false;
-        htmlParts.push(`<div class="answer-space"></div>`);
+        htmlParts.push(`<div class="answer-space" style="min-height: 80px; height: 80px; width: 100%; line-height: 2.5;"></div>`);
         htmlParts.push('</div>');
       }
     }
@@ -162,9 +162,9 @@ export async function exportWorksheetToPDF(worksheetText: string) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
       
-      htmlParts.push(`<div class="question-container" style="margin-bottom: 8px;">
-        <div style="margin-bottom: 4px; font-size: 15px;">${escapedLine}</div>
-        <div class="answer-space"></div>
+      htmlParts.push(`<div class="question-container" style="margin-bottom: 20px; direction: ${dir};">
+        <div style="margin-bottom: 10px; font-size: 15px; text-align: ${isHebrew ? 'right' : 'left'}; line-height: 1.6;">${escapedLine}</div>
+        <div class="answer-space" style="text-align: ${isHebrew ? 'right' : 'left'}; min-height: 80px; height: 80px; width: 100%; line-height: 2.5;"></div>
       </div>`);
       continue;
     }
@@ -177,7 +177,7 @@ export async function exportWorksheetToPDF(worksheetText: string) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
       
-      htmlParts.push(`<div style="margin: 8px 0 4px 0; font-size: 17px; font-weight: bold;">${escapedLine}</div>`);
+      htmlParts.push(`<div style="margin: 12px 0 6px 0; font-size: 18px; font-weight: bold; text-align: ${isHebrew ? 'right' : 'left'}; direction: ${dir};">${escapedLine}</div>`);
       continue;
     }
     
@@ -185,10 +185,10 @@ export async function exportWorksheetToPDF(worksheetText: string) {
     const escapedLine = line
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
+          .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
     
-    htmlParts.push(`<div style="margin-bottom: 4px; line-height: 1.3; font-size: 15px;">${escapedLine}</div>`);
+    htmlParts.push(`<div style="margin-bottom: 6px; line-height: 1.6; font-size: 15px; text-align: ${isHebrew ? 'right' : 'left'}; direction: ${dir};">${escapedLine}</div>`);
   }
   
   const escapedContent = htmlParts.join('');
@@ -207,16 +207,20 @@ export async function exportWorksheetToPDF(worksheetText: string) {
       <head>
         <meta charset="UTF-8">
         <title>${escapedTitle}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
         <style>
           * { box-sizing: border-box; }
           body {
-            font-family: 'Segoe UI', 'Arial', 'Helvetica', sans-serif;
+            font-family: ${isHebrew ? "'Assistant', 'Heebo', 'Segoe UI', 'Arial Hebrew', 'David', 'Miriam', sans-serif" : "'Segoe UI', 'Arial', 'Helvetica', sans-serif"};
             font-size: 15px;
-            line-height: 1.3;
+            line-height: 1.5;
             padding: 0;
             margin: 0;
             color: #2c3e50;
             background: #fff;
+            direction: ${dir};
+            text-align: ${isHebrew ? 'right' : 'left'};
+            unicode-bidi: embed;
           }
           @page {
             margin: 10mm 5mm;
@@ -257,6 +261,18 @@ export async function exportWorksheetToPDF(worksheetText: string) {
             }
             .answer-space {
               page-break-inside: avoid;
+              min-height: 100px !important;
+              height: 100px !important;
+              border-bottom: 2px solid #adb5bd !important;
+              width: 100% !important;
+              box-sizing: border-box !important;
+              line-height: 2.8 !important;
+              padding: 12px !important;
+              margin: 8px 0 !important;
+            }
+            .question-container {
+              page-break-inside: avoid;
+              margin-bottom: 20px !important;
             }
           }
           .print-header {
@@ -278,6 +294,8 @@ export async function exportWorksheetToPDF(worksheetText: string) {
             text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
             letter-spacing: 0.5px;
             flex: 1;
+            direction: ${dir};
+            text-align: ${isHebrew ? 'right' : 'left'};
           }
           .student-info-box {
             background: #ffffff;
@@ -290,37 +308,48 @@ export async function exportWorksheetToPDF(worksheetText: string) {
             justify-content: flex-start;
             align-items: center;
             gap: 30px;
+            direction: ${dir};
           }
           .student-field {
             font-size: 15px;
             color: #212529;
             white-space: nowrap;
             font-weight: 500;
+            direction: ${dir};
+            text-align: ${isHebrew ? 'right' : 'left'};
           }
           .content {
             margin-top: 0;
-            line-height: 1.4;
+            line-height: 1.6;
             padding: 0;
+            direction: ${dir};
+            text-align: ${isHebrew ? 'right' : 'left'};
           }
           .question-container {
             page-break-inside: avoid;
           }
           .answer-space {
-            margin-top: 4px;
-            min-height: 50px;
-            border-bottom: 1px solid #adb5bd;
-            padding: 6px;
+            margin-top: 8px;
+            min-height: 80px;
+            border-bottom: 2px solid #adb5bd;
+            padding: 12px;
             background: white;
-            margin-right: 10px;
-            line-height: 1.3;
+            ${isHebrew ? 'margin-right: 0; margin-left: 0;' : 'margin-left: 0; margin-right: 0;'}
+            line-height: 2.5;
+            direction: ${dir};
+            text-align: ${isHebrew ? 'right' : 'left'};
+            width: 100%;
+            box-sizing: border-box;
           }
           .answer-space::before {
             content: "${isHebrew ? 'תשובה:' : 'Answer:'}";
             color: #6c757d;
             font-size: 12px;
-            margin-bottom: 4px;
+            margin-bottom: 8px;
             display: block;
-            font-weight: 500;
+            font-weight: 600;
+            direction: ${dir};
+            text-align: ${isHebrew ? 'right' : 'left'};
           }
           @media print {
             * {
@@ -341,16 +370,16 @@ export async function exportWorksheetToPDF(worksheetText: string) {
       </head>
       <body>
         <div class="worksheet-wrapper">
-          <div class="print-header">
-            <h1>${escapedTitle}</h1>
-            <div>${isHebrew ? 'שם: __________________' : 'Name: __________________'}</div>
+          <div class="print-header" style="direction: ${dir};">
+            <h1 style="direction: ${dir}; text-align: ${isHebrew ? 'right' : 'left'};">${escapedTitle}</h1>
+            <div style="direction: ${dir}; text-align: ${isHebrew ? 'right' : 'left'}; font-size: 15px; white-space: nowrap;">${isHebrew ? 'שם: __________________' : 'Name: __________________'}</div>
           </div>
           <div class="student-info-box">
             <div class="student-field">${isHebrew ? 'שם התלמיד:' : 'Student Name:'} ________________________</div>
             <div class="student-field">${isHebrew ? 'כיתה:' : 'Class:'} ________</div>
             <div class="student-field">${isHebrew ? 'תאריך:' : 'Date:'} ________</div>
           </div>
-          <div class="content">
+          <div class="content" style="direction: ${dir}; text-align: ${isHebrew ? 'right' : 'left'};">
             ${escapedContent}
           </div>
         </div>

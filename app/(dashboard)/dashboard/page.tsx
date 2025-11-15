@@ -9,6 +9,7 @@ import {
   Languages,
   Mail,
   MessageSquare,
+  RotateCcw,
   ScrollText,
   Sparkles,
   Wand2,
@@ -84,6 +85,13 @@ const creationCards = [
     icon: Languages,
     href: '/dashboard/languages',
     gradient: 'from-teal-500 via-blue-500 to-purple-500',
+  },
+  {
+    title: 'היפוך מסמך עברי',
+    description: 'הופך מסמך עברית שנסרק הפוך - הופך כל שורה בנפרד.',
+    icon: RotateCcw,
+    href: '/dashboard/flip-document',
+    gradient: 'from-slate-500 via-gray-500 to-zinc-600',
   },
 ];
 
