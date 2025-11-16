@@ -99,12 +99,11 @@ async function parseHtmlToDocx(html: string) {
   // Process each child element in order
   body.contents().each((_, node) => {
     if (node.type === 'tag' && 'name' in node) {
-      const element = node as cheerio.AnyNode;
-      const tagName = (element as any).name;
+      const tagName = (node as any).name;
       
       if (tagName === 'table') {
         // Process table
-        const table = $(element);
+        const table = $(node);
         const rows: any[] = [];
         
         // Find all rows (including in tbody, thead, tfoot)
@@ -145,7 +144,7 @@ async function parseHtmlToDocx(html: string) {
         }
       } else if (tagName?.match(/^h[1-6]$/)) {
         // Process heading
-        const heading = $(element);
+        const heading = $(node);
         const level = parseInt(tagName[1]);
         const text = extractAndFlipText(heading.html() || '').trim();
         
@@ -169,7 +168,7 @@ async function parseHtmlToDocx(html: string) {
         }
       } else if (['p', 'div', 'li'].includes(tagName || '')) {
         // Process paragraph/div/list item
-        const para = $(element);
+        const para = $(node);
         const text = extractAndFlipText(para.html() || '').trim();
         
         if (text) {
