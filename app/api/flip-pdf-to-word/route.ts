@@ -98,9 +98,9 @@ async function parseHtmlToDocx(html: string) {
   
   // Process each child element in order
   body.contents().each((_, node) => {
-    if (node.type === 'tag') {
-      const element = node as cheerio.Element;
-      const tagName = element.name;
+    if (node.type === 'tag' && 'name' in node) {
+      const element = node as cheerio.AnyNode;
+      const tagName = (element as any).name;
       
       if (tagName === 'table') {
         // Process table
