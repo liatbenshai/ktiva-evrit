@@ -78,6 +78,7 @@ export async function exportWorksheetToPDF(worksheetText: string) {
   for (let i = 0; i < contentLines.length; i++) {
     const line = contentLines[i].trim();
     const nextLine = i < contentLines.length - 1 ? contentLines[i + 1].trim() : '';
+    const prevLine = i > 0 ? contentLines[i - 1].trim() : '';
     
       if (!line) {
         if (inVerticalMath) {
@@ -86,6 +87,15 @@ export async function exportWorksheetToPDF(worksheetText: string) {
           htmlParts.push('</div>');
         }
         htmlParts.push('<div style="height: 3px;"></div>');
+        continue;
+      }
+      
+      // בדיקה אם זה "תשובה:" - נציג עם תיבה אחרי (בלי ::before כפול)
+      if (/^תשובה:?\s*$/i.test(line) || /^Answer:?\s*$/i.test(line)) {
+        htmlParts.push(`<div class="question-container" style="margin-bottom: 20px; direction: ${dir};">
+          <div style="margin-bottom: 8px; font-size: 15px; font-weight: 600; text-align: ${isHebrew ? 'right' : 'left'}; color: #495057;">${isHebrew ? 'תשובה:' : 'Answer:'}</div>
+          <div class="answer-space-no-label" style="text-align: ${isHebrew ? 'right' : 'left'}; min-height: 100px; height: 100px; width: 100%; line-height: 2.5; border: 2px solid #adb5bd; border-radius: 4px; padding: 12px; margin-top: 8px; box-sizing: border-box; background: white;"></div>
+        </div>`);
         continue;
       }
     
@@ -152,6 +162,46 @@ export async function exportWorksheetToPDF(worksheetText: string) {
         htmlParts.push(`<div class="answer-space" style="min-height: 80px; height: 80px; width: 100%; line-height: 2.5;"></div>`);
         htmlParts.push('</div>');
       }
+    }
+    
+    // בדיקה אם זה תרגיל כפל אופקי מסוג "______ ×1" או "____ 1x" או "___ × 2"
+    const multiplicationMatch = line.match(/^(_+|[־_\s]+)\s*[×x]\s*(\d+)$/i) || 
+                                line.match(/^(_+|[־_\s]+)\s*(\d+)\s*[×x]$/i);
+    
+    if (multiplicationMatch) {
+      // זה תרגיל כפל - נציג אותו עם תיבת תשובה
+      const underline = multiplicationMatch[1] || '______';
+      const number = multiplicationMatch[2];
+      
+      // אם יש × בצורה "___ × 2" או "___ x 2"
+      const hasXBefore = /[×x]\s*\d+$/i.test(line);
+      const displayText = hasXBefore ? `${underline} ×${number}` : `${underline} ${number}×`;
+      
+      const escapedText = displayText
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+      
+      // בדיקה אם השורה הבאה היא "תשובה:" - אם כן, נחבר אותן יחד
+      const isNextLineAnswer = nextLine && (/^תשובה:?\s*$/i.test(nextLine) || /^Answer:?\s*$/i.test(nextLine));
+      
+      if (isNextLineAnswer) {
+        // דילוג על השורה הבאה (תשובה:) ונציג הכל יחד
+        i++; // Skip next line
+        htmlParts.push(`<div class="question-container" style="margin-bottom: 24px; direction: ${dir}; border-bottom: 1px solid #dee2e6; padding-bottom: 16px;">
+          <div style="margin-bottom: 12px; font-size: 18px; text-align: ${isHebrew ? 'right' : 'left'}; line-height: 1.8; font-weight: 500; font-family: 'Courier New', monospace;">${escapedText}</div>
+          <div style="margin-bottom: 8px; font-size: 15px; font-weight: 600; text-align: ${isHebrew ? 'right' : 'left'}; color: #495057;">${isHebrew ? 'תשובה:' : 'Answer:'}</div>
+          <div class="answer-space-no-label" style="text-align: ${isHebrew ? 'right' : 'left'}; min-height: 100px; height: 100px; width: 100%; line-height: 2.5; border: 2px solid #adb5bd; border-radius: 4px; padding: 12px; margin-top: 8px; box-sizing: border-box; background: white;"></div>
+        </div>`);
+      } else {
+        // לא, נציג רק את התרגיל עם תיבה
+        htmlParts.push(`<div class="question-container" style="margin-bottom: 24px; direction: ${dir}; border-bottom: 1px solid #dee2e6; padding-bottom: 16px;">
+          <div style="margin-bottom: 12px; font-size: 18px; text-align: ${isHebrew ? 'right' : 'left'}; line-height: 1.8; font-weight: 500; font-family: 'Courier New', monospace;">${escapedText}</div>
+          <div class="answer-space-no-label" style="text-align: ${isHebrew ? 'right' : 'left'}; min-height: 100px; height: 100px; width: 100%; line-height: 2.5; border: 2px solid #adb5bd; border-radius: 4px; padding: 12px; margin-top: 8px; box-sizing: border-box; background: white;"></div>
+        </div>`);
+      }
+      continue;
     }
     
     // אם זה תרגיל/שאלה רגיל
@@ -270,6 +320,18 @@ export async function exportWorksheetToPDF(worksheetText: string) {
               padding: 12px !important;
               margin: 8px 0 !important;
             }
+            .answer-space-no-label {
+              page-break-inside: avoid;
+              min-height: 100px !important;
+              height: 100px !important;
+              border: 2px solid #adb5bd !important;
+              width: 100% !important;
+              box-sizing: border-box !important;
+              line-height: 2.8 !important;
+              padding: 12px !important;
+              margin: 8px 0 !important;
+              background: white !important;
+            }
             .question-container {
               page-break-inside: avoid;
               margin-bottom: 20px !important;
@@ -350,6 +412,22 @@ export async function exportWorksheetToPDF(worksheetText: string) {
             font-weight: 600;
             direction: ${dir};
             text-align: ${isHebrew ? 'right' : 'left'};
+          }
+          .answer-space-no-label {
+            margin-top: 8px;
+            min-height: 80px;
+            border: 2px solid #adb5bd;
+            padding: 12px;
+            background: white;
+            ${isHebrew ? 'margin-right: 0; margin-left: 0;' : 'margin-left: 0; margin-right: 0;'}
+            line-height: 2.5;
+            direction: ${dir};
+            text-align: ${isHebrew ? 'right' : 'left'};
+            width: 100%;
+            box-sizing: border-box;
+          }
+          .answer-space-no-label::before {
+            display: none;
           }
           @media print {
             * {
