@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mammoth from 'mammoth';
+import * as cheerio from 'cheerio';
 
 let cachedPdfParse: ((data: Buffer) => Promise<{ text: string }>) | null = null;
 async function getPdfParser() {
@@ -84,147 +85,71 @@ function flipTextInHtml(html: string): string {
   return parts.join('');
 }
 
-// Parse HTML and convert to docx elements
+// Parse HTML and convert to docx elements using cheerio
 async function parseHtmlToDocx(html: string) {
   const { Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType } = await import('docx');
   const elements: any[] = [];
   
-  // Simple HTML parser for basic structure
-  // Remove style tags and comments
-  html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-  html = html.replace(/<!--[\s\S]*?-->/g, '');
+  // Load HTML with cheerio
+  const $ = cheerio.load(html);
   
-  // Split HTML into segments (tables and other content) while preserving order
-  const segments: Array<{ type: 'table' | 'content'; html: string; index: number }> = [];
-  const tableRegex = /<table[^>]*>[\s\S]*?<\/table>/gi;
-  let tableMatch;
+  // Process body content in order
+  const body = $('body').length > 0 ? $('body') : $.root();
   
-  // Extract all tables with their positions
-  const tables: Array<{ html: string; index: number }> = [];
-  while ((tableMatch = tableRegex.exec(html)) !== null) {
-    tables.push({
-      html: tableMatch[0],
-      index: tableMatch.index,
-    });
-  }
-  
-  // Sort tables by index to process in order
-  tables.sort((a, b) => a.index - b.index);
-  
-  // Process HTML in order: content, table, content, table, etc.
-  let currentIndex = 0;
-  for (const table of tables) {
-    // Add content before table
-    if (table.index > currentIndex) {
-      segments.push({
-        type: 'content',
-        html: html.substring(currentIndex, table.index),
-        index: currentIndex,
-      });
-    }
-    
-    // Add table
-    segments.push({
-      type: 'table',
-      html: table.html,
-      index: table.index,
-    });
-    
-    currentIndex = table.index + table.html.length;
-  }
-  
-  // Add remaining content
-  if (currentIndex < html.length) {
-    segments.push({
-      type: 'content',
-      html: html.substring(currentIndex),
-      index: currentIndex,
-    });
-  }
-  
-  // If no tables found, process entire HTML as content
-  if (segments.length === 0) {
-    segments.push({
-      type: 'content',
-      html: html,
-      index: 0,
-    });
-  }
-  
-  // Process each segment in order
-  for (const segment of segments) {
-    if (segment.type === 'table') {
-      // Process table - remove table tags but keep tbody, thead, tfoot if present
-      let tableHtml = segment.html.replace(/<\/?table[^>]*>/gi, '');
-      // Also handle tbody, thead, tfoot
-      tableHtml = tableHtml.replace(/<\/?(tbody|thead|tfoot)[^>]*>/gi, '');
+  // Process each child element in order
+  body.contents().each((_, node) => {
+    if (node.type === 'tag') {
+      const element = node as cheerio.Element;
+      const tagName = element.name;
       
-      const rows: any[] = [];
-      const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-      let rowMatch;
-      
-      // Determine number of columns from first row
-      let numColumns = 0;
-      const firstRowMatch = rowRegex.exec(tableHtml);
-      if (firstRowMatch) {
-        numColumns = (firstRowMatch[1].match(/<t[dh][^>]*>/gi) || []).length;
-      }
-      rowRegex.lastIndex = 0; // Reset regex
-      
-      while ((rowMatch = rowRegex.exec(tableHtml)) !== null) {
-        const rowHtml = rowMatch[1];
-        const cells: any[] = [];
-        const cellRegex = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
-        let cellMatch;
+      if (tagName === 'table') {
+        // Process table
+        const table = $(element);
+        const rows: any[] = [];
         
-        while ((cellMatch = cellRegex.exec(rowHtml)) !== null) {
-          const cellContent = cellMatch[1];
-          // Extract text from cell content and flip it, preserving line breaks
-          const cellText = extractAndFlipText(cellContent).trim();
+        // Find all rows (including in tbody, thead, tfoot)
+        table.find('tr').each((_, trNode) => {
+          const row = $(trNode);
+          const cells: any[] = [];
           
-          // Split by newlines to preserve paragraph structure within cells
-          const cellLines = cellText.split('\n').filter(l => l.trim());
-          const cellParagraphs = cellLines.length > 0 
-            ? cellLines.map(line => new Paragraph({ children: [new TextRun(line.trim())] }))
-            : [new Paragraph({ children: [new TextRun('')] })];
+          // Find all cells
+          row.find('td, th').each((_, cellNode) => {
+            const cell = $(cellNode);
+            const cellText = extractAndFlipText(cell.html() || '').trim();
+            
+            // Split by newlines to preserve paragraph structure
+            const cellLines = cellText.split('\n').filter(l => l.trim());
+            const cellParagraphs = cellLines.length > 0 
+              ? cellLines.map(line => new Paragraph({ children: [new TextRun(line.trim())] }))
+              : [new Paragraph({ children: [new TextRun('')] })];
+            
+            cells.push(
+              new TableCell({
+                children: cellParagraphs,
+              })
+            );
+          });
           
-          cells.push(
-            new TableCell({
-              children: cellParagraphs,
-              width: numColumns > 0 ? { size: 100 / numColumns, type: WidthType.PERCENTAGE } : undefined,
-            })
-          );
+          if (cells.length > 0) {
+            rows.push(new TableRow({ children: cells }));
+          }
+        });
+        
+        if (rows.length > 0) {
+          // Calculate column count from first row
+          const numColumns = rows[0]?.children.length || 1;
+          elements.push(new Table({ 
+            rows,
+            columnWidths: Array(numColumns).fill(100 / numColumns).map(size => ({ size, type: WidthType.PERCENTAGE }))
+          }));
         }
+      } else if (tagName?.match(/^h[1-6]$/)) {
+        // Process heading
+        const heading = $(element);
+        const level = parseInt(tagName[1]);
+        const text = extractAndFlipText(heading.html() || '').trim();
         
-        if (cells.length > 0) {
-          rows.push(new TableRow({ children: cells }));
-        }
-      }
-      
-      if (rows.length > 0) {
-        elements.push(new Table({ rows }));
-      }
-    } else {
-      // Process content (headings, paragraphs, etc.)
-      const contentToProcess = segment.html;
-      
-      // Split by block elements
-      const blockRegex = /<(h[1-6]|p|div|li|ul|ol)[^>]*>([\s\S]*?)<\/\1>/gi;
-      let blockMatch;
-      let foundBlocks = false;
-      
-      while ((blockMatch = blockRegex.exec(contentToProcess)) !== null) {
-        foundBlocks = true;
-        const tagName = blockMatch[1];
-        const content = blockMatch[2];
-        
-        // Extract and flip text, preserving structure
-        const text = extractAndFlipText(content).trim();
-        
-        if (!text) continue;
-        
-        if (tagName.match(/^h[1-6]$/)) {
-          const level = parseInt(tagName[1]);
+        if (text) {
           const headingLevels = [
             HeadingLevel.HEADING_1,
             HeadingLevel.HEADING_2,
@@ -234,64 +159,79 @@ async function parseHtmlToDocx(html: string) {
             HeadingLevel.HEADING_6,
           ];
           
-          // Split heading by lines if needed
-          const headingLines = text.split('\n').filter(l => l.trim());
-          for (const line of headingLines) {
+          elements.push(
+            new Paragraph({
+              children: [new TextRun(text)],
+              heading: headingLevels[Math.min(level - 1, 5)],
+              spacing: { after: 240 },
+            })
+          );
+        }
+      } else if (['p', 'div', 'li'].includes(tagName || '')) {
+        // Process paragraph/div/list item
+        const para = $(element);
+        const text = extractAndFlipText(para.html() || '').trim();
+        
+        if (text) {
+          // Split by newlines if needed
+          const lines = text.split('\n').filter(l => l.trim());
+          for (const line of lines) {
             elements.push(
               new Paragraph({
                 children: [new TextRun(line.trim())],
-                heading: headingLevels[Math.min(level - 1, 5)],
-                spacing: { after: 240 },
-              })
-            );
-          }
-        } else {
-          // Split paragraph by lines to preserve structure
-          const paragraphLines = text.split('\n').filter(l => l.trim());
-          if (paragraphLines.length > 0) {
-            for (const line of paragraphLines) {
-              elements.push(
-                new Paragraph({
-                  children: [new TextRun(line.trim())],
-                  spacing: { after: 120 },
-                })
-              );
-            }
-          } else {
-            elements.push(
-              new Paragraph({
-                children: [new TextRun('')],
                 spacing: { after: 120 },
               })
             );
           }
+        } else {
+          elements.push(
+            new Paragraph({
+              children: [new TextRun('')],
+              spacing: { after: 120 },
+            })
+          );
+        }
+      } else if (tagName === 'br') {
+        // Line break
+        elements.push(
+          new Paragraph({
+            children: [new TextRun('')],
+            spacing: { after: 120 },
+          })
+        );
+      }
+    } else if (node.type === 'text') {
+      // Process text nodes directly
+      const text = $(node).text().trim();
+      if (text) {
+        const flipped = extractAndFlipText(text);
+        const lines = flipped.split('\n').filter(l => l.trim());
+        for (const line of lines) {
+          elements.push(
+            new Paragraph({
+              children: [new TextRun(line.trim())],
+              spacing: { after: 120 },
+            })
+          );
         }
       }
-      
-      // If no block elements found, process as plain text
-      if (!foundBlocks) {
-        const plainText = extractAndFlipText(contentToProcess).trim();
-        if (plainText) {
-          const lines = plainText.split('\n');
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (trimmed) {
-              elements.push(
-                new Paragraph({
-                  children: [new TextRun(trimmed)],
-                  spacing: { after: 120 },
-                })
-              );
-            } else {
-              // Preserve empty lines as empty paragraphs
-              elements.push(
-                new Paragraph({
-                  children: [new TextRun('')],
-                  spacing: { after: 120 },
-                })
-              );
-            }
-          }
+    }
+  });
+  
+  // If no elements found, process entire HTML as plain text
+  if (elements.length === 0) {
+    const plainText = extractAndFlipText(html).trim();
+    if (plainText) {
+      const lines = plainText.split('\n');
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed) {
+          elements.push(
+            new Paragraph({
+              children: [new TextRun(trimmed)],
+              spacing: { after: 120 },
+            })
+          );
         }
       }
     }
