@@ -23,22 +23,65 @@ function flipHebrewText(text: string): string {
     .join('\n');
 }
 
-// Helper function to flip text in HTML while preserving structure
+// Helper function to extract and flip text from HTML while preserving structure
+function extractAndFlipText(html: string): string {
+  // Remove HTML tags and preserve newlines, then flip
+  let text = html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<\/h[1-6]>/gi, '\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+  
+  // Flip Hebrew text line by line
+  return flipHebrewText(text);
+}
+
+// Helper function to flip text in HTML while preserving structure (for nested content)
 function flipTextInHtml(html: string): string {
-  // Simple approach: flip text content between HTML tags
-  // This preserves the structure (tables, headings, etc.)
-  return html.replace(/>([^<]+)</g, (match, text) => {
-    const trimmed = text.trim();
-    if (!trimmed) return match;
-    
-    // Only flip if contains Hebrew characters
-    const hasHebrew = /[\u0590-\u05FF]/.test(trimmed);
-    if (hasHebrew) {
-      const flipped = flipHebrewText(trimmed);
-      return `>${flipped}<`;
+  // More sophisticated: preserve HTML structure but flip text nodes
+  // Split by tags and process text content separately
+  const parts: string[] = [];
+  const tagRegex = /<[^>]+>/g;
+  let tagMatch;
+  
+  // Find all tags
+  const tags: Array<{ index: number; content: string }> = [];
+  while ((tagMatch = tagRegex.exec(html)) !== null) {
+    tags.push({
+      index: tagMatch.index,
+      content: tagMatch[0],
+    });
+  }
+  
+  // Process content between tags
+  let currentIndex = 0;
+  for (const tag of tags) {
+    // Add text before tag (flip it)
+    if (tag.index > currentIndex) {
+      const text = html.substring(currentIndex, tag.index);
+      const hasHebrew = /[\u0590-\u05FF]/.test(text);
+      parts.push(hasHebrew ? flipHebrewText(text) : text);
     }
-    return match;
-  });
+    
+    // Add tag as-is
+    parts.push(tag.content);
+    currentIndex = tag.index + tag.content.length;
+  }
+  
+  // Add remaining text
+  if (currentIndex < html.length) {
+    const text = html.substring(currentIndex);
+    const hasHebrew = /[\u0590-\u05FF]/.test(text);
+    parts.push(hasHebrew ? flipHebrewText(text) : text);
+  }
+  
+  return parts.join('');
 }
 
 // Parse HTML and convert to docx elements
@@ -130,15 +173,18 @@ async function parseHtmlToDocx(html: string) {
         
         while ((cellMatch = cellRegex.exec(rowHtml)) !== null) {
           const cellContent = cellMatch[1];
-          const cellText = flipTextInHtml(cellContent).replace(/<[^>]+>/g, ' ').trim();
+          // Extract text from cell content and flip it, preserving line breaks
+          const cellText = extractAndFlipText(cellContent).trim();
+          
+          // Split by newlines to preserve paragraph structure within cells
+          const cellLines = cellText.split('\n').filter(l => l.trim());
+          const cellParagraphs = cellLines.length > 0 
+            ? cellLines.map(line => new Paragraph({ children: [new TextRun(line.trim())] }))
+            : [new Paragraph({ children: [new TextRun('')] })];
           
           cells.push(
             new TableCell({
-              children: [
-                new Paragraph({
-                  children: cellText ? [new TextRun(cellText)] : [new TextRun('')],
-                }),
-              ],
+              children: cellParagraphs,
               width: numColumns > 0 ? { size: 100 / numColumns, type: WidthType.PERCENTAGE } : undefined,
             })
           );
@@ -165,7 +211,9 @@ async function parseHtmlToDocx(html: string) {
         foundBlocks = true;
         const tagName = blockMatch[1];
         const content = blockMatch[2];
-        const text = flipTextInHtml(content).replace(/<[^>]+>/g, ' ').trim();
+        
+        // Extract and flip text, preserving structure
+        const text = extractAndFlipText(content).trim();
         
         if (!text) continue;
         
@@ -180,26 +228,43 @@ async function parseHtmlToDocx(html: string) {
             HeadingLevel.HEADING_6,
           ];
           
-          elements.push(
-            new Paragraph({
-              children: [new TextRun(text)],
-              heading: headingLevels[Math.min(level - 1, 5)],
-              spacing: { after: 240 },
-            })
-          );
+          // Split heading by lines if needed
+          const headingLines = text.split('\n').filter(l => l.trim());
+          for (const line of headingLines) {
+            elements.push(
+              new Paragraph({
+                children: [new TextRun(line.trim())],
+                heading: headingLevels[Math.min(level - 1, 5)],
+                spacing: { after: 240 },
+              })
+            );
+          }
         } else {
-          elements.push(
-            new Paragraph({
-              children: [new TextRun(text)],
-              spacing: { after: 120 },
-            })
-          );
+          // Split paragraph by lines to preserve structure
+          const paragraphLines = text.split('\n').filter(l => l.trim());
+          if (paragraphLines.length > 0) {
+            for (const line of paragraphLines) {
+              elements.push(
+                new Paragraph({
+                  children: [new TextRun(line.trim())],
+                  spacing: { after: 120 },
+                })
+              );
+            }
+          } else {
+            elements.push(
+              new Paragraph({
+                children: [new TextRun('')],
+                spacing: { after: 120 },
+              })
+            );
+          }
         }
       }
       
       // If no block elements found, process as plain text
       if (!foundBlocks) {
-        const plainText = flipTextInHtml(contentToProcess).replace(/<[^>]+>/g, ' ').trim();
+        const plainText = extractAndFlipText(contentToProcess).trim();
         if (plainText) {
           const lines = plainText.split('\n');
           for (const line of lines) {
@@ -208,6 +273,14 @@ async function parseHtmlToDocx(html: string) {
               elements.push(
                 new Paragraph({
                   children: [new TextRun(trimmed)],
+                  spacing: { after: 120 },
+                })
+              );
+            } else {
+              // Preserve empty lines as empty paragraphs
+              elements.push(
+                new Paragraph({
+                  children: [new TextRun('')],
                   spacing: { after: 120 },
                 })
               );
