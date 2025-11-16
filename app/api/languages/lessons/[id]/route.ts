@@ -29,7 +29,11 @@ export async function GET(
     }
 
     // Add progress if available (still from database)
-    let lessonWithProgress = lesson;
+    let lessonWithProgress: typeof lesson & { userProgress: any[]; prerequisites: any[] } = {
+      ...lesson,
+      userProgress: [],
+      prerequisites: [],
+    };
     try {
       const progress = await prisma.userLessonProgress.findUnique({
         where: {
