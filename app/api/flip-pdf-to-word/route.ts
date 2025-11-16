@@ -25,7 +25,10 @@ function flipHebrewText(text: string): string {
 }
 
 // Helper function to extract and flip text from HTML while preserving structure
-function extractAndFlipText(html: string): string {
+function extractAndFlipText(html: string | null | undefined): string {
+  // Handle null/undefined
+  if (!html) return '';
+  
   // Remove HTML tags and preserve newlines, then flip
   let text = html
     .replace(/<br\s*\/?>/gi, '\n')
@@ -114,10 +117,11 @@ async function parseHtmlToDocx(html: string) {
           // Find all cells
           row.find('td, th').each((_, cellNode) => {
             const cell = $(cellNode);
-            const cellText = extractAndFlipText(cell.html() || '').trim();
+            const cellHtml = cell.html();
+            const cellText = extractAndFlipText(cellHtml).trim();
             
             // Split by newlines to preserve paragraph structure
-            const cellLines = cellText.split('\n').filter(l => l.trim());
+            const cellLines = cellText ? cellText.split('\n').filter(l => l.trim()) : [];
             const cellParagraphs = cellLines.length > 0 
               ? cellLines.map(line => new Paragraph({ children: [new TextRun(line.trim())] }))
               : [new Paragraph({ children: [new TextRun('')] })];
@@ -136,17 +140,21 @@ async function parseHtmlToDocx(html: string) {
         
         if (rows.length > 0) {
           // Calculate column count from first row
-          const numColumns = rows[0]?.children.length || 1;
-          elements.push(new Table({ 
-            rows,
-            columnWidths: Array(numColumns).fill(100 / numColumns)
-          }));
+          const firstRow = rows[0];
+          const numColumns = firstRow?.children?.length || 1;
+          
+          if (numColumns > 0) {
+            elements.push(new Table({ 
+              rows,
+              columnWidths: Array(numColumns).fill(100 / numColumns)
+            }));
+          }
         }
       } else if (tagName?.match(/^h[1-6]$/)) {
         // Process heading
         const heading = $(node);
         const level = parseInt(tagName[1]);
-        const text = extractAndFlipText(heading.html() || '').trim();
+        const text = extractAndFlipText(heading.html()).trim();
         
         if (text) {
           const headingLevels = [
@@ -169,11 +177,11 @@ async function parseHtmlToDocx(html: string) {
       } else if (['p', 'div', 'li'].includes(tagName || '')) {
         // Process paragraph/div/list item
         const para = $(node);
-        const text = extractAndFlipText(para.html() || '').trim();
+        const text = extractAndFlipText(para.html()).trim();
         
         if (text) {
           // Split by newlines if needed
-          const lines = text.split('\n').filter(l => l.trim());
+          const lines = text ? text.split('\n').filter(l => l.trim()) : [];
           for (const line of lines) {
             elements.push(
               new Paragraph({
