@@ -11,38 +11,85 @@ async function getPdfParser() {
   return cachedPdfParse;
 }
 
-// Function to flip Hebrew text (reverse each line)
+// Function to flip Hebrew text (reverse each line) - only flip Hebrew characters, preserve numbers and English
 function flipHebrewText(text: string): string {
+  if (!text) return text;
+  
   const lines = text.split('\n');
   return lines
     .map((line) => {
-      const trimmedLine = line.trimEnd();
-      const flippedLine = trimmedLine.split('').reverse().join('');
-      const trailingSpaces = line.slice(trimmedLine.length);
-      return flippedLine + trailingSpaces;
+      // Split line into segments: Hebrew text, numbers, English, spaces, etc.
+      const segments: string[] = [];
+      let currentSegment = '';
+      let currentType: 'hebrew' | 'other' | null = null;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const isHebrew = /[\u0590-\u05FF]/.test(char);
+        const type = isHebrew ? 'hebrew' : 'other';
+        
+        if (currentType === null) {
+          currentType = type;
+          currentSegment = char;
+        } else if (currentType === type) {
+          currentSegment += char;
+        } else {
+          // Type changed, save current segment and start new one
+          if (currentType === 'hebrew') {
+            // Flip Hebrew segment
+            segments.push(currentSegment.split('').reverse().join(''));
+          } else {
+            segments.push(currentSegment);
+          }
+          currentType = type;
+          currentSegment = char;
+        }
+      }
+      
+      // Handle last segment
+      if (currentSegment) {
+        if (currentType === 'hebrew') {
+          segments.push(currentSegment.split('').reverse().join(''));
+        } else {
+          segments.push(currentSegment);
+        }
+      }
+      
+      return segments.join('');
     })
     .join('\n');
 }
 
-// Helper function to extract and flip text from HTML while preserving structure
+// Helper function to extract text from HTML and flip only Hebrew parts
 function extractAndFlipText(html: string | null | undefined): string {
   // Handle null/undefined
   if (!html) return '';
   
-  // Remove HTML tags and preserve newlines, then flip
-  let text = html
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n')
-    .replace(/<\/div>/gi, '\n')
-    .replace(/<\/h[1-6]>/gi, '\n')
-    .replace(/<\/li>/gi, '\n')
-    .replace(/<[^>]+>/g, ' ')
+  // Use cheerio to extract text properly, preserving structure
+  const $ = cheerio.load(html);
+  const body = $('body').length > 0 ? $('body') : $.root();
+  let text = body.text();
+  
+  // Decode HTML entities
+  text = text
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
   
-  // Flip Hebrew text line by line
+  // Preserve line breaks from block elements
+  const blockBreakElements = ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'br', 'tr'];
+  blockBreakElements.forEach(tag => {
+    const regex = new RegExp(`</${tag}>`, 'gi');
+    text = text.replace(regex, '\n');
+  });
+  
+  // Clean up multiple spaces but preserve single spaces
+  text = text.replace(/[ \t]+/g, ' ');
+  
+  // Flip only Hebrew text, preserve everything else
   return flipHebrewText(text);
 }
 
@@ -269,11 +316,24 @@ export async function POST(request: NextRequest) {
       const result = await mammoth.convertToHtml({ buffer: Buffer.from(arrayBuffer) });
       const html = result.value;
       
+      // Log warnings if any
+      if (result.messages && result.messages.length > 0) {
+        console.log('Mammoth messages:', result.messages);
+      }
+      
       if (!html || !html.trim()) {
         return NextResponse.json(
           { error: 'Could not extract content from file. The file might be empty or contain only images.' },
           { status: 400 }
         );
+      }
+      
+      // Debug: Check if HTML contains tables
+      const hasTables = /<table/i.test(html);
+      console.log('HTML contains tables:', hasTables);
+      if (hasTables) {
+        const tableMatches = html.match(/<table[^>]*>[\s\S]*?<\/table>/gi);
+        console.log('Number of tables found:', tableMatches?.length || 0);
       }
       
       // Parse HTML and convert to docx elements
