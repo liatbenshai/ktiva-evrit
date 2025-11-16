@@ -110,7 +110,7 @@ async function parseHtmlToDocx(html: string) {
     if (segment.type === 'table') {
       // Process table
       const tableHtml = segment.html.replace(/<\/?table[^>]*>/gi, '');
-      const rows: TableRow[] = [];
+      const rows: any[] = [];
       const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
       let rowMatch;
       
@@ -124,7 +124,7 @@ async function parseHtmlToDocx(html: string) {
       
       while ((rowMatch = rowRegex.exec(tableHtml)) !== null) {
         const rowHtml = rowMatch[1];
-        const cells: TableCell[] = [];
+        const cells: any[] = [];
         const cellRegex = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
         let cellMatch;
         
