@@ -4,8 +4,6 @@
  * No database required - everything is in-memory
  */
 
-import { generateGrammarNotes } from '@/lib/ai/claude';
-
 type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french' | 'russian';
 type LanguageLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 type ExerciseType = 'MATCHING' | 'FILL_BLANK' | 'WORD_ORDER' | 'LISTENING';
