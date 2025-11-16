@@ -100,8 +100,8 @@ export async function POST(request: NextRequest) {
     // Generate buffer
     const buffer = await Packer.toBuffer(doc);
 
-    // Return as blob
-    return new NextResponse(buffer, {
+    // Return as blob - convert Buffer to Uint8Array for NextResponse
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename="${file.name.replace(/\.[^/.]+$/, '')}_flipped.docx"`,
