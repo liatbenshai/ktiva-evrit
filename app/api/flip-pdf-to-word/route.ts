@@ -139,7 +139,7 @@ async function parseHtmlToDocx(html: string) {
           const numColumns = rows[0]?.children.length || 1;
           elements.push(new Table({ 
             rows,
-            columnWidths: Array(numColumns).fill(100 / numColumns).map(size => ({ size, type: WidthType.PERCENTAGE }))
+            columnWidths: Array(numColumns).fill(100 / numColumns)
           }));
         }
       } else if (tagName?.match(/^h[1-6]$/)) {
