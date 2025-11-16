@@ -108,6 +108,9 @@ async function parseHtmlToDocx(html: string) {
     });
   }
   
+  // Sort tables by index to process in order
+  tables.sort((a, b) => a.index - b.index);
+  
   // Process HTML in order: content, table, content, table, etc.
   let currentIndex = 0;
   for (const table of tables) {
@@ -151,8 +154,11 @@ async function parseHtmlToDocx(html: string) {
   // Process each segment in order
   for (const segment of segments) {
     if (segment.type === 'table') {
-      // Process table
-      const tableHtml = segment.html.replace(/<\/?table[^>]*>/gi, '');
+      // Process table - remove table tags but keep tbody, thead, tfoot if present
+      let tableHtml = segment.html.replace(/<\/?table[^>]*>/gi, '');
+      // Also handle tbody, thead, tfoot
+      tableHtml = tableHtml.replace(/<\/?(tbody|thead|tfoot)[^>]*>/gi, '');
+      
       const rows: any[] = [];
       const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
       let rowMatch;
