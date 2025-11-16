@@ -100,11 +100,20 @@ export async function POST(request: NextRequest) {
     // Generate buffer
     const buffer = await Packer.toBuffer(doc);
 
+    // Generate safe filename (ASCII only) for Content-Disposition header
+    const originalName = file.name.replace(/\.[^/.]+$/, '');
+    const safeFilename = originalName
+      .replace(/[^\x00-\x7F]/g, '') // Remove non-ASCII characters
+      || 'document'; // Fallback if name becomes empty
+    const filename = `${safeFilename}_flipped.docx`;
+    const encodedFilename = encodeURIComponent(originalName + '_flipped.docx');
+
     // Return as blob - convert Buffer to Uint8Array for NextResponse
+    // Use RFC 5987 encoding for non-ASCII characters
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'Content-Disposition': `attachment; filename="${file.name.replace(/\.[^/.]+$/, '')}_flipped.docx"`,
+        'Content-Disposition': `attachment; filename="${filename}"; filename*=UTF-8''${encodedFilename}`,
       },
     });
   } catch (error: any) {
