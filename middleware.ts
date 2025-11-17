@@ -16,14 +16,16 @@ function verifyToken(token: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Skip middleware for static files and public assets
+  // Skip middleware for static files and public assets - check this FIRST
+  // This must be checked before any authentication logic
   if (
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/api/') ||
     pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|json|js|css|woff|woff2|ttf|eot)$/i) ||
     pathname === '/manifest.json' ||
     pathname === '/sw.js' ||
-    pathname === '/favicon.ico'
+    pathname === '/favicon.ico' ||
+    pathname.startsWith('/icon-')
   ) {
     return NextResponse.next()
   }
