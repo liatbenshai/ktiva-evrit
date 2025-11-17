@@ -14,7 +14,6 @@ import {
   Sparkles,
   Wand2,
 } from 'lucide-react';
-import UserMenu from '@/components/auth/UserMenu';
 
 const creationCards = [
   {
@@ -136,15 +135,12 @@ export default function DashboardPage() {
             <Wand2 className="h-5 w-5" />
             <span className="text-sm font-semibold sm:text-base">כתיבה בעברית</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard/ai-correction"
-              className="rounded-full bg-indigo-600 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-indigo-700"
-            >
-              התחילי לתקן
-            </Link>
-            <UserMenu />
-          </div>
+          <Link
+            href="/dashboard/ai-correction"
+            className="rounded-full bg-indigo-600 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-indigo-700"
+          >
+            התחילי לתקן
+          </Link>
         </div>
       </header>
 
