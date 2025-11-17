@@ -56,17 +56,11 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
+     * Match all request paths except for:
      * - api (API routes)
      * - _next (Next.js internal files)
-     * - Static file extensions
+     * The middleware function itself will handle skipping static files
      */
-    {
-      source: '/((?!api|_next|favicon\\.ico|manifest\\.json|sw\\.js|icon-.*\\.png|.*\\.(?:png|jpg|jpeg|gif|svg|ico|json|js|css|woff|woff2|ttf|eot)$).*)',
-      missing: [
-        { type: 'header', key: 'next-router-prefetch' },
-        { type: 'header', key: 'purpose', value: 'prefetch' },
-      ],
-    },
+    '/((?!api|_next).*)',
   ],
 }
