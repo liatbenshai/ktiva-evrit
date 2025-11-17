@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
 
     // Hash password and create user
     const hashedPassword = await hashPassword(password);
+    console.log('Registering user:', { email, name, hasPassword: !!hashedPassword });
     const user = await prisma.user.create({
       data: {
         name,
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
         email: true,
       },
     });
+    console.log('User created successfully:', { id: user.id, email: user.email });
 
     // Generate token
     const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
