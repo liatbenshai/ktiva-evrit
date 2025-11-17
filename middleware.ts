@@ -16,14 +16,21 @@ function verifyToken(token: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // Skip middleware for static files and public assets
+  if (
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/api/') ||
+    pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|json|js|css|woff|woff2|ttf|eot)$/i) ||
+    pathname === '/manifest.json' ||
+    pathname === '/sw.js' ||
+    pathname === '/favicon.ico'
+  ) {
+    return NextResponse.next()
+  }
+
   // Public routes that don't require authentication
   const publicRoutes = ['/login', '/register', '/']
-  const publicFiles = ['/manifest.json', '/sw.js', '/favicon.ico']
-  const isPublicRoute = publicRoutes.includes(pathname) || 
-                        publicFiles.some(file => pathname.startsWith(file)) ||
-                        pathname.startsWith('/api/auth') ||
-                        pathname.startsWith('/icon-') ||
-                        pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|json|js)$/i)
+  const isPublicRoute = publicRoutes.includes(pathname)
 
   // Check authentication token
   const token = request.cookies.get('auth-token')?.value
