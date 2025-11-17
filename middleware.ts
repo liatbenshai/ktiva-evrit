@@ -70,8 +70,11 @@ export const config = {
      * Match all request paths except for:
      * - api (API routes)
      * - _next (Next.js internal files)
-     * The middleware function itself will handle skipping static files
+     * - manifest.json (PWA manifest - served from public/)
+     * - sw.js (Service worker - served from public/)
+     * - favicon.ico (Favicon - served from public/)
+     * - Static file extensions
      */
-    '/((?!api|_next).*)',
+    '/((?!api|_next|manifest\\.json|sw\\.js|favicon\\.ico|.*\\.(?:png|jpg|jpeg|gif|svg|ico|json|js|css|woff|woff2|ttf|eot)$).*)',
   ],
 }
