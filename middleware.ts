@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { auth } from '@/lib/auth'
+import { getToken } from 'next-auth/jwt'
 
 export async function middleware(request: NextRequest) {
-  const session = await auth();
+  const token = await getToken({ 
+    req: request, 
+    secret: process.env.NEXTAUTH_SECRET 
+  });
   const { pathname } = request.nextUrl;
 
   // Allow access to login page and public API routes
@@ -12,7 +15,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protect dashboard routes - require authentication
-  if (pathname.startsWith('/dashboard') && !session) {
+  if (pathname.startsWith('/dashboard') && !token) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(loginUrl);
