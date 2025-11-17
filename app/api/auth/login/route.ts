@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyPassword, setAuthCookie } from '@/lib/auth';
+import { verifyPassword } from '@/lib/auth';
+import * as jwt from 'jsonwebtoken';
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,13 +46,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate token
-    const token = require('jsonwebtoken').sign(
+    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+    const token = jwt.sign(
       {
         id: user.id,
         name: user.name,
         email: user.email,
       },
-      process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
 
