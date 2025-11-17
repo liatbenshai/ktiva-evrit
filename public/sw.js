@@ -2,7 +2,6 @@
 const CACHE_NAME = 'ktiva-evrit-v2';
 const urlsToCache = [
   '/',
-  '/dashboard',
   '/manifest.json',
 ];
 
