@@ -20,11 +20,13 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.67.0",
     "@prisma/client": "^6.18.0",
+    "@types/cheerio": "^0.22.35",
     "@types/node": "^24.9.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "autoprefixer": "^10.4.21",
     "bcryptjs": "^3.0.3",
+    "cheerio": "^1.1.2",
     "clsx": "^2.1.1",
     "docx": "^9.5.1",
     "file-saver": "^2.0.5",
