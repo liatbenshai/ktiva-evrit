@@ -18,15 +18,26 @@ export async function middleware(request: NextRequest) {
 
   // Skip middleware for static files and public assets - check this FIRST
   // This must be checked before any authentication logic
+  // Check exact matches first (faster)
+  if (
+    pathname === '/manifest.json' ||
+    pathname === '/sw.js' ||
+    pathname === '/favicon.ico'
+  ) {
+    return NextResponse.next()
+  }
+
+  // Check prefixes
   if (
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/api/') ||
-    pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|json|js|css|woff|woff2|ttf|eot)$/i) ||
-    pathname === '/manifest.json' ||
-    pathname === '/sw.js' ||
-    pathname === '/favicon.ico' ||
     pathname.startsWith('/icon-')
   ) {
+    return NextResponse.next()
+  }
+
+  // Check file extensions
+  if (pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|json|js|css|woff|woff2|ttf|eot)$/i)) {
     return NextResponse.next()
   }
 
