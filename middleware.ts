@@ -58,14 +58,15 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - manifest.json (PWA manifest)
-     * - sw.js (service worker)
-     * - icon-*.png (PWA icons)
-     * - *.png, *.jpg, *.jpeg, *.gif, *.svg, *.ico, *.json, *.js, *.css, *.woff, *.woff2, *.ttf, *.eot (static assets)
+     * - _next (Next.js internal files)
+     * - Static file extensions
      */
-    '/((?!api|_next|favicon\\.ico|manifest\\.json|sw\\.js|icon-.*\\.png|.*\\.(?:png|jpg|jpeg|gif|svg|ico|json|js|css|woff|woff2|ttf|eot)$).*)',
+    {
+      source: '/((?!api|_next|favicon\\.ico|manifest\\.json|sw\\.js|icon-.*\\.png|.*\\.(?:png|jpg|jpeg|gif|svg|ico|json|js|css|woff|woff2|ttf|eot)$).*)',
+      missing: [
+        { type: 'header', key: 'next-router-prefetch' },
+        { type: 'header', key: 'purpose', value: 'prefetch' },
+      ],
+    },
   ],
 }
