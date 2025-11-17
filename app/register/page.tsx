@@ -47,9 +47,11 @@ export default function RegisterPage() {
         return
       }
 
+      console.log('Registration successful, redirecting to dashboard')
+      // Wait a bit for cookie to be set
+      await new Promise(resolve => setTimeout(resolve, 100))
       // Redirect to dashboard
-      router.push('/dashboard')
-      router.refresh()
+      window.location.href = '/dashboard'
     } catch (err) {
       setError('שגיאה ביצירת המשתמש. נסה שוב.')
       setLoading(false)

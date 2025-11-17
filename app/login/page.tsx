@@ -33,10 +33,12 @@ function LoginForm() {
         return
       }
 
+      console.log('Login successful, redirecting')
+      // Wait a bit for cookie to be set
+      await new Promise(resolve => setTimeout(resolve, 100))
       // Redirect to dashboard or original destination
       const redirect = searchParams.get('redirect') || '/dashboard'
-      router.push(redirect)
-      router.refresh()
+      window.location.href = redirect
     } catch (err) {
       setError('שגיאה בהתחברות. נסה שוב.')
       setLoading(false)
