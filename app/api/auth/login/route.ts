@@ -44,14 +44,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Set auth cookie
-    await setAuthCookie({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    });
+    // Generate token
+    const token = require('jsonwebtoken').sign(
+      {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
+      process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+      { expiresIn: '7d' }
+    );
 
-    return NextResponse.json({
+    // Create response with cookie
+    const response = NextResponse.json({
       success: true,
       user: {
         id: user.id,
@@ -59,6 +64,17 @@ export async function POST(request: NextRequest) {
         email: user.email,
       },
     });
+
+    // Set cookie in response
+    response.cookies.set('auth-token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
