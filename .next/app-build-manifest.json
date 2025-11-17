@@ -11,30 +11,75 @@
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
+    "/(dashboard)/dashboard/languages/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/dashboard/languages/page.js"
+    ],
+    "/api/languages/entries/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/languages/entries/route.js"
+    ],
+    "/api/languages/lessons/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/languages/lessons/route.js"
+    ],
+    "/api/languages/progress/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/languages/progress/route.js"
+    ],
+    "/api/languages/lessons/create-multiple-demo/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/languages/lessons/create-multiple-demo/route.js"
+    ],
+    "/api/languages/lessons/[id]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/languages/lessons/[id]/route.js"
+    ],
     "/(dashboard)/dashboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(dashboard)/dashboard/page.js"
     ],
-    "/(dashboard)/dashboard/ai-correction/page": [
+    "/(dashboard)/dashboard/stories/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/dashboard/ai-correction/page.js"
+      "static/chunks/app/(dashboard)/dashboard/stories/page.js"
     ],
-    "/api/ai-correction/analyze/route": [
+    "/api/claude/generate/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/ai-correction/analyze/route.js"
+      "static/chunks/app/api/claude/generate/route.js"
     ],
-    "/api/ai-correction/route": [
+    "/api/languages/lessons/[id]/progress/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/ai-correction/route.js"
+      "static/chunks/app/api/languages/lessons/[id]/progress/route.js"
     ],
-    "/api/ai-correction/suggestions/route": [
+    "/(dashboard)/dashboard/flip-document/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/ai-correction/suggestions/route.js"
+      "static/chunks/app/(dashboard)/dashboard/flip-document/page.js"
+    ],
+    "/api/flip-pdf-to-word/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/flip-pdf-to-word/route.js"
+    ],
+    "/api/upload/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/upload/route.js"
+    ],
+    "/(dashboard)/dashboard/worksheets/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/dashboard/worksheets/page.js"
     ]
   }
 }

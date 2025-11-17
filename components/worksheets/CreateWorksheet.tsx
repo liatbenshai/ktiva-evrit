@@ -223,7 +223,8 @@ export default function CreateWorksheet() {
           // שורה ריקה - סיום תרגיל מאונך אם היה
           if (inVerticalMath) {
             inVerticalMath = false;
-            htmlParts.push(`<div class="answer-space"></div>`);
+            htmlParts.push(`<div class="math-answer-space" style="margin-top: 4px; min-height: 40px; border-bottom: 2px solid #333; width: 120px; direction: ltr; ${isHebrew ? 'margin-right: 20px;' : 'margin-left: 20px;'}"></div>`);
+            htmlParts.push('</div>');
           }
           htmlParts.push('<div style="height: 3px;"></div>');
           continue;
@@ -235,12 +236,13 @@ export default function CreateWorksheet() {
         
         // בדיקה אם זה תרגיל מאונך - אם השורה היא מספר והשורה הקודמת לא הייתה חלק מתרגיל
         if (/^\d+$/.test(line) && !inVerticalMath) {
-          // בדיקה אם השורה הבאה היא סימן + מספר או קו הפרדה
-          if (/^[+\-×*÷]\s*\d+/.test(nextLine) || /^-{2,}/.test(nextLine)) {
-            inVerticalMath = true;
-            exerciseStartIndex = i;
-            // המשך לטפל בשורה זו כמספר ראשון
-          }
+        // בדיקה אם השורה הבאה היא סימן + מספר או קו הפרדה
+        if (/^[+\-×*÷xX]\s*\d+/.test(nextLine) || /^-{2,}/.test(nextLine)) {
+          inVerticalMath = true;
+          exerciseStartIndex = i;
+          htmlParts.push(`<div class="vertical-math-container" style="margin-bottom: 16px; ${isHebrew ? 'direction: rtl; text-align: right;' : 'direction: ltr; text-align: left;'}">`);
+          // המשך לטפל בשורה זו כמספר ראשון
+        }
         }
         
         // אם זה מספור בשורה נפרדת כמו "(1)" או "(1) " - דילוג עליו
@@ -250,6 +252,7 @@ export default function CreateWorksheet() {
           if (/^\d+$/.test(nextLine)) {
             inVerticalMath = true;
             exerciseStartIndex = i;
+            htmlParts.push(`<div class="vertical-math-container" style="margin-bottom: 16px; ${isHebrew ? 'direction: rtl; text-align: right;' : 'direction: ltr; text-align: left;'}">`);
           }
           continue;
         }
@@ -262,43 +265,41 @@ export default function CreateWorksheet() {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
           
-          // אם זה מספר (שורה ראשונה של התרגיל) - מיושר ימינה (או שמאלה בעברית)
-          // המספר צריך להיות באותו יישור כמו המספר הבא
+          // אם זה מספר (שורה ראשונה של התרגיל) - מיושר ימינה
           if (/^\d+$/.test(line)) {
-            // שמירת המספר הראשון כדי ליישר את השורה הבאה
-            // יישור ימין (או שמאל בעברית) - המספר יופיע מימין בתוך container מיושר
-            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: ${isHebrew ? 'right' : 'left'}; padding-${isHebrew ? 'right' : 'left'}: 40px;">${escapedLine}</div>`);
+            htmlParts.push(`<div style="margin-bottom: 1px; font-size: 16px; direction: ltr; text-align: right; font-family: 'Courier New', monospace; letter-spacing: 1px; ${isHebrew ? 'padding-right: 20px;' : 'padding-left: 20px;'}">${escapedLine}</div>`);
             continue;
           }
           
           // אם זה סימן + מספר (שורה שנייה) - צריך ליישר עם המספר הראשון
-          const signMatch = line.match(/^([+\-×*÷])\s*(\d+)$/);
+          const signMatch = line.match(/^([+\-×*÷xX])\s*(\d+)$/);
           if (signMatch) {
-            const sign = signMatch[1];
+            const sign = signMatch[1] === 'x' || signMatch[1] === 'X' ? '×' : signMatch[1];
             const number = signMatch[2];
-            // יישור כך שהמספר יתחיל באותה הזחה כמו המספר הראשון
-            // הסימן מופיע משמאל (או מימין בעברית) למספר
-            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; text-align: ${isHebrew ? 'right' : 'left'}; padding-${isHebrew ? 'right' : 'left'}: 40px;"><span style="display: inline-block; ${isHebrew ? 'margin-left' : 'margin-right'}: 5px;">${sign}</span><span>${number}</span></div>`);
+            htmlParts.push(`<div style="margin-bottom: 1px; font-size: 16px; direction: ltr; text-align: right; font-family: 'Courier New', monospace; letter-spacing: 1px; ${isHebrew ? 'padding-right: 20px;' : 'padding-left: 20px;'}"><span style="margin-right: 4px;">${sign}</span><span>${number}</span></div>`);
             continue;
           }
           
           // אם זה קו הפרדה - מיושר כמו המספרים
           if (/^-{2,}/.test(line)) {
-            htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; border-bottom: 1px solid #333; width: 80px; ${isHebrew ? 'margin-right' : 'margin-left'}: 40px;"></div>`);
+            const lineLength = line.length;
+            htmlParts.push(`<div style="margin-bottom: 4px; border-bottom: 1px solid #333; width: ${Math.min(lineLength * 8, 100)}px; direction: ltr; ${isHebrew ? 'margin-right: 20px;' : 'margin-left: 20px;'}"></div>`);
             continue;
           }
           
           // אם זה "תשובה:" - סיום התרגיל
           if (/תשובה:/.test(line) || /Answer:/.test(line)) {
             inVerticalMath = false;
-            htmlParts.push(`<div class="answer-space"></div>`);
+            htmlParts.push(`<div class="math-answer-space" style="margin-top: 4px; min-height: 40px; border-bottom: 2px solid #333; width: 120px; direction: ltr; ${isHebrew ? 'margin-right: 20px;' : 'margin-left: 20px;'}"></div>`);
+            htmlParts.push('</div>');
             continue;
           }
           
           // אם השורה הבאה לא חלק מהתרגיל - סיום
-          if (!/^\d+$/.test(nextLine) && !/^[+\-×*÷]\s*\d+/.test(nextLine) && !/^-{2,}/.test(nextLine) && nextLine && !/^\(?\d+\)?\s*$/.test(nextLine)) {
+          if (!/^\d+$/.test(nextLine) && !/^[+\-×*÷xX]\s*\d+/.test(nextLine) && !/^-{2,}/.test(nextLine) && nextLine && !/^\(?\d+\)?\s*$/.test(nextLine)) {
             inVerticalMath = false;
-            htmlParts.push(`<div class="answer-space"></div>`);
+            htmlParts.push(`<div class="math-answer-space" style="margin-top: 4px; min-height: 40px; border-bottom: 2px solid #333; width: 120px; direction: ltr; ${isHebrew ? 'margin-right: 20px;' : 'margin-left: 20px;'}"></div>`);
+            htmlParts.push('</div>');
           }
         }
         
@@ -433,6 +434,18 @@ export default function CreateWorksheet() {
                   padding: 12px !important;
                   margin: 8px 0 !important;
                 }
+                
+                .vertical-math-container {
+                  margin-bottom: 20px !important;
+                  page-break-inside: avoid !important;
+                }
+                
+                .math-answer-space {
+                  min-height: 40px !important;
+                  height: 40px !important;
+                  border-bottom: 2px solid #333 !important;
+                  width: 120px !important;
+                }
               }
               
               .print-header {
@@ -537,6 +550,19 @@ export default function CreateWorksheet() {
                 margin-bottom: 4px;
                 display: block;
                 font-weight: 500;
+              }
+              
+              .vertical-math-container {
+                margin-bottom: 20px;
+                display: inline-block;
+                min-width: 150px;
+              }
+              
+              .math-answer-space {
+                height: 40px;
+                border-bottom: 2px solid #333;
+                background: white;
+                line-height: 2;
               }
               
               

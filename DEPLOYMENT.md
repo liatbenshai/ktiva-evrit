@@ -13,16 +13,38 @@
 2. צור פרויקט חדש
 3. העתק את ה-`DATABASE_URL`
 
-## 2. הגדרת משתני סביבה ב-Vercel
+## 2. הגדרת משתני סביבה
 
-1. לך ל-Vercel Dashboard → הפרויקט שלך → Settings → Environment Variables
+### מקומי (.env.local):
+
+1. צור קובץ `.env.local` בשורש הפרויקט (אם עדיין לא קיים)
+2. הוסף את המשתנים הבאים:
+
+```env
+DATABASE_URL=postgresql://username:password@host:port/database
+NEXTAUTH_SECRET=JkJHfr7WnX4uAgkSM+07FrP4BBrtELpo5T1JwoeKN1c=
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
+```
+
+**⚠️ חשוב:** 
+- השתמש ב-secret key שונה לכל סביבה (local ו-production)
+- ליצירת secret חדש: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
+
+### ב-Vercel (Production):
+
+1. לך ל-[Vercel Dashboard](https://vercel.com/dashboard) → הפרויקט שלך → Settings → Environment Variables
 2. הוסף את המשתנים הבאים:
 
 ```
 DATABASE_URL=postgresql://username:password@host:port/database
-JWT_SECRET=your-super-secret-jwt-key-here
+NEXTAUTH_SECRET=your-production-secret-key-here
 ANTHROPIC_API_KEY=your-anthropic-api-key-here
 ```
+
+**⚠️ חשוב:** 
+- ודא שה-`NEXTAUTH_SECRET` שונה מה-local (לא אותו secret!)
+- בחר **Production**, **Preview**, ו-**Development** (כל שלושת האפשרויות)
+- אחרי הוספת משתנים חדשים, צריך לבצע **Redeploy**
 
 ## 3. פריסה
 

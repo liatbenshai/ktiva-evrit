@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLessons } from '@/lib/language-lessons';
 import { prisma } from '@/lib/prisma';
+import { getUserId } from '@/lib/get-user-id';
 
 type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french' | 'russian';
 type LanguageLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
@@ -11,8 +12,8 @@ export async function GET(req: NextRequest) {
     const targetLanguage = searchParams.get('targetLanguage') as SupportedLanguageKey | null;
     const level = searchParams.get('level') as LanguageLevel | null;
     const topic = searchParams.get('topic');
-    const userId = searchParams.get('userId') || 'default-user';
-    const includeProgress = searchParams.get('includeProgress') === 'true';
+          const userId = await getUserId();
+          const includeProgress = searchParams.get('includeProgress') === 'true';
 
     // Get lessons from static data (no database needed)
     const lessons = await getLessons({

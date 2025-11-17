@@ -1,4 +1,7 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/(dashboard)/dashboard/ai-correction/page": "app/(dashboard)/dashboard/ai-correction/page.js"
+  "/(dashboard)/dashboard/languages/page": "app/(dashboard)/dashboard/languages/page.js",
+  "/(dashboard)/dashboard/page": "app/(dashboard)/dashboard/page.js",
+  "/(dashboard)/dashboard/stories/page": "app/(dashboard)/dashboard/stories/page.js",
+  "/(dashboard)/dashboard/flip-document/page": "app/(dashboard)/dashboard/flip-document/page.js",
+  "/(dashboard)/dashboard/worksheets/page": "app/(dashboard)/dashboard/worksheets/page.js"
 }

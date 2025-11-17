@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLessonById } from '@/lib/language-lessons';
 import { prisma } from '@/lib/prisma';
+import { getUserId } from '@/lib/get-user-id';
 
 export async function GET(
   req: NextRequest,
@@ -8,8 +9,8 @@ export async function GET(
 ) {
   try {
     const params = await context.params;
-    const userId = new URL(req.url).searchParams.get('userId') || 'default-user';
-    const lessonId = params.id;
+          const userId = await getUserId();
+          const lessonId = params.id;
 
     // Get lesson from static data
     const lesson = await getLessonById(lessonId);

@@ -92,9 +92,9 @@ export async function exportWorksheetToPDF(worksheetText: string) {
     // בדיקה אם זה תרגיל מאונך - אם השורה היא מספר והשורה הקודמת לא הייתה חלק מתרגיל
     if (/^\d+$/.test(line) && !inVerticalMath) {
       // בדיקה אם השורה הבאה היא סימן + מספר או קו הפרדה
-      if (/^[+\-×*÷]\s*\d+/.test(nextLine) || /^-{2,}/.test(nextLine)) {
+      if (/^[+\-×*÷xX]\s*\d+/.test(nextLine) || /^-{2,}/.test(nextLine)) {
         inVerticalMath = true;
-        htmlParts.push('<div class="question-container" style="margin-bottom: 8px;">');
+        htmlParts.push(`<div class="vertical-math-container" style="margin-bottom: 16px; ${isHebrew ? 'direction: rtl; text-align: right;' : 'direction: ltr; text-align: left;'}">`);
       }
     }
     
@@ -104,7 +104,7 @@ export async function exportWorksheetToPDF(worksheetText: string) {
       // בדיקה אם השורה הבאה היא מספר - אז זה תרגיל מאונך
       if (/^\d+$/.test(nextLine)) {
         inVerticalMath = true;
-        htmlParts.push('<div class="question-container" style="margin-bottom: 8px;">');
+        htmlParts.push(`<div class="vertical-math-container" style="margin-bottom: 16px; ${isHebrew ? 'direction: rtl; text-align: right;' : 'direction: ltr; text-align: left;'}">`);
       }
       continue;
     }
@@ -117,39 +117,40 @@ export async function exportWorksheetToPDF(worksheetText: string) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
       
-      // אם זה מספר (שורה ראשונה של התרגיל) - מיושר ימינה (או שמאלה בעברית)
+      // אם זה מספר (שורה ראשונה של התרגיל) - מיושר ימינה
       if (/^\d+$/.test(line)) {
-        htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; direction: ltr; text-align: right; padding-${isHebrew ? 'right' : 'left'}: 40px; font-family: 'Courier New', monospace;">${escapedLine}</div>`);
+        htmlParts.push(`<div style="margin-bottom: 1px; font-size: 16px; direction: ltr; text-align: right; font-family: 'Courier New', monospace; letter-spacing: 1px; ${isHebrew ? 'padding-right: 20px;' : 'padding-left: 20px;'}">${escapedLine}</div>`);
         continue;
       }
       
       // אם זה סימן + מספר (שורה שנייה) - צריך ליישר עם המספר הראשון
-      const signMatch = line.match(/^([+\-×*÷])\s*(\d+)$/);
+      const signMatch = line.match(/^([+\-×*÷xX])\s*(\d+)$/);
       if (signMatch) {
-        const sign = signMatch[1];
+        const sign = signMatch[1] === 'x' || signMatch[1] === 'X' ? '×' : signMatch[1];
         const number = signMatch[2];
-        htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; direction: ltr; text-align: right; padding-${isHebrew ? 'right' : 'left'}: 40px; font-family: 'Courier New', monospace;"><span style="display: inline-block; margin-left: 5px;">${sign}</span><span>${number}</span></div>`);
+        htmlParts.push(`<div style="margin-bottom: 1px; font-size: 16px; direction: ltr; text-align: right; font-family: 'Courier New', monospace; letter-spacing: 1px; ${isHebrew ? 'padding-right: 20px;' : 'padding-left: 20px;'}"><span style="margin-right: 4px;">${sign}</span><span>${number}</span></div>`);
         continue;
       }
       
       // אם זה קו הפרדה - מיושר כמו המספרים
       if (/^-{2,}/.test(line)) {
-        htmlParts.push(`<div style="margin-bottom: 2px; font-size: 15px; border-bottom: 1px solid #333; width: 80px; margin-right: 40px; direction: ltr;"></div>`);
+        const lineLength = line.length;
+        htmlParts.push(`<div style="margin-bottom: 4px; border-bottom: 1px solid #333; width: ${Math.min(lineLength * 8, 100)}px; direction: ltr; ${isHebrew ? 'margin-right: 20px;' : 'margin-left: 20px;'}"></div>`);
         continue;
       }
       
       // אם זה "תשובה:" - סיום התרגיל
       if (/תשובה:/.test(line) || /Answer:/.test(line)) {
         inVerticalMath = false;
-        htmlParts.push(`<div class="answer-space" style="min-height: 80px; height: 80px; width: 100%; line-height: 2.5;"></div>`);
+        htmlParts.push(`<div class="math-answer-space" style="margin-top: 4px; min-height: 40px; border-bottom: 2px solid #333; width: 120px; direction: ltr; ${isHebrew ? 'margin-right: 20px;' : 'margin-left: 20px;'}"></div>`);
         htmlParts.push('</div>');
         continue;
       }
       
       // אם השורה הבאה לא חלק מהתרגיל - סיום
-      if (!/^\d+$/.test(nextLine) && !/^[+\-×*÷]\s*\d+/.test(nextLine) && !/^-{2,}/.test(nextLine) && nextLine && !/^\(?\d+\)?\s*$/.test(nextLine)) {
+      if (!/^\d+$/.test(nextLine) && !/^[+\-×*÷xX]\s*\d+/.test(nextLine) && !/^-{2,}/.test(nextLine) && nextLine && !/^\(?\d+\)?\s*$/.test(nextLine)) {
         inVerticalMath = false;
-        htmlParts.push(`<div class="answer-space" style="min-height: 80px; height: 80px; width: 100%; line-height: 2.5;"></div>`);
+        htmlParts.push(`<div class="math-answer-space" style="margin-top: 4px; min-height: 40px; border-bottom: 2px solid #333; width: 120px; direction: ltr; ${isHebrew ? 'margin-right: 20px;' : 'margin-left: 20px;'}"></div>`);
         htmlParts.push('</div>');
       }
     }
@@ -274,6 +275,16 @@ export async function exportWorksheetToPDF(worksheetText: string) {
               page-break-inside: avoid;
               margin-bottom: 20px !important;
             }
+            .vertical-math-container {
+              page-break-inside: avoid;
+              margin-bottom: 20px !important;
+            }
+            .math-answer-space {
+              min-height: 40px !important;
+              height: 40px !important;
+              border-bottom: 2px solid #333 !important;
+              width: 120px !important;
+            }
           }
           .print-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -327,6 +338,19 @@ export async function exportWorksheetToPDF(worksheetText: string) {
           }
           .question-container {
             page-break-inside: avoid;
+          }
+          .vertical-math-container {
+            page-break-inside: avoid;
+            margin-bottom: 20px;
+            display: inline-block;
+            min-width: 150px;
+          }
+          .math-answer-space {
+            page-break-inside: avoid;
+            height: 40px;
+            border-bottom: 2px solid #333;
+            background: white;
+            line-height: 2;
           }
           .answer-space {
             margin-top: 8px;
