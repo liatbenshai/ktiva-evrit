@@ -29,10 +29,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // Skip service worker for protected routes that require authentication
+  // These routes may have redirects that the service worker can't handle
+  if (url.pathname.startsWith('/dashboard') || 
+      url.pathname.startsWith('/login') || 
+      url.pathname.startsWith('/register')) {
+    // For protected routes, always fetch from network with redirect mode
+    event.respondWith(fetch(request, { redirect: 'follow' }));
+    return;
+  }
+  
   // Only cache GET requests - skip POST, DELETE, PUT, PATCH
   if (method !== 'GET') {
     // For non-GET requests, just fetch from network without caching
-    event.respondWith(fetch(request));
+    event.respondWith(fetch(request, { redirect: 'follow' }));
     return;
   }
   
@@ -43,14 +53,15 @@ self.addEventListener('fetch', (event) => {
         if (response) {
           return response;
         }
-        return fetch(request).then(
+        return fetch(request, { redirect: 'follow' }).then(
           (response) => {
             // Check if we received a valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
+            // Don't cache redirects (3xx status codes)
+            if (!response || response.status < 200 || response.status >= 300 || response.type !== 'basic') {
               return response;
             }
-            // Only cache GET requests
-            if (method === 'GET') {
+            // Only cache successful GET requests
+            if (method === 'GET' && response.status === 200) {
               // Clone the response
               const responseToCache = response.clone();
               caches.open(CACHE_NAME)
