@@ -66,6 +66,6 @@ export const config = {
      * - icon-*.png (PWA icons)
      * - *.png, *.jpg, *.jpeg, *.gif, *.svg, *.ico, *.json, *.js, *.css, *.woff, *.woff2, *.ttf, *.eot (static assets)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|manifest.json|sw.js|icon-.*\\.png|.*\\.(png|jpg|jpeg|gif|svg|ico|json|js|css|woff|woff2|ttf|eot)$).*)',
+    '/((?!api|_next|favicon\\.ico|manifest\\.json|sw\\.js|icon-.*\\.png|.*\\.(png|jpg|jpeg|gif|svg|ico|json|js|css|woff|woff2|ttf|eot)$).*)',
   ],
 }
