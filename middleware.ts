@@ -18,7 +18,12 @@ export async function middleware(request: NextRequest) {
 
   // Public routes that don't require authentication
   const publicRoutes = ['/login', '/register', '/']
-  const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/api/auth')
+  const publicFiles = ['/manifest.json', '/sw.js', '/favicon.ico']
+  const isPublicRoute = publicRoutes.includes(pathname) || 
+                        publicFiles.some(file => pathname.startsWith(file)) ||
+                        pathname.startsWith('/api/auth') ||
+                        pathname.startsWith('/icon-') ||
+                        pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|json|js)$/i)
 
   // Check authentication token
   const token = request.cookies.get('auth-token')?.value
@@ -40,5 +45,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|manifest.json|sw.js|icon-.*\\.png).*)'],
 }
