@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
+      console.log('Login failed: User not found for email:', email);
       return NextResponse.json(
         { error: 'אימייל או סיסמה שגויים' },
         { status: 401 }
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user has a password (for users created before password system)
     if (!user.password) {
+      console.log('Login failed: User has no password for email:', email);
       return NextResponse.json(
         { error: 'למשתמש זה אין סיסמה. אנא צור סיסמה חדשה' },
         { status: 401 }
@@ -39,11 +41,14 @@ export async function POST(request: NextRequest) {
     // Verify password
     const isValid = await verifyPassword(password, user.password);
     if (!isValid) {
+      console.log('Login failed: Invalid password for email:', email);
       return NextResponse.json(
         { error: 'אימייל או סיסמה שגויים' },
         { status: 401 }
       );
     }
+
+    console.log('Login successful for email:', email);
 
     // Generate token
     const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
