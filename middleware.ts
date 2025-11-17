@@ -9,8 +9,16 @@ export async function middleware(request: NextRequest) {
   });
   const { pathname } = request.nextUrl;
 
-  // Allow access to login page and public API routes
-  if (pathname === '/login' || pathname.startsWith('/api/auth')) {
+  // Allow access to login page and public files
+  if (
+    pathname === '/login' || 
+    pathname === '/manifest.json' ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/favicon') ||
+    pathname.startsWith('/icon') ||
+    pathname.startsWith('/sw.js')
+  ) {
     return NextResponse.next();
   }
 
