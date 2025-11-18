@@ -22,20 +22,29 @@ export default function LoginPage() {
     try {
       if (isLogin) {
         // התחברות
+        console.log('Attempting login with email:', email);
         const result = await signIn('credentials', {
           email,
           password,
           redirect: false,
         });
 
+        console.log('SignIn result:', result);
+
         if (result?.error) {
+          console.error('Login error:', result.error);
           setError('אימייל או סיסמה שגויים');
           setLoading(false);
         } else if (result?.ok) {
           // התחברות מוצלחת - רענון מלא של הדף
+          console.log('Login successful, redirecting...');
           setLoading(false);
-          window.location.href = '/dashboard';
+          // Use window.location for full page reload to ensure session is loaded
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 100);
         } else {
+          console.error('Unexpected login result:', result);
           setError('שגיאה בהתחברות. נסה שוב.');
           setLoading(false);
         }
@@ -70,9 +79,14 @@ export default function LoginPage() {
             setLoading(false);
           } else if (result?.ok) {
             // התחברות מוצלחת - רענון מלא של הדף
+            console.log('Auto-login after registration successful, redirecting...');
             setLoading(false);
-            window.location.href = '/dashboard';
+            // Use window.location for full page reload to ensure session is loaded
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 100);
           } else {
+            console.error('Unexpected auto-login result:', result);
             setError('המשתמש נוצר אבל לא ניתן להתחבר. נסה להתחבר ידנית.');
             setIsLogin(true); // מעבר למצב התחברות
             setLoading(false);

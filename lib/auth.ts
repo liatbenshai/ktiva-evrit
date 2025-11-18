@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true, // חשוב ל-NextAuth v5
+  debug: process.env.NODE_ENV === 'development', // Enable debug in development
   providers: [
     Credentials({
       credentials: {
@@ -13,27 +14,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         try {
+          console.log('Authorize called with email:', credentials?.email);
+          
           if (!credentials?.email || !credentials?.password) {
+            console.log('Missing credentials');
             return null;
           }
 
           const email = credentials.email as string;
           const password = credentials.password as string;
 
+          console.log('Looking up user in database...');
           const user = await prisma.user.findUnique({
             where: { email },
           });
 
-          if (!user || !user.password) {
+          if (!user) {
+            console.log('User not found in database');
             return null;
           }
 
+          if (!user.password) {
+            console.log('User found but has no password');
+            return null;
+          }
+
+          console.log('Comparing password...');
           const isValid = await bcrypt.compare(password, user.password);
 
           if (!isValid) {
+            console.log('Password comparison failed');
             return null;
           }
 
+          console.log('Authorization successful for user:', user.id);
           return {
             id: user.id,
             email: user.email,
