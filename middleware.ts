@@ -8,7 +8,10 @@ export async function middleware(request: NextRequest) {
   // Get token - NextAuth v5 will automatically detect the cookie name
   const token = await getToken({ 
     req: request, 
-    secret: process.env.NEXTAUTH_SECRET
+    secret: process.env.NEXTAUTH_SECRET,
+    cookieName: process.env.NODE_ENV === 'production'
+      ? '__Secure-authjs.session-token'
+      : 'authjs.session-token',
   });
   
   // Debug: Log token status for dashboard routes
@@ -18,6 +21,16 @@ export async function middleware(request: NextRequest) {
       console.log('[Middleware] No token found, checking cookies...');
       const cookies = request.cookies.getAll();
       console.log('[Middleware] Available cookies:', cookies.map(c => c.name));
+      
+      // Check for session cookies
+      const secureCookie = request.cookies.get('__Secure-authjs.session-token');
+      const regularCookie = request.cookies.get('authjs.session-token');
+      console.log('[Middleware] Secure cookie exists:', !!secureCookie);
+      console.log('[Middleware] Regular cookie exists:', !!regularCookie);
+      
+      if (!process.env.NEXTAUTH_SECRET) {
+        console.error('[Middleware] CRITICAL: NEXTAUTH_SECRET is not set!');
+      }
     }
   }
 

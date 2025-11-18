@@ -12,6 +12,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true, // חשוב ל-NextAuth v5
   debug: process.env.NODE_ENV === 'development', // Enable debug in development
   basePath: '/api/auth', // Explicit base path for NextAuth
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production' 
+        ? '__Secure-authjs.session-token' 
+        : 'authjs.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
   providers: [
     Credentials({
       credentials: {

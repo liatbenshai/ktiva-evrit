@@ -38,36 +38,20 @@ function LoginForm() {
           setError('אימייל או סיסמה שגויים');
           setLoading(false);
         } else if (result?.ok) {
-          // התחברות מוצלחת - רענון מלא של הדף
+          // התחברות מוצלחת
           console.log('Login successful, redirecting...');
           console.log('Full result:', JSON.stringify(result, null, 2));
           
-          // Wait a bit longer to ensure session cookie is set
           setLoading(false);
           
-          // Try to refresh the session first
-          try {
-            const sessionCheck = await fetch('/api/auth/session');
-            const sessionData = await sessionCheck.json();
-            console.log('Session after login:', sessionData);
-          } catch (e) {
-            console.error('Error checking session:', e);
-          }
-          
-          // Wait longer to ensure cookie is set and middleware can read it
           // Use the callbackUrl from the URL, or default to /dashboard
           const redirectUrl = callbackUrl || '/dashboard';
           
           console.log('Redirecting to:', redirectUrl);
           
-          // First try to refresh the router to update session state
-          router.refresh();
-          
-          // Then redirect after a delay to ensure cookie is set
-          setTimeout(() => {
-            // Use replace instead of href to avoid adding to history
-            window.location.replace(redirectUrl);
-          }, 1000);
+          // Use window.location.href for full page reload to ensure cookies are sent
+          // This ensures the middleware can read the session cookie
+          window.location.href = redirectUrl;
         } else {
           console.error('Unexpected login result:', result);
           console.error('Result details:', JSON.stringify(result, null, 2));
