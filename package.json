@@ -16,7 +16,7 @@
     "diagnose:auth": "npx tsx scripts/diagnose-auth-connection.ts",
     "analyzer:check": "npx tsx scripts/analyzer-self-check.ts",
     "create-admin": "npx tsx scripts/create-admin.ts",
-    "postinstall": "PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1 prisma generate || prisma generate",
+    "postinstall": "prisma generate",
     "deploy": "vercel --prod"
   },
   "dependencies": {

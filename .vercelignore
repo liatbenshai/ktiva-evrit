@@ -1,0 +1,3 @@
+# Vercel will use environment variables for Prisma
+# PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING should be set in Vercel dashboard
+

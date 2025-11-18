@@ -11,9 +11,7 @@ Error: Failed to fetch sha256 checksum at https://binaries.prisma.sh/...
 
 ## הפתרון
 
-יש שתי דרכים לפתור את זה:
-
-### פתרון 1: הוסף משתנה סביבה ב-Vercel (מומלץ)
+**הדרך היחידה לפתור את זה היא להוסיף משתנה סביבה ב-Vercel:**
 
 1. לך ל-[Vercel Dashboard](https://vercel.com/dashboard)
 2. בחר את הפרויקט שלך
@@ -26,23 +24,17 @@ Error: Failed to fetch sha256 checksum at https://binaries.prisma.sh/...
 6. לחץ **"Save"**
 7. **חשוב:** בצע **Redeploy** אחרי הוספת המשתנה!
 
-### פתרון 2: עדכון אוטומטי (כבר בוצע)
-
-עדכנתי את ה-`postinstall` script ב-`package.json` כך שהוא יתעלם מהשגיאה הזו.
-
 ## מה לעשות עכשיו
 
-### שלב 1: ודא שהקוד ב-GitHub
-
-```bash
-git add package.json
-git commit -m "Fix Prisma checksum error in Vercel build"
-git push
-```
-
-### שלב 2: הוסף את המשתנה ב-Vercel (פתרון 1)
+### שלב 1: הוסף את המשתנה ב-Vercel (חובה!)
 
 זה יבטיח שהבעיה לא תחזור גם אם יש בעיות זמניות עם שרתי Prisma.
+
+### שלב 2: דחוף את הקוד ל-GitHub (אם עוד לא)
+
+```bash
+git push
+```
 
 ### שלב 3: בדוק את ה-Build
 
