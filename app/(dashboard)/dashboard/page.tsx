@@ -99,7 +99,7 @@ const creationCards = [
   },
   {
     title: 'עוזר החלטות לניסוח',
-    description: 'הציגי דילמה בניסוח או תקן - ואני אציע לך אפשרויות מעשיות להתמודדות.',
+    description: 'עוזר להחלטות בניסוח וסימון - הציגי דילמה ואני אציע לך אפשרויות מעשיות.',
     icon: Lightbulb,
     href: '/dashboard/transcription-guidelines',
     gradient: 'from-yellow-500 via-amber-500 to-orange-500',

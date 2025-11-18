@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
       email: user.email,
       name: user.name,
       hasPassword: !!user.password,
-      passwordHash: user.password ? `${user.password.substring(0, 20)}...` : null, // Show first 20 chars of hash
+      passwordHash: user.password ? `${user.password.substring(0, 10)}...` : null, // Show first 10 chars of hash (just for identification)
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       isAdmin: user.email === 'admin@ktiva-evrit.com',

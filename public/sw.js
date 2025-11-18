@@ -1,5 +1,6 @@
 // Service Worker for PWA
-const CACHE_NAME = 'ktiva-evrit-v4';
+// Update version number when you want to force cache refresh
+const CACHE_NAME = 'ktiva-evrit-v5';
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
@@ -92,19 +93,24 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and claim clients
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
+      return Promise.all([
+        // Delete old caches
+        ...cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
             console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
-        })
-      );
+        }),
+        // Claim all clients immediately
+        self.clients.claim()
+      ]);
     })
   );
+  // Force activation immediately
+  return self.clients.claim();
 });
 

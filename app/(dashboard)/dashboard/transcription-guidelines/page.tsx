@@ -15,7 +15,7 @@ export default function TranscriptionGuidelinesPage() {
                 💡 עוזר החלטות לניסוח וסימון
               </h1>
               <p className="mt-1 sm:mt-2 text-sm sm:text-base lg:text-lg text-gray-700">
-                הצגי דילמה בניסוח או תקן - ואני אציע לך אפשרויות מעשיות
+                עוזר להחלטות בניסוח וסימון - הציגי דילמה ואני אציע לך אפשרויות מעשיות
               </p>
             </div>
             <Link

@@ -86,7 +86,7 @@ export default function WritingDecisionHelper() {
           <h1 className="text-3xl font-bold">💡 עוזר החלטות לניסוח וסימון</h1>
         </div>
         <p className="text-indigo-100 text-lg">
-          הצגי דילמה בניסוח, סימון או תקן - ואני אציע לך אפשרויות מעשיות להתמודדות
+          עוזר להחלטות בניסוח וסימון - הציגי דילמה ואני אציע לך אפשרויות מעשיות
         </p>
       </div>
 
@@ -125,16 +125,19 @@ export default function WritingDecisionHelper() {
 
         <div>
           <label htmlFor="context" className="block text-sm font-semibold text-gray-700 mb-2">
-            הקשר נוסף (אופציונלי):
+            פרטים נוספים שיכולים לעזור (אופציונלי):
           </label>
           <textarea
             id="context"
             value={context}
             onChange={(e) => setContext(e.target.value)}
-            placeholder="מידע נוסף שיכול לעזור, כמו: איזה סוג קורס, למי זה מיועד, איזה כלים יש לכם וכו'"
+            placeholder="לדוגמה: איזה סוג תמלול זה? (ראיונות, ישיבות, הרצאות...), איזה כלים אתן משתמשות? (Word, Google Docs...), איזה סגנון אתן מעדיפות? וכל מידע אחר שיכול לעזור להבין את ההקשר"
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
             rows={3}
           />
+          <p className="mt-1 text-xs text-gray-500">
+            כל מידע נוסף שיכול לעזור להבין את ההקשר ולהציע אפשרויות מתאימות יותר
+          </p>
         </div>
 
         <button
