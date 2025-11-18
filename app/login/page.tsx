@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -52,10 +54,20 @@ export default function LoginPage() {
             console.error('Error checking session:', e);
           }
           
-          // Use window.location for full page reload to ensure session is loaded
+          // Wait longer to ensure cookie is set and middleware can read it
+          // Use the callbackUrl from the URL, or default to /dashboard
+          const redirectUrl = callbackUrl || '/dashboard';
+          
+          console.log('Redirecting to:', redirectUrl);
+          
+          // First try to refresh the router to update session state
+          router.refresh();
+          
+          // Then redirect after a delay to ensure cookie is set
           setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 300);
+            // Use replace instead of href to avoid adding to history
+            window.location.replace(redirectUrl);
+          }, 1000);
         } else {
           console.error('Unexpected login result:', result);
           console.error('Result details:', JSON.stringify(result, null, 2));
@@ -222,6 +234,14 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>טוען...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
 

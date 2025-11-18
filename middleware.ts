@@ -3,11 +3,13 @@ import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  // Get token - NextAuth v5 will automatically detect the cookie name
   const token = await getToken({ 
     req: request, 
-    secret: process.env.NEXTAUTH_SECRET 
+    secret: process.env.NEXTAUTH_SECRET
   });
-  const { pathname } = request.nextUrl;
 
   // Allow access to login page, create-admin page, debug page and public files
   if (
