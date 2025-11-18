@@ -100,7 +100,7 @@ export default function WritingDecisionHelper() {
             id="dilemma"
             value={dilemma}
             onChange={(e) => setDilemma(e.target.value)}
-            placeholder="לדוגמה: איך לסמן הערות של המתרגם? איך לסמן חלקים לא ברורים? איך לסמן שמות של אנשים?"
+            placeholder="לדוגמה: איך לסמן הערות של המתרגם בתמלול? איך לסמן כשמישהו נושם נשימה מהירה? איך לסמן חלקים לא ברורים בתמלול? איך לסמן שמות של אנשים? איך לסמן רעשי רקע?"
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
             rows={4}
           />
