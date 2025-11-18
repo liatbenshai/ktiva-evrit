@@ -192,10 +192,16 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <div className="mt-4 text-center">
+        <div className="mt-4 text-center space-y-2">
+          <Link
+            href="/admin/create-admin"
+            className="block text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+          >
+            יצירת משתמש Admin
+          </Link>
           <Link
             href="/"
-            className="text-gray-500 hover:text-gray-700 text-sm"
+            className="block text-gray-500 hover:text-gray-700 text-sm"
           >
             חזרה לדף הבית
           </Link>

@@ -14,6 +14,7 @@
     "db:check": "tsx scripts/check-database.ts",
     "db:convert": "tsx scripts/convert-to-pooling-url.ts",
     "analyzer:check": "tsx scripts/analyzer-self-check.ts",
+    "create-admin": "tsx scripts/create-admin.ts",
     "postinstall": "prisma generate",
     "deploy": "vercel --prod"
   },
