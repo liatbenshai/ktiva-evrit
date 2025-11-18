@@ -1,5 +1,5 @@
 // Service Worker for PWA
-const CACHE_NAME = 'ktiva-evrit-v3';
+const CACHE_NAME = 'ktiva-evrit-v4';
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
@@ -8,10 +8,12 @@ self.addEventListener('install', (event) => {
       .then((cache) => {
         console.log('Opened cache');
         // Only cache static files that don't require authentication
+        // Don't cache login or auth-related pages
         return cache.addAll([
-          '/',
           '/manifest.json',
-        ]);
+        ]).catch((error) => {
+          console.error('Cache install failed:', error);
+        });
       })
       .catch((error) => {
         console.error('Cache install failed:', error);
@@ -27,13 +29,15 @@ self.addEventListener('fetch', (event) => {
   const method = request.method;
   const url = new URL(request.url);
   
-  // Skip service worker entirely for routes that may have redirects
+  // Skip service worker entirely for routes that may have redirects or require authentication
   // Let the browser handle these naturally without service worker interception
   if (url.pathname.startsWith('/api/') ||
       url.pathname.startsWith('/dashboard') || 
       url.pathname.startsWith('/login') || 
       url.pathname.startsWith('/register') ||
-      url.pathname.startsWith('/admin')) {
+      url.pathname.startsWith('/admin') ||
+      url.pathname === '/' || // Don't cache home page - might have auth redirects
+      url.searchParams.has('callbackUrl')) { // Don't cache pages with callback URLs
     // Don't intercept these requests at all - let browser handle redirects
     return;
   }
@@ -63,9 +67,9 @@ self.addEventListener('fetch', (event) => {
             }
             // Only cache successful GET requests for static assets
             if (method === 'GET' && response.status === 200) {
-              // Only cache static files, not dynamic pages
-              if (url.pathname === '/' || 
-                  url.pathname === '/manifest.json' ||
+              // Only cache static files, not dynamic pages or HTML pages
+              // Never cache HTML pages - they might contain auth state
+              if (url.pathname === '/manifest.json' ||
                   url.pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|css|js|woff|woff2|ttf|eot)$/i)) {
                 // Clone the response
                 const responseToCache = response.clone();
