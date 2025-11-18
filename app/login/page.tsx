@@ -30,9 +30,13 @@ export default function LoginPage() {
 
         if (result?.error) {
           setError('אימייל או סיסמה שגויים');
+          setLoading(false);
+        } else if (result?.ok) {
+          // התחברות מוצלחת - רענון מלא של הדף
+          window.location.href = '/dashboard';
         } else {
-          router.push('/dashboard');
-          router.refresh();
+          setError('שגיאה בהתחברות. נסה שוב.');
+          setLoading(false);
         }
       } else {
         // הרשמה
@@ -46,8 +50,12 @@ export default function LoginPage() {
 
         if (!data.success) {
           setError(data.error || 'שגיאה ביצירת משתמש');
+          setLoading(false);
         } else {
-          // אחרי הרשמה מוצלחת, התחבר אוטומטית
+          // אחרי הרשמה מוצלחת, המתן רגע ואז התחבר אוטומטית
+          // זה נותן למסד הנתונים זמן לשמור את המשתמש
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
           const result = await signIn('credentials', {
             email,
             password,
@@ -55,16 +63,23 @@ export default function LoginPage() {
           });
 
           if (result?.error) {
-            setError('המשתמש נוצר אבל לא ניתן להתחבר. נסה להתחבר ידנית.');
+            console.error('Sign in error after registration:', result.error);
+            setError('המשתמש נוצר בהצלחה! אנא התחבר עם האימייל והסיסמה שלך.');
+            setIsLogin(true); // מעבר למצב התחברות
+            setLoading(false);
+          } else if (result?.ok) {
+            // התחברות מוצלחת - רענון מלא של הדף
+            window.location.href = '/dashboard';
           } else {
-            router.push('/dashboard');
-            router.refresh();
+            setError('המשתמש נוצר אבל לא ניתן להתחבר. נסה להתחבר ידנית.');
+            setIsLogin(true); // מעבר למצב התחברות
+            setLoading(false);
           }
         }
       }
     } catch (err: any) {
-      setError('שגיאה: ' + err.message);
-    } finally {
+      console.error('Login/Register error:', err);
+      setError('שגיאה: ' + (err.message || 'שגיאה לא צפויה'));
       setLoading(false);
     }
   };
