@@ -73,11 +73,23 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Protect admin routes - require authentication
-  if (pathname.startsWith('/admin') && !token) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(loginUrl);
+  // Protect admin routes - require authentication and admin role
+  if (pathname.startsWith('/admin')) {
+    if (!token) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    
+    // Check if user is admin (only admin@ktiva-evrit.com can access admin routes)
+    const userEmail = token.email as string | undefined;
+    const isAdmin = userEmail === 'admin@ktiva-evrit.com';
+    
+    if (!isAdmin) {
+      // Redirect non-admin users to dashboard
+      const dashboardUrl = new URL('/dashboard', request.url);
+      return NextResponse.redirect(dashboardUrl);
+    }
   }
 
   return NextResponse.next();

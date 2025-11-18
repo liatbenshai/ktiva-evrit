@@ -1,21 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Mail, Calendar, User as UserIcon } from 'lucide-react';
+import { Users, Mail, Calendar, User as UserIcon, Shield, Lock, Unlock, Copy, Check } from 'lucide-react';
 import Link from 'next/link';
 
 interface User {
   id: string;
   email: string;
   name: string | null;
+  hasPassword: boolean;
+  passwordHash: string | null;
   createdAt: string;
   updatedAt: string;
+  isAdmin: boolean;
 }
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -28,6 +32,9 @@ export default function UsersPage() {
       
       if (!response.ok) {
         const data = await response.json();
+        if (response.status === 403) {
+          throw new Error('אין הרשאה - רק אדמין יכול לראות משתמשים');
+        }
         throw new Error(data.error || 'שגיאה בטעינת משתמשים');
       }
 
@@ -50,6 +57,16 @@ export default function UsersPage() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const copyToClipboard = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
   };
 
   return (
@@ -109,6 +126,8 @@ export default function UsersPage() {
                       <tr className="border-b-2 border-gray-200">
                         <th className="text-right py-4 px-4 font-semibold text-gray-700">שם</th>
                         <th className="text-right py-4 px-4 font-semibold text-gray-700">אימייל</th>
+                        <th className="text-right py-4 px-4 font-semibold text-gray-700">סטטוס</th>
+                        <th className="text-right py-4 px-4 font-semibold text-gray-700">סיסמה</th>
                         <th className="text-right py-4 px-4 font-semibold text-gray-700">תאריך הרשמה</th>
                         <th className="text-right py-4 px-4 font-semibold text-gray-700">עדכון אחרון</th>
                       </tr>
@@ -117,7 +136,9 @@ export default function UsersPage() {
                       {users.map((user) => (
                         <tr
                           key={user.id}
-                          className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                          className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                            user.isAdmin ? 'bg-purple-50' : ''
+                          }`}
                         >
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-2">
@@ -131,6 +152,55 @@ export default function UsersPage() {
                             <div className="flex items-center gap-2">
                               <Mail className="w-5 h-5 text-gray-400" />
                               <span className="text-gray-700">{user.email}</span>
+                              <button
+                                onClick={() => copyToClipboard(user.email, `email-${user.id}`)}
+                                className="text-indigo-600 hover:text-indigo-800"
+                                title="העתק אימייל"
+                              >
+                                {copiedId === `email-${user.id}` ? (
+                                  <Check className="w-4 h-4" />
+                                ) : (
+                                  <Copy className="w-4 h-4" />
+                                )}
+                              </button>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            {user.isAdmin ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">
+                                <Shield className="w-3 h-3" />
+                                אדמין
+                              </span>
+                            ) : (
+                              <span className="text-gray-500 text-sm">משתמש רגיל</span>
+                            )}
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2">
+                              {user.hasPassword ? (
+                                <>
+                                  <Lock className="w-4 h-4 text-green-600" />
+                                  <span className="text-gray-600 text-xs font-mono">
+                                    {user.passwordHash}
+                                  </span>
+                                  <button
+                                    onClick={() => copyToClipboard(user.passwordHash || '', `hash-${user.id}`)}
+                                    className="text-indigo-600 hover:text-indigo-800"
+                                    title="העתק hash"
+                                  >
+                                    {copiedId === `hash-${user.id}` ? (
+                                      <Check className="w-3 h-3" />
+                                    ) : (
+                                      <Copy className="w-3 h-3" />
+                                    )}
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <Unlock className="w-4 h-4 text-gray-400" />
+                                  <span className="text-gray-400 text-xs">ללא סיסמה</span>
+                                </>
+                              )}
                             </div>
                           </td>
                           <td className="py-4 px-4">

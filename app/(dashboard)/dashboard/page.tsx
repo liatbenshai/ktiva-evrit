@@ -17,6 +17,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import UserMenu from '@/components/auth/UserMenu';
+import { useSession } from 'next-auth/react';
 
 const creationCards = [
   {
@@ -137,6 +138,9 @@ const learningCards = [
 ];
 
 export default function DashboardPage() {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.email === 'admin@ktiva-evrit.com';
+
   return (
     <div dir="rtl" className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <header className="sticky top-0 z-30 border-b border-white/40 bg-white/80 backdrop-blur">
@@ -146,14 +150,16 @@ export default function DashboardPage() {
             <span className="text-sm font-semibold sm:text-base">כתיבה בעברית</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link
-              href="/admin/users"
-              className="flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-purple-700"
-              title="ניהול משתמשים"
-            >
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">משתמשים</span>
-            </Link>
+            {isAdmin && (
+              <Link
+                href="/admin/users"
+                className="flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-purple-700"
+                title="ניהול משתמשים"
+              >
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">משתמשים</span>
+              </Link>
+            )}
             <Link
               href="/dashboard/ai-correction"
               className="rounded-full bg-indigo-600 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-indigo-700"

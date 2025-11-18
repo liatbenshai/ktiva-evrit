@@ -21,6 +21,7 @@ interface SuggestionsResponse {
 export default function WritingDecisionHelper() {
   const [dilemma, setDilemma] = useState('');
   const [context, setContext] = useState('');
+  const [englishTerm, setEnglishTerm] = useState('');
   const [suggestions, setSuggestions] = useState<SuggestionsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -40,7 +41,11 @@ export default function WritingDecisionHelper() {
       const response = await fetch('/api/transcription/suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dilemma, context: context.trim() || undefined }),
+        body: JSON.stringify({ 
+          dilemma, 
+          context: context.trim() || undefined,
+          englishTerm: englishTerm.trim() || undefined,
+        }),
       });
 
       const data = await response.json();
@@ -99,6 +104,23 @@ export default function WritingDecisionHelper() {
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
             rows={4}
           />
+        </div>
+
+        <div>
+          <label htmlFor="englishTerm" className="block text-sm font-semibold text-gray-700 mb-2">
+            מילה/מונח באנגלית (אופציונלי):
+          </label>
+          <input
+            id="englishTerm"
+            type="text"
+            value={englishTerm}
+            onChange={(e) => setEnglishTerm(e.target.value)}
+            placeholder="לדוגמה: gasping, stuttering, whispering, background noise..."
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            אם יש מילה באנגלית שמתארת במדויק את הפעולה או התופעה - זה יעזור להציע אפשרויות מדויקות יותר
+          </p>
         </div>
 
         <div>
@@ -270,6 +292,7 @@ export default function WritingDecisionHelper() {
                 setSuggestions(null);
                 setDilemma('');
                 setContext('');
+                setEnglishTerm('');
               }}
               className="text-indigo-600 hover:text-indigo-800 font-medium"
             >

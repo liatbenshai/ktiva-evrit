@@ -8,7 +8,7 @@ const anthropic = new Anthropic({
 
 export async function POST(req: NextRequest) {
   try {
-    const { dilemma, context } = await req.json();
+    const { dilemma, context, englishTerm } = await req.json();
 
     if (!dilemma || !dilemma.trim()) {
       return NextResponse.json(
@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
 - תן דוגמאות קונקרטיות
 - הסבר יתרונות וחסרונות של כל אפשרות
 - הצע המלצה ברורה
+- אם ניתנה מילה באנגלית, השתמש בה כדי להבין בדיוק מה הכוונה ולהציע אפשרויות מדויקות יותר
+- חשוב שהאפשרויות יהיו מעשיות וברורות לשימוש בתקן תמלול
 
 **פורמט התשובה:**
 החזר JSON עם 3-5 אפשרויות. כל אפשרות צריכה לכלול:
@@ -39,6 +41,8 @@ export async function POST(req: NextRequest) {
 
 **הדילמה שלי:**
 ${dilemma}
+
+${englishTerm ? `**מילה/מונח באנגלית שמתאר את זה:**\n${englishTerm}\n\nזה יעזור לך להבין בדיוק מה הכוונה - השתמש במונח הזה כדי להציע אפשרויות מדויקות יותר.\n` : ''}
 
 ${context ? `**ההקשר:**\n${context}\n` : ''}
 
