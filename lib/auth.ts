@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true, // חשוב ל-NextAuth v5
   debug: process.env.NODE_ENV === 'development', // Enable debug in development
+  basePath: '/api/auth', // Explicit base path for NextAuth
   providers: [
     Credentials({
       credentials: {

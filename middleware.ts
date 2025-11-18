@@ -9,10 +9,11 @@ export async function middleware(request: NextRequest) {
   });
   const { pathname } = request.nextUrl;
 
-  // Allow access to login page, create-admin page and public files
+  // Allow access to login page, create-admin page, debug page and public files
   if (
     pathname === '/login' || 
     pathname === '/admin/create-admin' ||
+    pathname === '/admin/debug-auth' ||
     pathname === '/manifest.json' ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/') ||
