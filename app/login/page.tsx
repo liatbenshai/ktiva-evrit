@@ -38,14 +38,28 @@ export default function LoginPage() {
         } else if (result?.ok) {
           // התחברות מוצלחת - רענון מלא של הדף
           console.log('Login successful, redirecting...');
+          console.log('Full result:', JSON.stringify(result, null, 2));
+          
+          // Wait a bit longer to ensure session cookie is set
           setLoading(false);
+          
+          // Try to refresh the session first
+          try {
+            const sessionCheck = await fetch('/api/auth/session');
+            const sessionData = await sessionCheck.json();
+            console.log('Session after login:', sessionData);
+          } catch (e) {
+            console.error('Error checking session:', e);
+          }
+          
           // Use window.location for full page reload to ensure session is loaded
           setTimeout(() => {
             window.location.href = '/dashboard';
-          }, 100);
+          }, 300);
         } else {
           console.error('Unexpected login result:', result);
-          setError('שגיאה בהתחברות. נסה שוב.');
+          console.error('Result details:', JSON.stringify(result, null, 2));
+          setError('שגיאה בהתחברות. נסה שוב. בדוק את הקונסול לפרטים.');
           setLoading(false);
         }
       } else {
