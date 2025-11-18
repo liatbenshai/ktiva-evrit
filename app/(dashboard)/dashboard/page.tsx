@@ -7,6 +7,7 @@ import {
   FileCheck,
   FileText,
   Languages,
+  Lightbulb,
   Mail,
   MessageSquare,
   RotateCcw,
@@ -94,6 +95,13 @@ const creationCards = [
     icon: RotateCcw,
     href: '/dashboard/flip-document',
     gradient: 'from-slate-500 via-gray-500 to-zinc-600',
+  },
+  {
+    title: 'עוזר החלטות לניסוח',
+    description: 'הציגי דילמה בניסוח או תקן - ואני אציע לך אפשרויות מעשיות להתמודדות.',
+    icon: Lightbulb,
+    href: '/dashboard/transcription-guidelines',
+    gradient: 'from-yellow-500 via-amber-500 to-orange-500',
   },
 ];
 
