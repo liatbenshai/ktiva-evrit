@@ -10,6 +10,16 @@ export async function middleware(request: NextRequest) {
     req: request, 
     secret: process.env.NEXTAUTH_SECRET
   });
+  
+  // Debug: Log token status for dashboard routes
+  if (pathname.startsWith('/dashboard')) {
+    console.log('[Middleware] Dashboard route - token exists:', !!token);
+    if (!token) {
+      console.log('[Middleware] No token found, checking cookies...');
+      const cookies = request.cookies.getAll();
+      console.log('[Middleware] Available cookies:', cookies.map(c => c.name));
+    }
+  }
 
   // Allow access to login page, create-admin page, debug page and public files
   if (
@@ -27,10 +37,27 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protect dashboard routes - require authentication
-  if (pathname.startsWith('/dashboard') && !token) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(loginUrl);
+  if (pathname.startsWith('/dashboard')) {
+    if (!token) {
+      // Check if there's a session cookie that might not have been decoded
+      // This usually means NEXTAUTH_SECRET mismatch
+      const sessionCookie = request.cookies.get('__Secure-authjs.session-token') || 
+                           request.cookies.get('authjs.session-token');
+      
+      if (sessionCookie && !process.env.NEXTAUTH_SECRET) {
+        console.error('[Middleware] CRITICAL: NEXTAUTH_SECRET is not set!');
+      } else if (sessionCookie) {
+        console.error('[Middleware] Session cookie exists but token is null - NEXTAUTH_SECRET mismatch!');
+        console.error('[Middleware] Cookie name:', sessionCookie.name);
+        console.error('[Middleware] Cookie value length:', sessionCookie.value?.length || 0);
+      }
+      
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    // Token exists, allow access
+    return NextResponse.next();
   }
 
   // Protect admin routes - require authentication

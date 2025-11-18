@@ -3,6 +3,11 @@ import Credentials from 'next-auth/providers/credentials';
 import { prisma } from './prisma';
 import bcrypt from 'bcryptjs';
 
+// Validate NEXTAUTH_SECRET
+if (!process.env.NEXTAUTH_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('⚠️ CRITICAL: NEXTAUTH_SECRET is not set in production!');
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true, // חשוב ל-NextAuth v5
   debug: process.env.NODE_ENV === 'development', // Enable debug in development
