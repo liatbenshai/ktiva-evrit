@@ -27,32 +27,25 @@ self.addEventListener('fetch', (event) => {
   const method = request.method;
   const url = new URL(request.url);
   
-  // Always use redirect: 'follow' for all fetch requests
-  const fetchOptions = { redirect: 'follow' };
-  
-  // Skip service worker for API routes - always fetch from network
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(fetch(request, fetchOptions));
-    return;
-  }
-  
-  // Skip service worker for protected routes that require authentication
-  // These routes may have redirects that the service worker can't handle
-  if (url.pathname.startsWith('/dashboard') || 
+  // Skip service worker entirely for routes that may have redirects
+  // Let the browser handle these naturally without service worker interception
+  if (url.pathname.startsWith('/api/') ||
+      url.pathname.startsWith('/dashboard') || 
       url.pathname.startsWith('/login') || 
-      url.pathname.startsWith('/register')) {
-    // For protected routes, always fetch from network with redirect mode
-    event.respondWith(fetch(request, fetchOptions));
+      url.pathname.startsWith('/register') ||
+      url.pathname.startsWith('/admin')) {
+    // Don't intercept these requests at all - let browser handle redirects
     return;
   }
   
   // Only cache GET requests - skip POST, DELETE, PUT, PATCH
   if (method !== 'GET') {
-    // For non-GET requests, just fetch from network without caching
-    event.respondWith(fetch(request, fetchOptions));
+    // Don't intercept non-GET requests
     return;
   }
   
+  // Only handle static assets that we know won't redirect
+  // Use redirect: 'follow' explicitly to handle any redirects properly
   event.respondWith(
     caches.match(request)
       .then((response) => {
@@ -60,7 +53,8 @@ self.addEventListener('fetch', (event) => {
         if (response) {
           return response;
         }
-        return fetch(request, fetchOptions).then(
+        // Fetch with redirect: 'follow' to properly handle any redirects
+        return fetch(request, { redirect: 'follow' }).then(
           (response) => {
             // Check if we received a valid response
             // Don't cache redirects (3xx status codes) or errors

@@ -33,6 +33,7 @@ export default function LoginPage() {
           setLoading(false);
         } else if (result?.ok) {
           // התחברות מוצלחת - רענון מלא של הדף
+          setLoading(false);
           window.location.href = '/dashboard';
         } else {
           setError('שגיאה בהתחברות. נסה שוב.');
@@ -69,6 +70,7 @@ export default function LoginPage() {
             setLoading(false);
           } else if (result?.ok) {
             // התחברות מוצלחת - רענון מלא של הדף
+            setLoading(false);
             window.location.href = '/dashboard';
           } else {
             setError('המשתמש נוצר אבל לא ניתן להתחבר. נסה להתחבר ידנית.');
