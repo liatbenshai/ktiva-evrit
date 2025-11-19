@@ -62,12 +62,71 @@ interface Lesson {
 // We'll copy the LESSON_TEMPLATES here or import them
 // For now, let's create a helper function that builds lessons from templates
 
+// Map from SupportedLanguageKey to template field names
+const LANGUAGE_MAP: Record<SupportedLanguageKey, string> = {
+  english: 'en',
+  romanian: 'ro',
+  italian: 'it',
+  french: 'fr',
+  russian: 'ru',
+};
+
 function getTranslation(term: any, lang: SupportedLanguageKey): string {
-  return term[lang] || term.en || term.hebrew || '';
+  if (!term || typeof term !== 'object') return '';
+  const templateKey = LANGUAGE_MAP[lang];
+  if (!templateKey) return term.en || term.hebrew || '';
+  return term[templateKey] || term.en || term.hebrew || '';
 }
 
 function getPronunciation(term: any, lang: SupportedLanguageKey): string | null {
-  return term.pronunciation?.[lang] || null;
+  if (!term || typeof term !== 'object' || !term.pronunciation) return null;
+  const templateKey = LANGUAGE_MAP[lang];
+  if (!templateKey) return null;
+  return term.pronunciation[templateKey] || null;
+}
+
+// Helper function to create a matching exercise
+function createMatchingExercise(
+  vocab: any,
+  template: any,
+  lang: SupportedLanguageKey,
+  lessonId: string,
+  exerciseOrder: number,
+  title: string = 'התאמת מילים'
+): Exercise {
+  const otherVocabs = template.vocabulary.filter((v: any) => v.hebrew !== vocab.hebrew);
+  const wrongOptions = [
+    otherVocabs[0] || template.vocabulary[0],
+    otherVocabs[1] || template.vocabulary[0],
+    otherVocabs[2] || template.vocabulary[0],
+  ].filter(Boolean);
+
+  return {
+    id: `${lessonId}-ex-${exerciseOrder}`,
+    type: 'MATCHING',
+    title,
+    instructions: `בחרי את התרגום הנכון למילה "${vocab.hebrew}"`,
+    question: `מה התרגום של "${vocab.hebrew}"?`,
+    correctAnswer: getTranslation(vocab, lang),
+    points: 10,
+    order: exerciseOrder,
+    options: [
+      {
+        id: `${lessonId}-ex-${exerciseOrder}-opt-1`,
+        text: getTranslation(vocab, lang),
+        isCorrect: true,
+        explanation: `נכון! "${vocab.hebrew}" מתרגם ל-${getTranslation(vocab, lang)}`,
+        order: 1,
+      },
+      ...wrongOptions.slice(0, 3).map((wrongVocab: any, idx: number) => ({
+        id: `${lessonId}-ex-${exerciseOrder}-opt-${idx + 2}`,
+        text: getTranslation(wrongVocab, lang),
+        isCorrect: false,
+        explanation: 'זה לא התרגום הנכון',
+        order: idx + 2,
+      })),
+    ],
+  };
 }
 
 // Helper function to generate exercises from template
@@ -79,180 +138,156 @@ function generateExercisesFromTemplate(
   const exercises: Exercise[] = [];
   let exerciseOrder = 1;
 
-  // Exercise 1: Matching - first word
-  if (template.vocabulary && template.vocabulary.length > 0) {
-    const firstVocab = template.vocabulary[0];
-    exercises.push({
-      id: `${lessonId}-ex-${exerciseOrder}`,
-      type: 'MATCHING',
-      title: 'התאמת מילים',
-      instructions: `בחרי את התרגום הנכון למילה "${firstVocab.hebrew}"`,
-      question: `מה התרגום של "${firstVocab.hebrew}"?`,
-      correctAnswer: getTranslation(firstVocab, lang),
-      points: 10,
-      order: exerciseOrder++,
-      options: [
-        {
-          id: `${lessonId}-ex-${exerciseOrder - 1}-opt-1`,
-          text: getTranslation(firstVocab, lang),
-          isCorrect: true,
-          explanation: `נכון! "${firstVocab.hebrew}" מתרגם ל-${getTranslation(firstVocab, lang)}`,
-          order: 1,
-        },
-        {
-          id: `${lessonId}-ex-${exerciseOrder - 1}-opt-2`,
-          text: getTranslation(template.vocabulary[1] || template.vocabulary[0], lang),
-          isCorrect: false,
-          explanation: 'זה לא התרגום הנכון',
-          order: 2,
-        },
-        {
-          id: `${lessonId}-ex-${exerciseOrder - 1}-opt-3`,
-          text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang),
-          isCorrect: false,
-          explanation: 'זה לא התרגום הנכון',
-          order: 3,
-        },
-        {
-          id: `${lessonId}-ex-${exerciseOrder - 1}-opt-4`,
-          text: getTranslation(template.vocabulary[3] || template.vocabulary[0], lang),
-          isCorrect: false,
-          explanation: 'זה לא התרגום הנכון',
-          order: 4,
-        },
-      ],
+  const vocabList = template.vocabulary || [];
+  const sentences = template.sentences || [];
+
+  // Create matching exercises for multiple vocabulary words (up to 6-8 words)
+  const vocabToPractice = vocabList.slice(0, Math.min(8, vocabList.length));
+  vocabToPractice.forEach((vocab: any, index: number) => {
+    exercises.push(createMatchingExercise(
+      vocab,
+      template,
+      lang,
+      lessonId,
+      exerciseOrder++,
+      index === 0 ? 'התאמת מילים' : `התאמת מילה ${index + 1}`
+    ));
+  });
+
+  // Add sentence exercises if we have sentences
+  if (sentences.length > 0) {
+    sentences.forEach((sentence: any, sentenceIndex: number) => {
+      const sentenceTranslation = getTranslation(sentence, lang);
+      const sentenceWords = sentenceTranslation.split(' ').filter(
+        (w: string) => w.length > 1 && !['the', 'a', 'an', 'is', 'are', 'am', 'was', 'were', 'le', 'la', 'les', 'un', 'une', 'il', 'elle', 'nous', 'vous', 'ils', 'elles'].includes(w.toLowerCase())
+      );
+
+      // WORD_ORDER exercise for each sentence
+      if (sentenceWords.length >= 3) {
+        exercises.push({
+          id: `${lessonId}-ex-${exerciseOrder}`,
+          type: 'WORD_ORDER',
+          title: sentenceIndex === 0 ? 'הרכיבי משפט' : `הרכיבי משפט ${sentenceIndex + 1}`,
+          instructions: 'סדרי את המילים בסדר הנכון כדי ליצור משפט',
+          question: `הרכיבי משפט מהמילים הבאות: ${sentenceWords.join(', ')}`,
+          correctAnswer: sentenceTranslation,
+          exerciseData: JSON.stringify({
+            words: sentenceWords,
+            correctOrder: sentenceTranslation.split(' '),
+            hebrewSentence: sentence.hebrew,
+          }),
+          points: 20,
+          order: exerciseOrder++,
+        });
+      }
+
+      // FILL_BLANK exercises - translate words from target language to Hebrew
+      const importantWords = sentenceTranslation.split(' ').filter(
+        (w: string) => w.length > 2 && !['the', 'a', 'an', 'is', 'are', 'am', 'was', 'were', 'and', 'or', 'but'].includes(w.toLowerCase())
+      ).slice(0, 2);
+
+      importantWords.forEach((targetWord: string, wordIndex: number) => {
+        const hebrewWords = sentence.hebrew.split(' ');
+        const correspondingHebrew = hebrewWords[wordIndex] || hebrewWords[0];
+        
+        exercises.push({
+          id: `${lessonId}-ex-${exerciseOrder}`,
+          type: 'FILL_BLANK',
+          title: wordIndex === 0 ? 'תרגום מילה' : `תרגום מילה ${wordIndex + 1}`,
+          instructions: 'מה התרגום בעברית של המילה בשפה הנלמדת?',
+          question: `מה התרגום בעברית של המילה "${targetWord}"?`,
+          correctAnswer: correspondingHebrew,
+          exerciseData: JSON.stringify({
+            hebrewSentence: correspondingHebrew,
+            targetWord: targetWord,
+            targetLanguage: lang,
+          }),
+          points: 15,
+          order: exerciseOrder++,
+        });
+      });
+
+      // LISTENING exercise for sentences
+      exercises.push({
+        id: `${lessonId}-ex-${exerciseOrder}`,
+        type: 'LISTENING',
+        title: sentenceIndex === 0 ? 'האזנה וזיהוי' : `האזנה וזיהוי ${sentenceIndex + 1}`,
+        instructions: 'האזיני למילה/משפט ובחרי את התרגום הנכון בעברית',
+        question: `מה התרגום בעברית של "${sentenceTranslation}"?`,
+        correctAnswer: sentence.hebrew,
+        points: 15,
+        order: exerciseOrder++,
+      });
     });
   }
 
-  // Add sentence exercises if we have sentences
-  if (template.sentences && template.sentences.length > 0) {
-    const sentence = template.sentences[0];
-    const sentenceTranslation = getTranslation(sentence, lang);
-    const sentenceWords = sentenceTranslation.split(' ').filter(
-      (w: string) => w.length > 1 && !['the', 'a', 'an', 'is', 'are', 'am', 'was', 'were'].includes(w.toLowerCase())
-    );
-
-    // WORD_ORDER exercise
-    if (sentenceWords.length >= 2) {
-      exercises.push({
-        id: `${lessonId}-ex-${exerciseOrder}`,
-        type: 'WORD_ORDER',
-        title: 'הרכיבי משפט',
-        instructions: 'סדרי את המילים בסדר הנכון כדי ליצור משפט',
-        question: `הרכיבי משפט מהמילים הבאות: ${sentenceWords.join(', ')}`,
-        correctAnswer: sentenceTranslation,
-        exerciseData: JSON.stringify({
-          words: sentenceWords,
-          correctOrder: sentenceTranslation.split(' '),
-          hebrewSentence: sentence.hebrew,
-        }),
-        points: 20,
-        order: exerciseOrder++,
-      });
-    }
-
-    // Translation exercise - word in target language → Hebrew
-    const firstWord = sentenceTranslation.split(' ')[0];
-    const firstWordHebrew = sentence.hebrew.split(' ')[0];
-
+  // Add more FILL_BLANK exercises for vocabulary words (reverse translation)
+  vocabToPractice.slice(0, 4).forEach((vocab: any, index: number) => {
     exercises.push({
       id: `${lessonId}-ex-${exerciseOrder}`,
       type: 'FILL_BLANK',
-      title: 'תרגום מילה',
+      title: index === 0 ? 'תרגום הפוך' : `תרגום הפוך ${index + 1}`,
       instructions: 'מה התרגום בעברית של המילה בשפה הנלמדת?',
-      question: `מה התרגום בעברית של המילה "${firstWord}"?`,
-      correctAnswer: firstWordHebrew,
+      question: `מה התרגום בעברית של "${getTranslation(vocab, lang)}"?`,
+      correctAnswer: vocab.hebrew,
       exerciseData: JSON.stringify({
-        hebrewSentence: firstWordHebrew,
-        targetWord: firstWord,
+        hebrewSentence: vocab.hebrew,
+        targetWord: getTranslation(vocab, lang),
         targetLanguage: lang,
       }),
-      points: 15,
+      points: 12,
       order: exerciseOrder++,
     });
+  });
 
-    // Another matching exercise
-    if (template.vocabulary && template.vocabulary.length >= 2) {
-      const secondVocab = template.vocabulary[1];
-      exercises.push({
-        id: `${lessonId}-ex-${exerciseOrder}`,
-        type: 'MATCHING',
-        title: 'התאמת מילה נוספת',
-        instructions: `בחרי את התרגום הנכון למילה "${secondVocab.hebrew}"`,
-        question: `מה התרגום של "${secondVocab.hebrew}"?`,
-        correctAnswer: getTranslation(secondVocab, lang),
-        points: 10,
-        order: exerciseOrder++,
-        options: [
-          {
-            id: `${lessonId}-ex-${exerciseOrder - 1}-opt-1`,
-            text: getTranslation(secondVocab, lang),
-            isCorrect: true,
-            explanation: `נכון! "${secondVocab.hebrew}" מתרגם ל-${getTranslation(secondVocab, lang)}`,
-            order: 1,
-          },
-          {
-            id: `${lessonId}-ex-${exerciseOrder - 1}-opt-2`,
-            text: getTranslation(template.vocabulary[0], lang),
-            isCorrect: false,
-            explanation: 'זה לא התרגום הנכון',
-            order: 2,
-          },
-          {
-            id: `${lessonId}-ex-${exerciseOrder - 1}-opt-3`,
-            text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang),
-            isCorrect: false,
-            explanation: 'זה לא התרגום הנכון',
-            order: 3,
-          },
-          {
-            id: `${lessonId}-ex-${exerciseOrder - 1}-opt-4`,
-            text: getTranslation(template.vocabulary[3] || template.vocabulary[0], lang),
-            isCorrect: false,
-            explanation: 'זה לא התרגום הנכון',
-            order: 4,
-          },
-        ],
+  // Add sentence building exercises with linking words
+  if (sentences.length > 0) {
+    // Find linking words in vocabulary
+    const linkingWords = vocabList.filter((v: any) => v.contentType === 'linking_word' || ['ו', 'אבל', 'או', 'כי', 'אם', 'כאשר', 'לכן', 'אז', 'אחרי', 'לפני'].includes(v.hebrew));
+    
+    if (linkingWords.length > 0 && sentences.length > 0) {
+      // Create sentence building exercises that include linking words
+      sentences.slice(0, 2).forEach((sentence: any, sentenceIndex: number) => {
+        const sentenceTranslation = getTranslation(sentence, lang);
+        // Split sentence into parts and include linking words
+        const allWords = sentenceTranslation.split(' ').filter((w: string) => w.length > 0);
+        
+        // Create a more complex word order exercise that includes linking words
+        if (allWords.length >= 4) {
+          exercises.push({
+            id: `${lessonId}-ex-${exerciseOrder}`,
+            type: 'WORD_ORDER',
+            title: sentenceIndex === 0 ? 'הרכיבי משפט עם מילות קישור' : `הרכיבי משפט עם מילות קישור ${sentenceIndex + 1}`,
+            instructions: 'הרכיבי משפט שלם מהמילים הבאות, כולל מילות הקישור',
+            question: `הרכיבי משפט מהמילים הבאות: ${allWords.join(', ')}`,
+            correctAnswer: sentenceTranslation,
+            exerciseData: JSON.stringify({
+              words: allWords,
+              correctOrder: allWords,
+              hebrewSentence: sentence.hebrew,
+              includeLinkingWords: true,
+            }),
+            points: 25,
+            order: exerciseOrder++,
+          });
+        }
       });
     }
-  } else {
-    // If no sentences, add more matching exercises
-    if (template.vocabulary && template.vocabulary.length >= 2) {
-      const secondVocab = template.vocabulary[1];
-      exercises.push({
-        id: `${lessonId}-ex-${exerciseOrder}`,
-        type: 'MATCHING',
-        title: 'התאמת מילה נוספת',
-        instructions: `בחרי את התרגום הנכון למילה "${secondVocab.hebrew}"`,
-        question: `מה התרגום של "${secondVocab.hebrew}"?`,
-        correctAnswer: getTranslation(secondVocab, lang),
-        points: 10,
-        order: exerciseOrder++,
-        options: [
-          {
-            id: `${lessonId}-ex-${exerciseOrder - 1}-opt-1`,
-            text: getTranslation(secondVocab, lang),
-            isCorrect: true,
-            explanation: `נכון! "${secondVocab.hebrew}" מתרגם ל-${getTranslation(secondVocab, lang)}`,
-            order: 1,
-          },
-          {
-            id: `${lessonId}-ex-${exerciseOrder - 1}-opt-2`,
-            text: getTranslation(template.vocabulary[0], lang),
-            isCorrect: false,
-            explanation: 'זה לא התרגום הנכון',
-            order: 2,
-          },
-          {
-            id: `${lessonId}-ex-${exerciseOrder - 1}-opt-3`,
-            text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang),
-            isCorrect: false,
-            explanation: 'זה לא התרגום הנכון',
-            order: 3,
-          },
-        ],
-      });
-    }
+  }
+
+  // Add exercises specifically for linking words
+  const linkingWords = vocabList.filter((v: any) => v.contentType === 'linking_word' || ['ו', 'אבל', 'או', 'כי', 'אם', 'כאשר', 'לכן', 'אז', 'אחרי', 'לפני'].includes(v.hebrew));
+  if (linkingWords.length > 0) {
+    linkingWords.slice(0, 5).forEach((linkingWord: any, index: number) => {
+      exercises.push(createMatchingExercise(
+        linkingWord,
+        template,
+        lang,
+        lessonId,
+        exerciseOrder++,
+        `מילת קישור ${index + 1}`
+      ));
+    });
   }
 
   return exercises;

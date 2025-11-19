@@ -82,6 +82,36 @@ export const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'מסעדה', en: 'Restaurant', ro: 'Restaurant', it: 'Ristorante', fr: 'Restaurant', ru: 'Ресторан', pronunciation: { en: 'RES-tuh-rahnt', ro: 'rehs-tah-OO-rahnt', it: 'ree-stoh-RAHN-teh', fr: 'rehs-toh-RAHN', ru: 'rehs-tah-RAHN' } },
         { hebrew: 'מלצר', en: 'Waiter', ro: 'Chelner', it: 'Cameriere', fr: 'Serveur', ru: 'Официант', pronunciation: { en: 'WAY-ter', ro: 'KEHL-nehr', it: 'kah-meh-RYEH-reh', fr: 'sehr-VUHR', ru: 'ah-fee-TSYAHNT' } },
       ],
+      sentences: [
+        { hebrew: 'אני רוצה להזמין תפריט בבקשה', en: 'I would like to order a menu please', ro: 'Aș dori să comand un meniu, vă rog', it: 'Vorrei ordinare un menu per favore', fr: 'Je voudrais commander un menu s\'il vous plaît', ru: 'Я хотел бы заказать меню, пожалуйста', isSentence: true },
+        { hebrew: 'האוכל כאן טעים מאוד', en: 'The food here is very tasty', ro: 'Mâncarea de aici este foarte gustoasă', it: 'Il cibo qui è molto gustoso', fr: 'La nourriture ici est très savoureuse', ru: 'Еда здесь очень вкусная', isSentence: true },
+        { hebrew: 'אני אוהב בשר וירקות', en: 'I love meat and vegetables', ro: 'Îmi place carnea și legumele', it: 'Amo la carne e le verdure', fr: 'J\'aime la viande et les légumes', ru: 'Я люблю мясо и овощи', isSentence: true },
+        { hebrew: 'החשבון בבקשה', en: 'The bill please', ro: 'Nota, vă rog', it: 'Il conto per favore', fr: 'L\'addition s\'il vous plaît', ru: 'Счёт, пожалуйста', isSentence: true },
+      ],
+    },
+    אוכל_2: {
+      title: 'אוכל ומסעדות - חלק 2',
+      description: 'מילים נוספות על אוכל ובישול',
+      vocabulary: [
+        { hebrew: 'מרק', en: 'Soup', ro: 'Supă', it: 'Zuppa', fr: 'Soupe', ru: 'Суп', pronunciation: { en: 'soop', ro: 'SOO-puh', it: 'TZOOP-pah', fr: 'soop', ru: 'soop' } },
+        { hebrew: 'סלט', en: 'Salad', ro: 'Salată', it: 'Insalata', fr: 'Salade', ru: 'Салат', pronunciation: { en: 'SAL-ud', ro: 'sah-LAH-tuh', it: 'een-sah-LAH-tah', fr: 'sah-LAHD', ru: 'sah-LAHT' } },
+        { hebrew: 'קינוח', en: 'Dessert', ro: 'Desert', it: 'Dolce', fr: 'Dessert', ru: 'Десерт', pronunciation: { en: 'dih-ZURT', ro: 'deh-SEHRT', it: 'DOHL-cheh', fr: 'day-SEHR', ru: 'deh-SEHRT' } },
+        { hebrew: 'משקה', en: 'Drink', ro: 'Băutură', it: 'Bevanda', fr: 'Boisson', ru: 'Напиток', pronunciation: { en: 'dringk', ro: 'buh-oo-TOO-ruh', it: 'beh-VAHN-dah', fr: 'bwah-SOHN', ru: 'nah-PEE-tohk' } },
+        { hebrew: 'מתוק', en: 'Sweet', ro: 'Dulce', it: 'Dolce', fr: 'Sucré', ru: 'Сладкий', pronunciation: { en: 'sweet', ro: 'DOOL-cheh', it: 'DOHL-cheh', fr: 'soo-KRAY', ru: 'SLAHD-ky' } },
+        { hebrew: 'חמוץ', en: 'Sour', ro: 'Acru', it: 'Acido', fr: 'Acide', ru: 'Кислый', pronunciation: { en: 'sowr', ro: 'AH-kroo', it: 'AH-chee-doh', fr: 'ah-SEED', ru: 'KEE-sly' } },
+        { hebrew: 'מלוח', en: 'Salty', ro: 'Sărat', it: 'Salato', fr: 'Salé', ru: 'Солёный', pronunciation: { en: 'SAWL-tee', ro: 'suh-RAHT', it: 'sah-LAH-toh', fr: 'sah-LAY', ru: 'sah-LYOH-ny' } },
+        { hebrew: 'חריף', en: 'Spicy', ro: 'Picant', it: 'Piccante', fr: 'Épicé', ru: 'Острый', pronunciation: { en: 'SPAHY-see', ro: 'pee-KAHNT', it: 'peek-KAHN-teh', fr: 'ay-pee-SAY', ru: 'OHS-try' } },
+        { hebrew: 'להזמין', en: 'To order', ro: 'A comanda', it: 'Ordinare', fr: 'Commander', ru: 'Заказать', pronunciation: { en: 'tu OR-der', ro: 'ah koh-mahn-DAH', it: 'or-dee-NAH-reh', fr: 'koh-mahn-DAY', ru: 'zah-kah-ZAHT' } },
+        { hebrew: 'לשלם', en: 'To pay', ro: 'A plăti', it: 'Pagare', fr: 'Payer', ru: 'Платить', pronunciation: { en: 'tu pay', ro: 'ah pluh-TEE', it: 'pah-GAH-reh', fr: 'pah-YAY', ru: 'plah-TEET' } },
+        { hebrew: 'טיפ', en: 'Tip', ro: 'Bacșiș', it: 'Mancia', fr: 'Pourboire', ru: 'Чаевые', pronunciation: { en: 'tip', ro: 'bahk-SHEESH', it: 'MAHN-chah', fr: 'poor-BWAHR', ru: 'chah-ee-VYEH' } },
+        { hebrew: 'טעים', en: 'Tasty', ro: 'Gustos', it: 'Gustoso', fr: 'Savoureux', ru: 'Вкусный', pronunciation: { en: 'TAY-stee', ro: 'goos-TOHS', it: 'goos-TOH-zoh', fr: 'sah-voo-RUH', ru: 'VKOOS-ny' } },
+        { hebrew: 'מעולה', en: 'Excellent', ro: 'Excelent', it: 'Eccellente', fr: 'Excellent', ru: 'Отличный', pronunciation: { en: 'EK-suh-lent', ro: 'ehk-seh-LEHNT', it: 'eht-chehl-LEHN-teh', fr: 'ehk-seh-LAHN', ru: 'aht-LEECH-ny' } },
+      ],
+      sentences: [
+        { hebrew: 'המרק הזה חם וטעים', en: 'This soup is hot and tasty', ro: 'Această supă este caldă și gustoasă', it: 'Questa zuppa è calda e gustosa', fr: 'Cette soupe est chaude et savoureuse', ru: 'Этот суп горячий и вкусный', isSentence: true },
+        { hebrew: 'אני רוצה קינוח מתוק אחרי האוכל', en: 'I want a sweet dessert after the food', ro: 'Vreau un desert dulce după mâncare', it: 'Voglio un dolce dopo il cibo', fr: 'Je veux un dessert sucré après le repas', ru: 'Я хочу сладкий десерт после еды', isSentence: true },
+        { hebrew: 'האוכל חריף מדי בשבילי', en: 'The food is too spicy for me', ro: 'Mâncarea este prea picantă pentru mine', it: 'Il cibo è troppo piccante per me', fr: 'La nourriture est trop épicée pour moi', ru: 'Еда слишком острая для меня', isSentence: true },
+      ],
     },
     עבודה: {
       title: 'עבודה ועסקים',
@@ -399,6 +429,29 @@ export const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'אחי ואני גרים באותה דירה', en: 'My brother and I live in the same apartment', ro: 'Fratele meu și eu locuim în același apartament', it: 'Mio fratello e io viviamo nello stesso appartamento', fr: 'Mon frère et moi vivons dans le même appartement', ru: 'Мой брат и я живём в одной квартире', isSentence: true },
       ],
     },
+    מילות_קישור: {
+      title: 'מילות קישור בסיסיות',
+      description: 'ללמוד מילות קישור חשובות',
+      vocabulary: [
+        { hebrew: 'ו', en: 'And', ro: 'Și', it: 'E', fr: 'Et', ru: 'И', pronunciation: { en: 'and', ro: 'shee', it: 'eh', fr: 'ay', ru: 'ee' }, contentType: 'linking_word' },
+        { hebrew: 'אבל', en: 'But', ro: 'Dar', it: 'Ma', fr: 'Mais', ru: 'Но', pronunciation: { en: 'buht', ro: 'dahr', it: 'mah', fr: 'may', ru: 'noh' }, contentType: 'linking_word' },
+        { hebrew: 'או', en: 'Or', ro: 'Sau', it: 'O', fr: 'Ou', ru: 'Или', pronunciation: { en: 'or', ro: 'sah-OO', it: 'oh', fr: 'oo', ru: 'ee-LEE' }, contentType: 'linking_word' },
+        { hebrew: 'כי', en: 'Because', ro: 'Pentru că', it: 'Perché', fr: 'Parce que', ru: 'Потому что', pronunciation: { en: 'bih-KAWZ', ro: 'pehn-TROO kuh', it: 'pehr-KEH', fr: 'pahr-suh kuh', ru: 'pah-tah-MOO shtoh' }, contentType: 'linking_word' },
+        { hebrew: 'אם', en: 'If', ro: 'Dacă', it: 'Se', fr: 'Si', ru: 'Если', pronunciation: { en: 'if', ro: 'DAH-kuh', it: 'seh', fr: 'see', ru: 'ehs-LEE' }, contentType: 'linking_word' },
+        { hebrew: 'כאשר', en: 'When', ro: 'Când', it: 'Quando', fr: 'Quand', ru: 'Когда', pronunciation: { en: 'wen', ro: 'kuhnd', it: 'KWAHN-doh', fr: 'kahn', ru: 'kahg-DAH' }, contentType: 'linking_word' },
+        { hebrew: 'לכן', en: 'Therefore', ro: 'Prin urmare', it: 'Quindi', fr: 'Donc', ru: 'Поэтому', pronunciation: { en: 'THAIR-for', ro: 'preen oor-MAH-reh', it: 'KWEEN-dee', fr: 'dohnk', ru: 'pah-eh-TOH-moo' }, contentType: 'linking_word' },
+        { hebrew: 'אז', en: 'So', ro: 'Deci', it: 'Quindi', fr: 'Donc', ru: 'Так', pronunciation: { en: 'soh', ro: 'DEH-chee', it: 'KWEEN-dee', fr: 'dohnk', ru: 'tahk' }, contentType: 'linking_word' },
+        { hebrew: 'אחרי', en: 'After', ro: 'După', it: 'Dopo', fr: 'Après', ru: 'После', pronunciation: { en: 'AF-ter', ro: 'DOO-puh', it: 'DOH-poh', fr: 'ah-PREH', ru: 'pahs-LEH' }, contentType: 'linking_word' },
+        { hebrew: 'לפני', en: 'Before', ro: 'Înainte', it: 'Prima', fr: 'Avant', ru: 'До', pronunciation: { en: 'bih-FOR', ro: 'uhn-ah-EE-neh-teh', it: 'PREE-mah', fr: 'ah-VAHN', ru: 'doh' }, contentType: 'linking_word' },
+      ],
+      sentences: [
+        { hebrew: 'אני אוהב קפה ותה', en: 'I love coffee and tea', ro: 'Îmi place cafeaua și ceaiul', it: 'Amo il caffè e il tè', fr: 'J\'aime le café et le thé', ru: 'Я люблю кофе и чай', isSentence: true },
+        { hebrew: 'אני רוצה ללכת אבל אין לי זמן', en: 'I want to go but I don\'t have time', ro: 'Vreau să merg dar nu am timp', it: 'Voglio andare ma non ho tempo', fr: 'Je veux y aller mais je n\'ai pas le temps', ru: 'Я хочу пойти, но у меня нет времени', isSentence: true },
+        { hebrew: 'אני אשמח אם תבוא', en: 'I will be happy if you come', ro: 'Voi fi fericit dacă vii', it: 'Sarò felice se vieni', fr: 'Je serai heureux si tu viens', ru: 'Я буду счастлив, если ты придёшь', isSentence: true },
+        { hebrew: 'אני עובד כי אני צריך כסף', en: 'I work because I need money', ro: 'Lucrez pentru că am nevoie de bani', it: 'Lavoro perché ho bisogno di soldi', fr: 'Je travaille parce que j\'ai besoin d\'argent', ru: 'Я работаю, потому что мне нужны деньги', isSentence: true },
+        { hebrew: 'כאשר אני מגיע הביתה, אני נח', en: 'When I arrive home, I rest', ro: 'Când ajung acasă, mă odihnesc', it: 'Quando arrivo a casa, mi riposo', fr: 'Quand j\'arrive à la maison, je me repose', ru: 'Когда я прихожу домой, я отдыхаю', isSentence: true },
+      ],
+    },
   },
   INTERMEDIATE: {
     נסיעות: {
@@ -609,6 +662,29 @@ export const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'פותחן', en: 'Opener', ro: 'Deschizător', it: 'Apriporta', fr: 'Ouvre-boîte', ru: 'Открывалка', pronunciation: { en: 'OH-pen-er', ro: 'dehs-kee-zuh-TOHR', it: 'ah-pree-POR-tah', fr: 'oo-vruh-BWAHT', ru: 'aht-kry-VAHL-kah' } },
         { hebrew: 'מסננת', en: 'Strainer', ro: 'Strecurătoare', it: 'Colino', fr: 'Passoire', ru: 'Дуршлаг', pronunciation: { en: 'STRAYN-er', ro: 'streh-koo-ruh-TOH-reh', it: 'koh-LEE-noh', fr: 'pah-SWAHR', ru: 'door-SHLAHG' } },
         { hebrew: 'מערוך', en: 'Rolling pin', ro: 'Răzătoare', it: 'Mattarello', fr: 'Rouleau à pâtisserie', ru: 'Скалка', pronunciation: { en: 'ROH-ling pin', ro: 'ruh-zuh-TOH-reh', it: 'maht-tah-REHL-loh', fr: 'roo-LOH ah pah-tee-SREE', ru: 'SKAHL-kah' } },
+      ],
+    },
+    מילות_קישור: {
+      title: 'מילות קישור מתקדמות',
+      description: 'ללמוד מילות קישור מורכבות יותר',
+      vocabulary: [
+        { hebrew: 'למרות', en: 'Despite', ro: 'În ciuda', it: 'Nonostante', fr: 'Malgré', ru: 'Несмотря на', pronunciation: { en: 'dih-SPAHYT', ro: 'uhn CHOO-dah', it: 'nohn-stahn-TEH', fr: 'mahl-GRAY', ru: 'nehs-mah-TRYAH nah' }, contentType: 'linking_word' },
+        { hebrew: 'אף על פי', en: 'Although', ro: 'Deși', it: 'Sebbene', fr: 'Bien que', ru: 'Хотя', pronunciation: { en: 'awl-THOH', ro: 'DEH-shee', it: 'sehb-BEH-neh', fr: 'byan kuh', ru: 'khah-TYAH' }, contentType: 'linking_word' },
+        { hebrew: 'בגלל', en: 'Due to', ro: 'Din cauza', it: 'A causa di', fr: 'À cause de', ru: 'Из-за', pronunciation: { en: 'doo tu', ro: 'deen KAH-oo-zah', it: 'ah KAH-oo-zah dee', fr: 'ah kohz duh', ru: 'eez-ZAH' }, contentType: 'linking_word' },
+        { hebrew: 'בנוסף', en: 'Additionally', ro: 'În plus', it: 'Inoltre', fr: 'De plus', ru: 'Кроме того', pronunciation: { en: 'uh-DISH-uh-nuhl-ee', ro: 'uhn ploos', it: 'ee-NOHL-treh', fr: 'duh ploos', ru: 'KROH-meh tah-GOH' }, contentType: 'linking_word' },
+        { hebrew: 'לעומת', en: 'Compared to', ro: 'Comparativ cu', it: 'Rispetto a', fr: 'Comparé à', ru: 'По сравнению с', pronunciation: { en: 'kuhm-PAIRD tu', ro: 'kohm-pah-RAH-teev koo', it: 'ree-SPEHT-toh ah', fr: 'kohm-pah-RAY ah', ru: 'pah srahv-NYEH-nee-yoo s' }, contentType: 'linking_word' },
+        { hebrew: 'בניגוד', en: 'Unlike', ro: 'Spre deosebire de', it: 'A differenza di', fr: 'Contrairement à', ru: 'В отличие от', pronunciation: { en: 'uhn-LAHYK', ro: 'spreh deh-oh-seh-BEE-reh deh', it: 'ah deef-feh-REHN-zah dee', fr: 'kohn-treh-mahn ah', ru: 'v ah-LEE-chee-yeh aht' }, contentType: 'linking_word' },
+        { hebrew: 'לפיכך', en: 'Consequently', ro: 'Prin urmare', it: 'Di conseguenza', fr: 'Par conséquent', ru: 'Следовательно', pronunciation: { en: 'KON-suh-kwent-lee', ro: 'preen oor-MAH-reh', it: 'dee kohn-seh-GWEHN-zah', fr: 'pahr kohn-say-KAHN', ru: 'sleh-DOH-vah-tehl-nah' }, contentType: 'linking_word' },
+        { hebrew: 'לעומת זאת', en: 'However', ro: 'Totuși', it: 'Tuttavia', fr: 'Cependant', ru: 'Однако', pronunciation: { en: 'how-EV-er', ro: 'toh-TOO-shee', it: 'toot-TAH-vyah', fr: 'kahn-tuh-PAHN', ru: 'ah-dah-KOH' }, contentType: 'linking_word' },
+        { hebrew: 'יתר על כן', en: 'Furthermore', ro: 'Mai mult', it: 'Inoltre', fr: 'De plus', ru: 'Более того', pronunciation: { en: 'FUR-ther-mor', ro: 'mah-ee moolt', it: 'ee-NOHL-treh', fr: 'duh ploos', ru: 'bah-LEH-yeh tah-GOH' }, contentType: 'linking_word' },
+        { hebrew: 'לבסוף', en: 'Finally', ro: 'În final', it: 'Infine', fr: 'Enfin', ru: 'Наконец', pronunciation: { en: 'FAHY-nuhl-ee', ro: 'uhn fee-NAHL', it: 'een-FEE-neh', fr: 'ahn-FAN', ru: 'nah-kah-NYETS' }, contentType: 'linking_word' },
+      ],
+      sentences: [
+        { hebrew: 'למרות הגשם, יצאנו לטיול', en: 'Despite the rain, we went on a trip', ro: 'În ciuda ploii, am plecat în excursie', it: 'Nonostante la pioggia, siamo andati in gita', fr: 'Malgré la pluie, nous sommes partis en excursion', ru: 'Несмотря на дождь, мы поехали в поездку', isSentence: true },
+        { hebrew: 'אף על פי שהיה מאוחר, המשכנו לעבוד', en: 'Although it was late, we continued working', ro: 'Deși era târziu, am continuat să lucrăm', it: 'Sebbene fosse tardi, abbiamo continuato a lavorare', fr: 'Bien qu\'il soit tard, nous avons continué à travailler', ru: 'Хотя было поздно, мы продолжили работать', isSentence: true },
+        { hebrew: 'בגלל התנועה, איחרתי לפגישה', en: 'Due to traffic, I was late for the meeting', ro: 'Din cauza traficului, am întârziat la întâlnire', it: 'A causa del traffico, sono arrivato in ritardo all\'incontro', fr: 'À cause de la circulation, j\'ai été en retard à la réunion', ru: 'Из-за пробки я опоздал на встречу', isSentence: true },
+        { hebrew: 'בנוסף לעבודה, אני גם לומד', en: 'Additionally to work, I also study', ro: 'În plus față de muncă, studiez și eu', it: 'Inoltre al lavoro, studio anche', fr: 'De plus au travail, j\'étudie aussi', ru: 'Кроме работы, я также учусь', isSentence: true },
+        { hebrew: 'לבסוף, הצלחנו לסיים את הפרויקט', en: 'Finally, we managed to finish the project', ro: 'În final, am reușit să terminăm proiectul', it: 'Infine, siamo riusciti a finire il progetto', fr: 'Enfin, nous avons réussi à terminer le projet', ru: 'Наконец, нам удалось закончить проект', isSentence: true },
       ],
     },
   },
@@ -893,6 +969,29 @@ export const LESSON_TEMPLATES: Record<string, Record<string, any>> = {
         { hebrew: 'הסרט הזה הוא הטוב ביותר שראיתי', en: 'This movie is the best I have seen', ro: 'Acest film este cel mai bun pe care l-am văzut', it: 'Questo film è il migliore che abbia mai visto', fr: 'Ce film est le meilleur que j\'ai vu', ru: 'Этот фильм - лучший, который я видел', isSentence: true },
       ],
     },
+    מילות_קישור: {
+      title: 'מילות קישור מתקדמות מאוד',
+      description: 'ללמוד מילות קישור מורכבות ומתקדמות',
+      vocabulary: [
+        { hebrew: 'לפיכך', en: 'Hence', ro: 'Prin urmare', it: 'Quindi', fr: 'Par conséquent', ru: 'Следовательно', pronunciation: { en: 'hens', ro: 'preen oor-MAH-reh', it: 'KWEEN-dee', fr: 'pahr kohn-say-KAHN', ru: 'sleh-DOH-vah-tehl-nah' }, contentType: 'linking_word' },
+        { hebrew: 'לעומת זאת', en: 'On the other hand', ro: 'Pe de altă parte', it: 'D\'altra parte', fr: 'D\'autre part', ru: 'С другой стороны', pronunciation: { en: 'on thee UH-ther hand', ro: 'peh deh AHL-tuh PAHR-teh', it: 'dahl-trah PAHR-teh', fr: 'doh-truh pahr', ru: 's druh-GOY stah-ROH-ny' }, contentType: 'linking_word' },
+        { hebrew: 'בנוסף לכך', en: 'Moreover', ro: 'Mai mult', it: 'Inoltre', fr: 'De plus', ru: 'Более того', pronunciation: { en: 'mor-OH-ver', ro: 'mah-ee moolt', it: 'ee-NOHL-treh', fr: 'duh ploos', ru: 'bah-LEH-yeh tah-GOH' }, contentType: 'linking_word' },
+        { hebrew: 'למעשה', en: 'In fact', ro: 'De fapt', it: 'In realtà', fr: 'En fait', ru: 'На самом деле', pronunciation: { en: 'in fakt', ro: 'deh fahpt', it: 'een reh-ah-LYAH', fr: 'ahn feh', ru: 'nah sa-MOM dee-LEH' }, contentType: 'linking_word' },
+        { hebrew: 'בעצם', en: 'Actually', ro: 'De fapt', it: 'In realtà', fr: 'En réalité', ru: 'На самом деле', pronunciation: { en: 'AK-choo-uh-lee', ro: 'deh fahpt', it: 'een reh-ah-lee-TAH', fr: 'ahn ray-ah-lee-TAY', ru: 'nah sa-MOM dee-LEH' }, contentType: 'linking_word' },
+        { hebrew: 'במילים אחרות', en: 'In other words', ro: 'Cu alte cuvinte', it: 'In altre parole', fr: 'En d\'autres termes', ru: 'Другими словами', pronunciation: { en: 'in UH-ther wurdz', ro: 'koo AHL-teh koo-VEEN-teh', it: 'een AHL-treh pah-ROH-leh', fr: 'ahn doh-truh tehr-muh', ru: 'droo-GEE-mee slah-VAH-mee' }, contentType: 'linking_word' },
+        { hebrew: 'כלומר', en: 'That is', ro: 'Adică', it: 'Cioè', fr: 'C\'est-à-dire', ru: 'То есть', pronunciation: { en: 'that iz', ro: 'ah-DEE-kuh', it: 'CHOH-eh', fr: 'say-tah-DEER', ru: 'toh YEHST' }, contentType: 'linking_word' },
+        { hebrew: 'למשל', en: 'For example', ro: 'De exemplu', it: 'Per esempio', fr: 'Par exemple', ru: 'Например', pronunciation: { en: 'for ig-ZAM-pul', ro: 'deh ehg-ZEHM-ploo', it: 'pehr eh-ZEHM-pyoh', fr: 'pahr ehg-ZAHMPL', ru: 'nah-PRYE-meer' }, contentType: 'linking_word' },
+        { hebrew: 'בסיכום', en: 'In summary', ro: 'În concluzie', it: 'In sintesi', fr: 'En résumé', ru: 'В заключение', pronunciation: { en: 'in SUHM-uh-ree', ro: 'uhn kohn-KLOO-zee-eh', it: 'een SEEN-teh-zee', fr: 'ahn ray-zoo-MAY', ru: 'v zah-kloo-CHEH-nyeh' }, contentType: 'linking_word' },
+        { hebrew: 'לסיכום', en: 'To summarize', ro: 'Pentru a rezuma', it: 'Per riassumere', fr: 'Pour résumer', ru: 'Подводя итог', pronunciation: { en: 'tu SUHM-uh-rahyz', ro: 'pehn-TROO ah reh-zoo-MAH', it: 'pehr ree-ah-soo-MEH-reh', fr: 'poor ray-zoo-MAY', ru: 'pahd-vah-DYAH ee-TOHK' }, contentType: 'linking_word' },
+      ],
+      sentences: [
+        { hebrew: 'לפיכך, החלטנו לנסוע', en: 'Hence, we decided to travel', ro: 'Prin urmare, am decis să călătorim', it: 'Quindi, abbiamo deciso di viaggiare', fr: 'Par conséquent, nous avons décidé de voyager', ru: 'Следовательно, мы решили поехать', isSentence: true },
+        { hebrew: 'לעומת זאת, יש גם אפשרויות אחרות', en: 'On the other hand, there are other options', ro: 'Pe de altă parte, există și alte opțiuni', it: 'D\'altra parte, ci sono anche altre opzioni', fr: 'D\'autre part, il y a aussi d\'autres options', ru: 'С другой стороны, есть и другие варианты', isSentence: true },
+        { hebrew: 'בנוסף לכך, צריך לקחת בחשבון גם את העלות', en: 'Moreover, we need to consider the cost as well', ro: 'Mai mult, trebuie să luăm în considerare și costul', it: 'Inoltre, dobbiamo considerare anche il costo', fr: 'De plus, nous devons également prendre en compte le coût', ru: 'Более того, нужно также учитывать стоимость', isSentence: true },
+        { hebrew: 'למעשה, זה לא כל כך קשה כמו שזה נראה', en: 'In fact, it\'s not as difficult as it seems', ro: 'De fapt, nu este atât de dificil pe cât pare', it: 'In realtà, non è così difficile come sembra', fr: 'En fait, ce n\'est pas aussi difficile qu\'il y paraît', ru: 'На самом деле, это не так сложно, как кажется', isSentence: true },
+        { hebrew: 'בסיכום, הפרויקט הצליח מאוד', en: 'In summary, the project was very successful', ro: 'În concluzie, proiectul a fost foarte de succes', it: 'In sintesi, il progetto è stato molto di successo', fr: 'En résumé, le projet a été très réussi', ru: 'В заключение, проект был очень успешным', isSentence: true },
+      ],
+    },
   },
 };
 
@@ -1085,7 +1184,11 @@ export async function POST(req: NextRequest) {
       for (const level of levelsToCreate) {
         const topicsForLevel = LESSON_TEMPLATES[level] || {};
         
-        for (const [topic, template] of Object.entries(topicsForLevel)) {
+        for (const [topicKey, template] of Object.entries(topicsForLevel)) {
+          // Extract base topic name (remove _2, _3, etc.)
+          const baseTopic = topicKey.replace(/_\d+$/, '');
+          const topic = baseTopic; // Use base topic for grouping
+          
           processedLessons++;
           const elapsed = Math.floor((Date.now() - startTime) / 1000);
           const avgTimePerLesson = processedLessons > 0 ? elapsed / processedLessons : 0;
@@ -1099,7 +1202,7 @@ export async function POST(req: NextRequest) {
               where: {
                 targetLanguage: lang,
                 level,
-                topic,
+                topic: baseTopic,
                 title: template.title,
               },
             });
@@ -1123,7 +1226,15 @@ export async function POST(req: NextRequest) {
                 // Prepare new vocabulary data
                 const vocabularyData = template.vocabulary.map((term: any, index: number) => {
                   const mainTranslation = getTranslation(term, lang);
-                  const alternatives = term.alternatives?.[lang] || [];
+                  const langMap: Record<SupportedLanguageKey, string> = {
+                    french: 'fr',
+                    romanian: 'ro',
+                    italian: 'it',
+                    english: 'en',
+                    russian: 'ru',
+                  };
+                  const templateKey = langMap[lang];
+                  const alternatives = term.alternatives?.[templateKey] || [];
                   const notesContent = alternatives.length > 0 
                     ? `תרגומים חלופיים: ${alternatives.join(', ')}`
                     : null;
@@ -1412,7 +1523,15 @@ export async function POST(req: NextRequest) {
             // Create lesson with vocabulary
             const vocabularyData = template.vocabulary.map((term: any, index: number) => {
               const mainTranslation = getTranslation(term, lang);
-              const alternatives = term.alternatives?.[lang] || [];
+              const langMap: Record<SupportedLanguageKey, string> = {
+                french: 'fr',
+                romanian: 'ro',
+                italian: 'it',
+                english: 'en',
+                russian: 'ru',
+              };
+              const templateKey = langMap[lang];
+              const alternatives = term.alternatives?.[templateKey] || [];
               const notesContent = alternatives.length > 0 
                 ? `תרגומים חלופיים: ${alternatives.join(', ')}`
                 : null;
@@ -1479,165 +1598,179 @@ export async function POST(req: NextRequest) {
               grammarNotes = `<p>בשיעור זה נלמד מילים ומשפטים הקשורים ל-${topic}.</p>`;
             }
 
-            // Create exercises - more complex and interesting exercises
+            // Create exercises - more comprehensive exercises
             const exercisesData: any[] = [];
+            let exerciseOrder = 1;
 
-            // Exercise 1: Matching - match multiple words (always create if we have vocabulary)
-            if (template.vocabulary.length > 0) {
-              exercisesData.push({
+            const vocabList = template.vocabulary || [];
+            // sentences is already defined above (line 1461)
+
+            // Helper function to create matching exercise
+            const createMatchingExercise = (vocab: any, title: string) => {
+              const otherVocabs = vocabList.filter((v: any) => v.hebrew !== vocab.hebrew);
+              const wrongOptions = [
+                otherVocabs[0] || vocabList[0],
+                otherVocabs[1] || vocabList[0],
+                otherVocabs[2] || vocabList[0],
+              ].filter(Boolean);
+
+              return {
                 type: 'MATCHING' as const,
-                title: 'התאמת מילים',
-                instructions: `בחרי את התרגום הנכון למילה "${template.vocabulary[0].hebrew}"`,
-                question: `מה התרגום של "${template.vocabulary[0].hebrew}"?`,
-                correctAnswer: getTranslation(template.vocabulary[0], lang),
+                title,
+                instructions: `בחרי את התרגום הנכון למילה "${vocab.hebrew}"`,
+                question: `מה התרגום של "${vocab.hebrew}"?`,
+                correctAnswer: getTranslation(vocab, lang),
                 points: 10,
-                order: 1,
+                order: exerciseOrder++,
                 options: {
                   create: [
                     {
-                      text: getTranslation(template.vocabulary[0], lang),
+                      text: getTranslation(vocab, lang),
                       isCorrect: true,
-                      explanation: `נכון! "${template.vocabulary[0].hebrew}" מתרגם ל-${getTranslation(template.vocabulary[0], lang)}`,
+                      explanation: `נכון! "${vocab.hebrew}" מתרגם ל-${getTranslation(vocab, lang)}`,
                       order: 1,
                     },
-                    {
-                      text: getTranslation(template.vocabulary[1] || template.vocabulary[0], lang),
+                    ...wrongOptions.slice(0, 3).map((wrongVocab: any, idx: number) => ({
+                      text: getTranslation(wrongVocab, lang),
                       isCorrect: false,
                       explanation: 'זה לא התרגום הנכון',
-                      order: 2,
-                    },
-                    {
-                      text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang),
-                      isCorrect: false,
-                      explanation: 'זה לא התרגום הנכון',
-                      order: 3,
-                    },
-                    {
-                      text: getTranslation(template.vocabulary[3] || template.vocabulary[0], lang),
-                      isCorrect: false,
-                      explanation: 'זה לא התרגום הנכון',
-                      order: 4,
-                    },
+                      order: idx + 2,
+                    })),
                   ],
                 },
+              };
+            };
+
+            // Create matching exercises for multiple vocabulary words (up to 8 words)
+            const vocabToPractice = vocabList.slice(0, Math.min(8, vocabList.length));
+            vocabToPractice.forEach((vocab: any, index: number) => {
+              exercisesData.push(createMatchingExercise(
+                vocab,
+                index === 0 ? 'התאמת מילים' : `התאמת מילה ${index + 1}`
+              ));
+            });
+
+            // Add sentence exercises if we have sentences
+            if (sentences.length > 0) {
+              sentences.forEach((sentence: any, sentenceIndex: number) => {
+                const sentenceTranslation = getTranslation(sentence, lang);
+                const sentenceWords = sentenceTranslation.split(' ').filter(
+                  (w: string) => w.length > 1 && !['the', 'a', 'an', 'is', 'are', 'am', 'was', 'were', 'le', 'la', 'les', 'un', 'une', 'il', 'elle', 'nous', 'vous', 'ils', 'elles'].includes(w.toLowerCase())
+                );
+
+                // WORD_ORDER exercise for each sentence
+                if (sentenceWords.length >= 3) {
+                  exercisesData.push({
+                    type: 'WORD_ORDER' as const,
+                    title: sentenceIndex === 0 ? 'הרכיבי משפט' : `הרכיבי משפט ${sentenceIndex + 1}`,
+                    instructions: 'סדרי את המילים בסדר הנכון כדי ליצור משפט',
+                    question: `הרכיבי משפט מהמילים הבאות: ${sentenceWords.join(', ')}`,
+                    correctAnswer: sentenceTranslation,
+                    exerciseData: JSON.stringify({
+                      words: sentenceWords,
+                      correctOrder: sentenceTranslation.split(' '),
+                      hebrewSentence: sentence.hebrew,
+                    }),
+                    points: 20,
+                    order: exerciseOrder++,
+                  });
+                }
+
+                // FILL_BLANK exercises - translate words from target language to Hebrew
+                const importantWords = sentenceTranslation.split(' ').filter(
+                  (w: string) => w.length > 2 && !['the', 'a', 'an', 'is', 'are', 'am', 'was', 'were', 'and', 'or', 'but'].includes(w.toLowerCase())
+                ).slice(0, 2);
+
+                importantWords.forEach((targetWord: string, wordIndex: number) => {
+                  const hebrewWords = sentence.hebrew.split(' ');
+                  const correspondingHebrew = hebrewWords[wordIndex] || hebrewWords[0];
+                  
+                  exercisesData.push({
+                    type: 'FILL_BLANK' as const,
+                    title: wordIndex === 0 ? 'תרגום מילה' : `תרגום מילה ${wordIndex + 1}`,
+                    instructions: 'מה התרגום בעברית של המילה בשפה הנלמדת?',
+                    question: `מה התרגום בעברית של המילה "${targetWord}"?`,
+                    correctAnswer: correspondingHebrew,
+                    exerciseData: JSON.stringify({
+                      hebrewSentence: correspondingHebrew,
+                      targetWord: targetWord,
+                      targetLanguage: lang,
+                    }),
+                    points: 15,
+                    order: exerciseOrder++,
+                  });
+                });
+
+                // LISTENING exercise for sentences
+                exercisesData.push({
+                  type: 'LISTENING' as const,
+                  title: sentenceIndex === 0 ? 'האזנה וזיהוי' : `האזנה וזיהוי ${sentenceIndex + 1}`,
+                  instructions: 'האזיני למילה/משפט ובחרי את התרגום הנכון בעברית',
+                  question: `מה התרגום בעברית של "${sentenceTranslation}"?`,
+                  correctAnswer: sentence.hebrew,
+                  points: 15,
+                  order: exerciseOrder++,
+                });
               });
             }
 
-            // Exercise 2: Sentence building - if we have sentences
-            if (template.sentences && template.sentences.length > 0) {
-              const sentence = template.sentences[0];
-              const sentenceTranslation = getTranslation(sentence, lang);
-              
-              // Extract words from the sentence for word order exercise
-              const sentenceWords = sentenceTranslation.split(' ').filter(w => w.length > 1 && !['the', 'a', 'an', 'is', 'are', 'am', 'was', 'were'].includes(w.toLowerCase()));
-              
-              if (sentenceWords.length >= 3) {
-                exercisesData.push({
-                  type: 'WORD_ORDER' as const,
-                  title: 'הרכיבי משפט',
-                  instructions: 'סדרי את המילים בסדר הנכון כדי ליצור משפט',
-                  question: `הרכיבי משפט מהמילים הבאות: ${sentenceWords.join(', ')}`,
-                  correctAnswer: sentenceTranslation,
-                  exerciseData: JSON.stringify({
-                    words: sentenceWords,
-                    correctOrder: sentenceTranslation.split(' '),
-                    hebrewSentence: sentence.hebrew,
-                  }),
-                  points: 20,
-                  order: exercisesData.length + 1,
-                });
-              }
-
-              // Exercise 3: Translation - translate sentence from Hebrew
+            // Add more FILL_BLANK exercises for vocabulary words (reverse translation)
+            vocabToPractice.slice(0, 4).forEach((vocab: any, index: number) => {
               exercisesData.push({
                 type: 'FILL_BLANK' as const,
-                title: 'תרגומי משפט',
-                instructions: 'תרגמי את המשפט הבא מעברית',
-                question: `תרגמי את המשפט: "${sentence.hebrew}"`,
-                correctAnswer: sentenceTranslation,
+                title: index === 0 ? 'תרגום הפוך' : `תרגום הפוך ${index + 1}`,
+                instructions: 'מה התרגום בעברית של המילה בשפה הנלמדת?',
+                question: `מה התרגום בעברית של "${getTranslation(vocab, lang)}"?`,
+                correctAnswer: vocab.hebrew,
                 exerciseData: JSON.stringify({
-                  hebrewSentence: sentence.hebrew,
+                  hebrewSentence: vocab.hebrew,
+                  targetWord: getTranslation(vocab, lang),
                   targetLanguage: lang,
                 }),
-                points: 25,
-                order: exercisesData.length + 1,
+                points: 12,
+                order: exerciseOrder++,
               });
+            });
 
-              // Exercise 4: Another matching with a different word
-              if (template.vocabulary.length >= 2) {
-                exercisesData.push({
-                  type: 'MATCHING' as const,
-                  title: 'התאמת מילה נוספת',
-                  instructions: `בחרי את התרגום הנכון למילה "${template.vocabulary[1].hebrew}"`,
-                  question: `מה התרגום של "${template.vocabulary[1].hebrew}"?`,
-                  correctAnswer: getTranslation(template.vocabulary[1], lang),
-                  points: 10,
-                  order: exercisesData.length + 1,
-                  options: {
-                    create: [
-                      {
-                        text: getTranslation(template.vocabulary[1], lang),
-                        isCorrect: true,
-                        explanation: `נכון! "${template.vocabulary[1].hebrew}" מתרגם ל-${getTranslation(template.vocabulary[1], lang)}`,
-                        order: 1,
-                      },
-                      {
-                        text: getTranslation(template.vocabulary[0], lang),
-                        isCorrect: false,
-                        explanation: 'זה לא התרגום הנכון',
-                        order: 2,
-                      },
-                      {
-                        text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang),
-                        isCorrect: false,
-                        explanation: 'זה לא התרגום הנכון',
-                        order: 3,
-                      },
-                      {
-                        text: getTranslation(template.vocabulary[3] || template.vocabulary[0], lang),
-                        isCorrect: false,
-                        explanation: 'זה לא התרגום הנכון',
-                        order: 4,
-                      },
-                    ],
-                  },
-                });
-              }
-            } else {
-              // If no sentences, add more matching exercises
-              if (template.vocabulary.length >= 2) {
-                exercisesData.push({
-                  type: 'MATCHING' as const,
-                  title: 'התאמת מילה נוספת',
-                  instructions: `בחרי את התרגום הנכון למילה "${template.vocabulary[1].hebrew}"`,
-                  question: `מה התרגום של "${template.vocabulary[1].hebrew}"?`,
-                  correctAnswer: getTranslation(template.vocabulary[1], lang),
-                  points: 10,
-                  order: exercisesData.length + 1,
-                  options: {
-                    create: [
-                      {
-                        text: getTranslation(template.vocabulary[1], lang),
-                        isCorrect: true,
-                        explanation: `נכון! "${template.vocabulary[1].hebrew}" מתרגם ל-${getTranslation(template.vocabulary[1], lang)}`,
-                        order: 1,
-                      },
-                      {
-                        text: getTranslation(template.vocabulary[0], lang),
-                        isCorrect: false,
-                        explanation: 'זה לא התרגום הנכון',
-                        order: 2,
-                      },
-                      {
-                        text: getTranslation(template.vocabulary[2] || template.vocabulary[0], lang),
-                        isCorrect: false,
-                        explanation: 'זה לא התרגום הנכון',
-                        order: 3,
-                      },
-                    ],
-                  },
-                });
-              }
+            // Find linking words in vocabulary
+            const linkingWords = vocabList.filter((v: any) => v.contentType === 'linking_word' || ['ו', 'אבל', 'או', 'כי', 'אם', 'כאשר', 'לכן', 'אז', 'אחרי', 'לפני'].includes(v.hebrew));
+            
+            // Add sentence building exercises with linking words
+            if (linkingWords.length > 0 && sentences.length > 0) {
+              // Create sentence building exercises that include linking words
+              sentences.slice(0, 2).forEach((sentence: any, sentenceIndex: number) => {
+                const sentenceTranslation = getTranslation(sentence, lang);
+                const allWords = sentenceTranslation.split(' ').filter((w: string) => w.length > 0);
+                
+                // Create a more complex word order exercise that includes linking words
+                if (allWords.length >= 4) {
+                  exercisesData.push({
+                    type: 'WORD_ORDER' as const,
+                    title: sentenceIndex === 0 ? 'הרכיבי משפט עם מילות קישור' : `הרכיבי משפט עם מילות קישור ${sentenceIndex + 1}`,
+                    instructions: 'הרכיבי משפט שלם מהמילים הבאות, כולל מילות הקישור',
+                    question: `הרכיבי משפט מהמילים הבאות: ${allWords.join(', ')}`,
+                    correctAnswer: sentenceTranslation,
+                    exerciseData: JSON.stringify({
+                      words: allWords,
+                      correctOrder: allWords,
+                      hebrewSentence: sentence.hebrew,
+                      includeLinkingWords: true,
+                    }),
+                    points: 25,
+                    order: exerciseOrder++,
+                  });
+                }
+              });
+            }
+
+            // Add exercises specifically for linking words
+            if (linkingWords.length > 0) {
+              linkingWords.slice(0, 5).forEach((linkingWord: any, index: number) => {
+                exercisesData.push(createMatchingExercise(
+                  linkingWord,
+                  index === 0 ? 'מילת קישור' : `מילת קישור ${index + 1}`
+                ));
+              });
             }
 
             const lesson = await prisma.lesson.create({
