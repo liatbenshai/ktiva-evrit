@@ -11,6 +11,7 @@ import {
   Mail,
   MessageSquare,
   RotateCcw,
+  Scale,
   ScrollText,
   Search,
   Sparkles,
@@ -111,6 +112,13 @@ const creationCards = [
     icon: Search,
     href: '/dashboard/research',
     gradient: 'from-blue-500 via-indigo-500 to-purple-600',
+  },
+  {
+    title: 'חיפוש פסקי דין',
+    description: 'חפשי פסקי דין רלוונטיים לפי נושאים משפטיים, כולל הפניות למקורות.',
+    icon: Scale,
+    href: '/dashboard/legal-cases',
+    gradient: 'from-purple-500 via-purple-600 to-indigo-600',
   },
 ];
 

@@ -379,3 +379,41 @@ model ResearchQuestion {
   @@index([sessionId])
   @@index([order])
 }
+
+// Legal case sessions and history
+model LegalCaseSession {
+  id              String   @id @default(cuid())
+  userId          String   @default("default-user")
+  
+  // Session metadata
+  title           String?  // Optional title for the session
+  topic           String   // The legal topic (e.g., "תמלול", "צוואות")
+  
+  // Relations
+  cases           LegalCase[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([topic])
+  @@index([createdAt])
+}
+
+model LegalCase {
+  id              String   @id @default(cuid())
+  sessionId       String
+  session         LegalCaseSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  topic           String   // The legal topic
+  summary         String   // The AI-generated summary
+  detailedAnalysis String? // Additional detailed legal analysis
+  sources         String?  // JSON array of legal case sources
+  
+  order           Int      // Order within the session (0 = initial search)
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([sessionId])
+  @@index([order])
+}
