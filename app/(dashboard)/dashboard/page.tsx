@@ -12,6 +12,7 @@ import {
   MessageSquare,
   RotateCcw,
   ScrollText,
+  Search,
   Sparkles,
   Users,
   Wand2,
@@ -104,6 +105,13 @@ const creationCards = [
     href: '/dashboard/transcription-guidelines',
     gradient: 'from-yellow-500 via-amber-500 to-orange-500',
   },
+  {
+    title: 'מחקר מעמיק ברשת',
+    description: 'שאל שאלה וקבל מחקר מעמיק עם מידע ממקורות שונים ברשת, כולל הפניות למקורות.',
+    icon: Search,
+    href: '/dashboard/research',
+    gradient: 'from-blue-500 via-indigo-500 to-purple-600',
+  },
 ];
 
 const learningCards = [
@@ -138,8 +146,8 @@ const learningCards = [
 ];
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
-  const isAdmin = session?.user?.email === 'admin@ktiva-evrit.com';
+  const { data: session, status } = useSession();
+  const isAdmin = status === 'authenticated' && session?.user?.email === 'admin@ktiva-evrit.com';
 
   return (
     <div dir="rtl" className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -208,25 +216,28 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {creationCards.map(({ title, description, icon: Icon, href, gradient }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`group flex h-full flex-col justify-between rounded-3xl bg-gradient-to-br ${gradient} p-5 shadow-lg transition hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100`}
-              >
-                <div className="flex items-center gap-3 text-white">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/20 text-white">
-                    <Icon className="h-5 w-5" />
+            {creationCards.map(({ title, description, icon: Icon, href, gradient }) => {
+              if (!Icon) return null;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`group flex h-full flex-col justify-between rounded-3xl bg-gradient-to-br ${gradient} p-5 shadow-lg transition hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100`}
+                >
+                  <div className="flex items-center gap-3 text-white">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/20 text-white">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <h3 className="text-base font-semibold sm:text-lg">{title}</h3>
+                  </div>
+                  <p className="mt-3 flex-1 text-sm leading-relaxed text-white/90">{description}</p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-white transition group-hover:gap-2">
+                    כניסה לכלי
+                    <span aria-hidden>→</span>
                   </span>
-                  <h3 className="text-base font-semibold sm:text-lg">{title}</h3>
-                </div>
-                <p className="mt-3 flex-1 text-sm leading-relaxed text-white/90">{description}</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-white transition group-hover:gap-2">
-                  כניסה לכלי
-                  <span aria-hidden>→</span>
-                </span>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </section>
 

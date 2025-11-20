@@ -342,3 +342,40 @@ model UserLessonProgress {
   @@index([status])
   @@index([needsReview])
 }
+
+// Research sessions and history
+model ResearchSession {
+  id              String   @id @default(cuid())
+  userId          String   @default("default-user")
+  
+  // Session metadata
+  title           String?  // Optional title for the research session
+  initialQuestion String  // The first question that started the session
+  
+  // Relations
+  questions       ResearchQuestion[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ResearchQuestion {
+  id              String   @id @default(cuid())
+  sessionId       String
+  session         ResearchSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  question        String   // The question asked
+  answer          String   // The AI-generated answer/summary
+  detailedInfo    String?  // Additional detailed information
+  sources         String?  // JSON array of sources
+  
+  order           Int      // Order within the session (0 = initial question)
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([sessionId])
+  @@index([order])
+}
