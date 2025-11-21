@@ -163,8 +163,8 @@ ${text}
       analysis = {
         statistics: {
           wordCount: text.split(/\s+/).length,
-          sentenceCount: text.split(/[.!?]+/).filter(s => s.trim()).length,
-          paragraphCount: text.split(/\n\n+/).filter(p => p.trim()).length,
+          sentenceCount: text.split(/[.!?]+/).filter((s: string) => s.trim()).length,
+          paragraphCount: text.split(/\n\n+/).filter((p: string) => p.trim()).length,
           avgSentenceLength: 0,
           avgWordLength: 0,
           readingTimeMinutes: Math.ceil(text.split(/\s+/).length / 200),
