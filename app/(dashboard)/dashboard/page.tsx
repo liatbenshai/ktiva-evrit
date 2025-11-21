@@ -11,6 +11,7 @@ import {
   Lightbulb,
   Mail,
   MessageSquare,
+  Mic,
   RotateCcw,
   Scale,
   ScrollText,
@@ -127,6 +128,13 @@ const creationCards = [
     icon: Code2,
     href: '/dashboard/code-review',
     gradient: 'from-cyan-500 via-blue-500 to-indigo-600',
+  },
+  {
+    title: 'המרת קול לטקסט',
+    description: 'העלי קובץ קול והמערכת תמיר אותו לטקסט כתוב. תמיכה בעברית, אנגלית ורוסית.',
+    icon: Mic,
+    href: '/dashboard/speech-to-text',
+    gradient: 'from-pink-500 via-rose-500 to-orange-500',
   },
 ];
 
