@@ -83,15 +83,18 @@ ${codeContent}
 3. אם הקוד תקין - ציין זאת בבירור
 4. תן סיכום כללי והמלצות לשיפור
 
-השתמש בפורמט JSON:
+**חשוב מאוד:** החזר רק את אובייקט ה-JSON בלבד, ללא markdown, ללא backticks, ללא טקסט הסבר. 
+התשובה שלך צריכה להתחיל ב-{ ולהסתיים ב-}
+
+פורמט JSON מדויק:
 {
-  "hasIssues": boolean,
+  "hasIssues": true,
   "summary": "סיכום כללי",
   "issues": [
     {
-      "severity": "critical" | "high" | "medium" | "low" | "info",
-      "type": "bug" | "performance" | "security" | "style" | "best-practice" | "other",
-      "location": "מיקום בקוד (שורה/פונקציה)",
+      "severity": "critical",
+      "type": "bug",
+      "location": "שורה 5, פונקציה calculateSum",
       "description": "תיאור הבעיה",
       "code": "הקוד הבעייתי",
       "fix": "הקוד המתוקן",
@@ -99,8 +102,13 @@ ${codeContent}
     }
   ],
   "recommendations": ["המלצה 1", "המלצה 2"],
-  "overallScore": number (0-100)
-}`;
+  "overallScore": 75
+}
+
+זכור: 
+- החזר רק JSON תקין וטהור
+- אל תעטוף את ה-JSON בסימני קוד או בכל דבר אחר
+- אם אין בעיות, hasIssues צריך להיות false ו-issues צריך להיות רשימה ריקה`;
 
     // קריאה ל-Claude AI
     const analysisText = await generateText({
@@ -108,19 +116,39 @@ ${codeContent}
       systemPrompt,
       maxTokens: 8192,
       temperature: 0.3, // טמפרטורה נמוכה לניתוח מדויק
-      responseFormat: { type: 'json_object' },
     });
 
     // נסה לפרסר את התשובה כ-JSON
     let analysis;
     try {
-      analysis = JSON.parse(analysisText);
+      // נקה את התשובה מ-markdown code blocks אם יש
+      let cleanedText = analysisText.trim();
+      
+      // הסר markdown code blocks אם יש
+      if (cleanedText.startsWith('```')) {
+        const lines = cleanedText.split('\n');
+        const startIndex = lines.findIndex(line => line.trim().startsWith('```'));
+        const endIndex = lines.findIndex((line, idx) => idx > startIndex && line.trim().startsWith('```'));
+        if (startIndex !== -1 && endIndex !== -1) {
+          cleanedText = lines.slice(startIndex + 1, endIndex).join('\n');
+        }
+      }
+      
+      // מצא את ה-JSON (מתחיל ב-{ ומסתיים ב-})
+      const jsonStart = cleanedText.indexOf('{');
+      const jsonEnd = cleanedText.lastIndexOf('}');
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
+      }
+      
+      analysis = JSON.parse(cleanedText);
     } catch (parseError) {
       // אם לא JSON, נסה לחלץ מידע מהטקסט
-      console.warn('Failed to parse JSON response, using text format');
+      console.warn('Failed to parse JSON response:', parseError);
+      console.warn('Raw response:', analysisText.substring(0, 500));
       analysis = {
         hasIssues: true,
-        summary: analysisText,
+        summary: analysisText.substring(0, 500) + (analysisText.length > 500 ? '...' : ''),
         issues: [],
         recommendations: [],
         overallScore: 50,

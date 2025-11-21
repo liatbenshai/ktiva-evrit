@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import PageHeader, { PageHeaderLink } from '@/components/layout/PageHeader';
 import {
   Code2,
   Upload,
@@ -15,7 +16,6 @@ import {
   Copy,
   Check,
   Loader2,
-  ArrowLeft,
   X,
 } from 'lucide-react';
 
@@ -167,36 +167,25 @@ export default function CodeReviewPage() {
   };
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <header className="sticky top-0 z-30 border-b border-white/40 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700"
-            >
-              <ArrowLeft className="h-5 w-5" />
-              <span className="text-sm font-medium">חזרה לדשבורד</span>
-            </Link>
-            <div className="flex items-center gap-2 text-indigo-600">
-              <Code2 className="h-5 w-5" />
-              <span className="text-sm font-semibold sm:text-base">בדיקת קוד</span>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div dir="rtl" className="min-h-screen bg-slate-50">
+      <PageHeader
+        icon={Code2}
+        title="בדיקת קוד"
+        description="העלי קובץ קוד או הדבקי קוד ישירות. המערכת תנתח את הקוד, תזהה בעיות, ותציע תיקונים מקצועיים."
+        actions={
+          <PageHeaderLink
+            href="/dashboard"
+            label="חזרה לדשבורד"
+            icon={Home}
+            variant="outline"
+            className="text-sm sm:text-base"
+          />
+        }
+      />
 
-      <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8">
-        <div className="mb-8 rounded-3xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 text-white shadow-2xl">
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 className="mb-4 text-3xl font-bold sm:text-4xl">בדיקת קוד מקצועית</h1>
-            <p className="text-sm text-white/90 sm:text-base">
-              העלי קובץ קוד או הדבקי קוד ישירות. המערכת תנתח את הקוד, תזהה בעיות, ותציע תיקונים מקצועיים.
-            </p>
-          </div>
-        </div>
+      <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:py-8">
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2 mt-6">
           {/* פאנל קלט */}
           <Card className="p-6">
             <div className="mb-4 flex items-center gap-2">
