@@ -43,10 +43,10 @@ export async function POST(req: NextRequest) {
 
     // המר את הקובץ ל-ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
 
     // העלה ל-Vercel Blob Storage
-    const blob = await put(file.name, buffer, {
+    // put מקבל: string, Blob, ArrayBuffer, File, או ReadableStream
+    const blob = await put(file.name, arrayBuffer, {
       access: 'public',
       contentType: file.type || `audio/${fileExtension}`,
     });
