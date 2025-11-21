@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import {
+  BarChart3,
   BookMarked,
   Brain,
   Code2,
@@ -11,7 +12,6 @@ import {
   Lightbulb,
   Mail,
   MessageSquare,
-  Mic,
   RotateCcw,
   Scale,
   ScrollText,
@@ -130,11 +130,11 @@ const creationCards = [
     gradient: 'from-cyan-500 via-blue-500 to-indigo-600',
   },
   {
-    title: 'המרת קול לטקסט',
-    description: 'העלי קובץ קול והמערכת תמיר אותו לטקסט כתוב. תמיכה בעברית, אנגלית ורוסית.',
-    icon: Mic,
-    href: '/dashboard/speech-to-text',
-    gradient: 'from-pink-500 via-rose-500 to-orange-500',
+    title: 'ניתוח טקסטים',
+    description: 'הזיני טקסט והמערכת תנתח אותו - סגנון, טון, רגש, אורך, מורכבות וקריאות.',
+    icon: BarChart3,
+    href: '/dashboard/text-analysis',
+    gradient: 'from-emerald-500 via-teal-500 to-cyan-500',
   },
 ];
 
