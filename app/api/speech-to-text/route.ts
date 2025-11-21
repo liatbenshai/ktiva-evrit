@@ -23,19 +23,17 @@ export async function POST(req: NextRequest) {
     const blobUrl = formData.get('blobUrl') as string | null;
     const language = (formData.get('language') as string) || 'auto'; // he, en, ru, auto
 
-    let audioFile: File | Blob;
+    let audioFile: File;
     let fileName: string;
 
-    // אם יש blobUrl, נשתמש בו (לקבצים גדולים)
+    // אם יש blobUrl, נוריד את הקובץ ונשתמש בו (לקבצים גדולים)
     if (blobUrl) {
       try {
         console.log('Fetching file from Blob Storage:', blobUrl);
         // הורד את הקובץ מה-Blob Storage
         const response = await fetch(blobUrl, {
           method: 'GET',
-          headers: {
-            'Accept': 'audio/*',
-          },
+          signal: AbortSignal.timeout(60000), // timeout של 60 שניות
         });
         
         if (!response.ok) {
@@ -49,7 +47,6 @@ export async function POST(req: NextRequest) {
         }
         
         const contentType = response.headers.get('content-type') || 'audio/mpeg';
-        const blob = new Blob([arrayBuffer], { type: contentType });
         
         // חלץ את שם הקובץ מה-URL
         const urlParts = blobUrl.split('/');
@@ -57,15 +54,9 @@ export async function POST(req: NextRequest) {
         // הסר query parameters אם יש
         fileName = fileName.split('?')[0];
         
-        // נסה ליצור File object, אם זה נכשל, נשתמש ב-Blob ישירות
-        try {
-          audioFile = new File([blob], fileName, { type: blob.type });
-        } catch (fileError) {
-          // אם File לא עובד, נשתמש ב-Blob ישירות
-          console.log('File constructor failed, using Blob directly');
-          audioFile = blob;
-        }
-        console.log('Successfully loaded file from Blob Storage:', fileName, 'Size:', blob.size);
+        // צור File object - זה עובד ב-Node.js 18+
+        audioFile = new File([arrayBuffer], fileName, { type: contentType });
+        console.log('Successfully loaded file from Blob Storage:', fileName, 'Size:', audioFile.size);
       } catch (error: any) {
         console.error('Error loading file from Blob Storage:', error);
         return NextResponse.json(
@@ -118,18 +109,58 @@ export async function POST(req: NextRequest) {
     }
 
     // קריאה ל-Whisper API
-    // OpenAI SDK תומך ב-File או Blob
-    console.log('Calling OpenAI Whisper API with file:', fileName, 'Size:', audioFile.size, 'Type:', audioFile instanceof File ? 'File' : 'Blob');
+    console.log('Calling OpenAI Whisper API:', {
+      fileName,
+      size: audioFile.size,
+      type: audioFile.type,
+    });
     
     try {
-      const transcription = await openai.audio.transcriptions.create({
-        file: audioFile as any, // OpenAI SDK מקבל File או Blob
-        model: 'whisper-1',
-        language: languageCode,
-        response_format: 'verbose_json', // לקבל מידע נוסף כמו segments
-      });
+      // OpenAI SDK מקבל File object
+      // נשתמש ב-timeout ארוך יותר לקבצים גדולים
+      // ננסה עד 3 פעמים במקרה של שגיאת חיבור
+      let transcription;
+      let lastError;
+      const maxRetries = 3;
       
-      console.log('OpenAI Whisper API response received successfully');
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`OpenAI API attempt ${attempt}/${maxRetries}`);
+          transcription = await openai.audio.transcriptions.create(
+            {
+              file: audioFile,
+              model: 'whisper-1',
+              language: languageCode,
+              response_format: 'verbose_json',
+            },
+            {
+              timeout: 300000, // 5 דקות timeout
+            }
+          );
+          console.log('OpenAI Whisper API response received successfully');
+          break; // הצלחנו, נצא מהלולאה
+        } catch (retryError: any) {
+          lastError = retryError;
+          // אם זו שגיאת חיבור ואנחנו לא בניסיון האחרון, ננסה שוב
+          if (
+            (retryError.code === 'ECONNRESET' || 
+             retryError.message?.includes('Connection') ||
+             retryError.cause?.code === 'ECONNRESET') &&
+            attempt < maxRetries
+          ) {
+            console.warn(`Connection error on attempt ${attempt}, retrying...`);
+            // נחכה קצת לפני הניסיון הבא
+            await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+            continue;
+          }
+          // אם זו לא שגיאת חיבור או שזה הניסיון האחרון, נזרוק את השגיאה
+          throw retryError;
+        }
+      }
+      
+      if (!transcription) {
+        throw lastError || new Error('Failed to transcribe after retries');
+      }
 
       // החזר את הטקסט והמידע הנוסף
       return NextResponse.json({
