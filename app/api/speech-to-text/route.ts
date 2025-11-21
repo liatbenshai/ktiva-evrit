@@ -54,8 +54,16 @@ export async function POST(req: NextRequest) {
         // הסר query parameters אם יש
         fileName = fileName.split('?')[0];
         
-        // צור File object - זה עובד ב-Node.js 18+
-        audioFile = new File([arrayBuffer], fileName, { type: contentType });
+        // צור File object - ננסה ליצור File, אם זה נכשל נשתמש ב-Blob
+        try {
+          audioFile = new File([arrayBuffer], fileName, { type: contentType });
+        } catch (fileError) {
+          // אם File לא עובד, נשתמש ב-Blob ואז נמיר ל-File
+          console.log('File constructor failed, creating Blob and converting to File');
+          const blob = new Blob([arrayBuffer], { type: contentType });
+          // נמיר Blob ל-File
+          audioFile = new File([blob], fileName, { type: contentType });
+        }
         console.log('Successfully loaded file from Blob Storage:', fileName, 'Size:', audioFile.size);
       } catch (error: any) {
         console.error('Error loading file from Blob Storage:', error);
@@ -116,31 +124,56 @@ export async function POST(req: NextRequest) {
     });
     
     try {
-      // OpenAI SDK מקבל File object
-      // נשתמש ב-timeout ארוך יותר לקבצים גדולים
+      // OpenAI SDK מקבל File, Blob, או ReadableStream
       // ננסה עד 3 פעמים במקרה של שגיאת חיבור
       let transcription;
       let lastError;
       const maxRetries = 3;
       
+      // נמיר את הקובץ ל-Blob אם צריך (יותר יציב מ-File ב-Node.js)
+      let fileToSend: File | Blob = audioFile;
+      
+      // אם זה File, נמיר ל-Blob כדי להימנע מבעיות
+      if (audioFile instanceof File) {
+        try {
+          const arrayBuffer = await audioFile.arrayBuffer();
+          fileToSend = new Blob([arrayBuffer], { type: audioFile.type });
+        } catch (e) {
+          // אם ההמרה נכשלה, נשתמש ב-File ישירות
+          fileToSend = audioFile;
+        }
+      }
+      
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-          console.log(`OpenAI API attempt ${attempt}/${maxRetries}`);
+          console.log(`OpenAI API attempt ${attempt}/${maxRetries}`, {
+            fileName,
+            size: fileToSend.size,
+            type: fileToSend instanceof File ? 'File' : 'Blob',
+          });
+          
           transcription = await openai.audio.transcriptions.create(
             {
-              file: audioFile,
+              file: fileToSend as any, // OpenAI SDK מקבל File, Blob, או ReadableStream
               model: 'whisper-1',
               language: languageCode,
               response_format: 'verbose_json',
             },
             {
               timeout: 300000, // 5 דקות timeout
+              maxRetries: 0, // נטפל ב-retry בעצמנו
             }
           );
           console.log('OpenAI Whisper API response received successfully');
           break; // הצלחנו, נצא מהלולאה
         } catch (retryError: any) {
           lastError = retryError;
+          console.error(`OpenAI API attempt ${attempt} failed:`, {
+            code: retryError.code,
+            message: retryError.message,
+            cause: retryError.cause?.code,
+          });
+          
           // אם זו שגיאת חיבור ואנחנו לא בניסיון האחרון, ננסה שוב
           if (
             (retryError.code === 'ECONNRESET' || 
@@ -148,8 +181,8 @@ export async function POST(req: NextRequest) {
              retryError.cause?.code === 'ECONNRESET') &&
             attempt < maxRetries
           ) {
-            console.warn(`Connection error on attempt ${attempt}, retrying...`);
-            // נחכה קצת לפני הניסיון הבא
+            console.warn(`Connection error on attempt ${attempt}, retrying in ${2 * attempt} seconds...`);
+            // נחכה קצת לפני הניסיון הבא (exponential backoff)
             await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
             continue;
           }
