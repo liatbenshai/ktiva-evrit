@@ -49,10 +49,10 @@ export default function SpeechToTextPage() {
       return;
     }
 
-    // בדוק גודל קובץ
+    // בדוק גודל קובץ (Whisper תומך עד 25MB, אבל נגביל ל-20MB)
     const fileSizeMB = selectedFile.size / (1024 * 1024);
-    if (fileSizeMB > 25) {
-      setError('קובץ גדול מדי. גודל מקסימלי: 25MB');
+    if (fileSizeMB > 20) {
+      setError(`קובץ גדול מדי (${fileSizeMB.toFixed(2)}MB). גודל מקסימלי: 20MB. נסי לדחוס את הקובץ או לחתוך אותו לחלקים קטנים יותר.`);
       setFile(null);
       return;
     }
@@ -73,8 +73,38 @@ export default function SpeechToTextPage() {
     setTranscription(null);
 
     try {
+      const fileSizeMB = file.size / (1024 * 1024);
+      let blobUrl: string | null = null;
+
+      // אם הקובץ גדול מ-4MB, העלה אותו ל-Blob Storage קודם
+      if (fileSizeMB > 4) {
+        // העלה ל-Blob Storage
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', file);
+
+        const uploadResponse = await fetch('/api/speech-to-text/upload', {
+          method: 'POST',
+          body: uploadFormData,
+        });
+
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json();
+          throw new Error(errorData.error || 'שגיאה בהעלאת הקובץ ל-Blob Storage');
+        }
+
+        const uploadData = await uploadResponse.json();
+        blobUrl = uploadData.url;
+      }
+
+      // כעת שלח ל-API להמרה
       const formData = new FormData();
-      formData.append('file', file);
+      if (blobUrl) {
+        // אם יש blobUrl, שלח אותו
+        formData.append('blobUrl', blobUrl);
+      } else {
+        // אחרת, שלח את הקובץ ישירות
+        formData.append('file', file);
+      }
       formData.append('language', language);
 
       const response = await fetch('/api/speech-to-text', {
@@ -83,8 +113,30 @@ export default function SpeechToTextPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'שגיאה בהמרת הקול לטקסט');
+        // טיפול בשגיאת 413 (קובץ גדול מדי)
+        if (response.status === 413) {
+          const fileSizeMB = file.size / (1024 * 1024);
+          throw new Error(`קובץ גדול מדי (${fileSizeMB.toFixed(2)}MB). גודל מקסימלי: 20MB. נסי לדחוס את הקובץ או לחתוך אותו לחלקים קטנים יותר.`);
+        }
+        
+        // נסה לפרסר JSON, אבל אם זה לא JSON, תן הודעה כללית
+        let errorMessage = 'שגיאה בהמרת הקול לטקסט';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // אם התשובה לא JSON, נסה לקרוא כטקסט
+          try {
+            const text = await response.text();
+            if (text) {
+              errorMessage = text.length > 200 ? text.substring(0, 200) + '...' : text;
+            }
+          } catch (textError) {
+            // אם גם זה נכשל, השתמש בהודעה כללית
+            errorMessage = `שגיאה ${response.status}: ${response.statusText || 'שגיאה בהמרת הקול לטקסט'}`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -208,7 +260,7 @@ export default function SpeechToTextPage() {
                 )}
               </div>
               <p className="mt-2 text-xs text-gray-500">
-                פורמטים נתמכים: {supportedFormats.join(', ')} | גודל מקסימלי: 25MB
+                פורמטים נתמכים: {supportedFormats.join(', ')} | גודל מקסימלי: 20MB (קבצים מעל 4MB יעלו אוטומטית ל-Blob Storage)
               </p>
             </div>
 
