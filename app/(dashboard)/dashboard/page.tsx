@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {
   BookMarked,
   Brain,
+  Code2,
   FileCheck,
   FileText,
   Languages,
@@ -119,6 +120,13 @@ const creationCards = [
     icon: Scale,
     href: '/dashboard/legal-cases',
     gradient: 'from-purple-500 via-purple-600 to-indigo-600',
+  },
+  {
+    title: 'בדיקת קוד',
+    description: 'העלי קובץ קוד והמערכת תנתח אותו, תזהה בעיות ותציע תיקונים מקצועיים.',
+    icon: Code2,
+    href: '/dashboard/code-review',
+    gradient: 'from-cyan-500 via-blue-500 to-indigo-600',
   },
 ];
 
