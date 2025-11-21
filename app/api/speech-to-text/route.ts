@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     const blobUrl = formData.get('blobUrl') as string | null;
     const language = (formData.get('language') as string) || 'auto'; // he, en, ru, auto
 
-    let audioFile: File;
+    let audioFile: File | Blob;
     let fileName: string;
 
     // אם יש blobUrl, נשתמש בו (לקבצים גדולים)
@@ -48,7 +48,8 @@ export async function POST(req: NextRequest) {
           throw new Error('File from Blob Storage is empty');
         }
         
-        const blob = new Blob([arrayBuffer], { type: response.headers.get('content-type') || 'audio/mpeg' });
+        const contentType = response.headers.get('content-type') || 'audio/mpeg';
+        const blob = new Blob([arrayBuffer], { type: contentType });
         
         // חלץ את שם הקובץ מה-URL
         const urlParts = blobUrl.split('/');
@@ -56,8 +57,15 @@ export async function POST(req: NextRequest) {
         // הסר query parameters אם יש
         fileName = fileName.split('?')[0];
         
-        audioFile = new File([blob], fileName, { type: blob.type });
-        console.log('Successfully loaded file from Blob Storage:', fileName, 'Size:', audioFile.size);
+        // נסה ליצור File object, אם זה נכשל, נשתמש ב-Blob ישירות
+        try {
+          audioFile = new File([blob], fileName, { type: blob.type });
+        } catch (fileError) {
+          // אם File לא עובד, נשתמש ב-Blob ישירות
+          console.log('File constructor failed, using Blob directly');
+          audioFile = blob;
+        }
+        console.log('Successfully loaded file from Blob Storage:', fileName, 'Size:', blob.size);
       } catch (error: any) {
         console.error('Error loading file from Blob Storage:', error);
         return NextResponse.json(
@@ -110,22 +118,32 @@ export async function POST(req: NextRequest) {
     }
 
     // קריאה ל-Whisper API
-    const transcription = await openai.audio.transcriptions.create({
-      file: audioFile,
-      model: 'whisper-1',
-      language: languageCode,
-      response_format: 'verbose_json', // לקבל מידע נוסף כמו segments
-    });
+    // OpenAI SDK תומך ב-File או Blob
+    console.log('Calling OpenAI Whisper API with file:', fileName, 'Size:', audioFile.size, 'Type:', audioFile instanceof File ? 'File' : 'Blob');
+    
+    try {
+      const transcription = await openai.audio.transcriptions.create({
+        file: audioFile as any, // OpenAI SDK מקבל File או Blob
+        model: 'whisper-1',
+        language: languageCode,
+        response_format: 'verbose_json', // לקבל מידע נוסף כמו segments
+      });
+      
+      console.log('OpenAI Whisper API response received successfully');
 
-    // החזר את הטקסט והמידע הנוסף
-    return NextResponse.json({
-      success: true,
-      text: transcription.text,
-      language: transcription.language || language,
-      duration: transcription.duration,
-      segments: transcription.segments || [],
-      fileName: fileName,
-    });
+      // החזר את הטקסט והמידע הנוסף
+      return NextResponse.json({
+        success: true,
+        text: transcription.text,
+        language: transcription.language || language,
+        duration: transcription.duration,
+        segments: transcription.segments || [],
+        fileName: fileName,
+      });
+    } catch (openaiError: any) {
+      console.error('OpenAI API error:', openaiError);
+      throw openaiError; // נזרוק את השגיאה כדי שהטיפול הכללי יטופל בה
+    }
   } catch (error: any) {
     console.error('Error transcribing audio:', error);
     console.error('Error details:', {
