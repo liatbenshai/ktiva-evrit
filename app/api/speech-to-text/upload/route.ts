@@ -60,16 +60,43 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error uploading to Blob Storage:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      status: error?.status,
+      statusCode: error?.statusCode,
+      code: error?.code,
+      type: error?.constructor?.name,
+    });
     
-    if (error.message?.includes('BLOB_READ_WRITE_TOKEN')) {
+    // בדוק אם BLOB_READ_WRITE_TOKEN חסר או לא תקין
+    if (error?.message?.includes('BLOB_READ_WRITE_TOKEN') || 
+        error?.message?.includes('token') || 
+        !process.env.BLOB_READ_WRITE_TOKEN) {
       return NextResponse.json(
-        { error: 'מפתח Blob Storage לא מוגדר. נא לבדוק את BLOB_READ_WRITE_TOKEN ב-Vercel Dashboard' },
+        { 
+          error: 'מפתח Blob Storage לא מוגדר. נא לבדוק את BLOB_READ_WRITE_TOKEN ב-Vercel Dashboard',
+          details: process.env.NODE_ENV === 'development' ? 'BLOB_READ_WRITE_TOKEN is missing or invalid' : undefined
+        },
+        { status: 500 }
+      );
+    }
+
+    // בדוק אם זו שגיאת חיבור
+    if (error?.message?.includes('Connection') || error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND') {
+      return NextResponse.json(
+        { 
+          error: 'שגיאת חיבור ל-Blob Storage. נא לבדוק את החיבור לאינטרנט',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        },
         { status: 500 }
       );
     }
 
     return NextResponse.json(
-      { error: error.message || 'שגיאה בהעלאת הקובץ' },
+      { 
+        error: error?.message || 'שגיאה בהעלאת הקובץ ל-Blob Storage',
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      },
       { status: 500 }
     );
   }

@@ -88,8 +88,15 @@ export default function SpeechToTextPage() {
         });
 
         if (!uploadResponse.ok) {
-          const errorData = await uploadResponse.json();
-          throw new Error(errorData.error || 'שגיאה בהעלאת הקובץ ל-Blob Storage');
+          let errorMessage = 'שגיאה בהעלאת הקובץ ל-Blob Storage';
+          try {
+            const errorData = await uploadResponse.json();
+            errorMessage = errorData.error || errorData.details || errorMessage;
+          } catch (e) {
+            // אם התשובה לא JSON
+            errorMessage = `שגיאה ${uploadResponse.status}: ${uploadResponse.statusText || 'שגיאה בהעלאת הקובץ'}`;
+          }
+          throw new Error(errorMessage);
         }
 
         const uploadData = await uploadResponse.json();
@@ -123,7 +130,11 @@ export default function SpeechToTextPage() {
         let errorMessage = 'שגיאה בהמרת הקול לטקסט';
         try {
           const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
+          errorMessage = errorData.error || errorData.details || errorMessage;
+          // אם יש פרטים נוספים, הוסף אותם
+          if (errorData.details && errorData.details !== errorMessage) {
+            errorMessage += ` (${errorData.details})`;
+          }
         } catch (e) {
           // אם התשובה לא JSON, נסה לקרוא כטקסט
           try {

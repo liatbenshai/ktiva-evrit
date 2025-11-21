@@ -29,23 +29,42 @@ export async function POST(req: NextRequest) {
     // אם יש blobUrl, נשתמש בו (לקבצים גדולים)
     if (blobUrl) {
       try {
+        console.log('Fetching file from Blob Storage:', blobUrl);
         // הורד את הקובץ מה-Blob Storage
-        const response = await fetch(blobUrl);
+        const response = await fetch(blobUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'audio/*',
+          },
+        });
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch file from Blob Storage');
+          console.error('Failed to fetch from Blob Storage:', response.status, response.statusText);
+          throw new Error(`Failed to fetch file from Blob Storage: ${response.status} ${response.statusText}`);
         }
         
         const arrayBuffer = await response.arrayBuffer();
+        if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+          throw new Error('File from Blob Storage is empty');
+        }
+        
         const blob = new Blob([arrayBuffer], { type: response.headers.get('content-type') || 'audio/mpeg' });
         
         // חלץ את שם הקובץ מה-URL
         const urlParts = blobUrl.split('/');
         fileName = urlParts[urlParts.length - 1] || 'audio.mp3';
+        // הסר query parameters אם יש
+        fileName = fileName.split('?')[0];
         
         audioFile = new File([blob], fileName, { type: blob.type });
+        console.log('Successfully loaded file from Blob Storage:', fileName, 'Size:', audioFile.size);
       } catch (error: any) {
+        console.error('Error loading file from Blob Storage:', error);
         return NextResponse.json(
-          { error: `שגיאה בטעינת הקובץ מ-Blob Storage: ${error.message}` },
+          { 
+            error: `שגיאה בטעינת הקובץ מ-Blob Storage: ${error.message}`,
+            details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+          },
           { status: 500 }
         );
       }
@@ -109,24 +128,56 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error transcribing audio:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      status: error?.status,
+      statusCode: error?.statusCode,
+      code: error?.code,
+      type: error?.constructor?.name,
+    });
     
     // טיפול בשגיאות ספציפיות
-    if (error.status === 401) {
+    if (error?.status === 401 || error?.statusCode === 401) {
       return NextResponse.json(
         { error: 'מפתח API לא תקין או חסר. נא לבדוק את OPENAI_API_KEY' },
         { status: 401 }
       );
     }
     
-    if (error.status === 413) {
+    if (error?.status === 413 || error?.statusCode === 413) {
       return NextResponse.json(
         { error: 'קובץ גדול מדי. גודל מקסימלי: 25MB' },
         { status: 413 }
       );
     }
 
+    // בדוק אם זו שגיאת חיבור
+    if (error?.message?.includes('Connection') || error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND') {
+      return NextResponse.json(
+        { 
+          error: 'שגיאת חיבור. נא לבדוק את החיבור לאינטרנט ואת מפתחות ה-API',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        },
+        { status: 500 }
+      );
+    }
+
+    // בדוק אם זו שגיאה עם OpenAI API
+    if (error?.message?.includes('OpenAI') || error?.message?.includes('API')) {
+      return NextResponse.json(
+        { 
+          error: 'שגיאה ב-OpenAI API. נא לבדוק את OPENAI_API_KEY',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { error: error.message || 'שגיאה בהמרת הקול לטקסט' },
+      { 
+        error: error?.message || 'שגיאה בהמרת הקול לטקסט',
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      },
       { status: 500 }
     );
   }
