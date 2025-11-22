@@ -13,6 +13,11 @@ interface ContentChange {
   improved?: string;
 }
 
+interface ContentSource {
+  title: string;
+  url: string;
+}
+
 interface ContentImprovement {
   improvedText: string;
   changes: ContentChange[];
@@ -41,6 +46,7 @@ export default function ContentImprovementPage() {
   const [customProfession, setCustomProfession] = useState('');
   const [goal, setGoal] = useState('');
   const [improvement, setImprovement] = useState<ContentImprovement | null>(null);
+  const [sources, setSources] = useState<ContentSource[]>([]);
   const [isImproving, setIsImproving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -59,6 +65,7 @@ export default function ContentImprovementPage() {
     setIsImproving(true);
     setError(null);
     setImprovement(null);
+    setSources([]);
     setCopied(false);
 
     try {
@@ -82,6 +89,7 @@ export default function ContentImprovementPage() {
 
       const data = await response.json();
       setImprovement(data.improvement);
+      setSources(data.sources || []);
     } catch (err: any) {
       setError(err.message || 'שגיאה בשיפור התוכן');
       console.error('Error improving content:', err);
@@ -336,6 +344,27 @@ export default function ContentImprovementPage() {
                         <li key={idx}>{rec}</li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {/* Sources */}
+                {sources && sources.length > 0 && (
+                  <div>
+                    <h3 className="mb-2 text-sm font-semibold text-gray-900">מקורות מידע שנמצאו</h3>
+                    <div className="space-y-2 rounded-lg bg-blue-50 p-3">
+                      {sources.map((source, idx) => (
+                        <div key={idx} className="text-sm">
+                          <a
+                            href={source.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 hover:underline"
+                          >
+                            {source.title}
+                          </a>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
