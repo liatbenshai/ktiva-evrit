@@ -402,9 +402,100 @@ ${text}
       };
     }
 
+    // יצירת גרסאות חלופיות
+    let alternatives: Array<{ text: string; explanation?: string; context?: string }> = [];
+    try {
+      const alternativesPrompt = `אתה מומחה בעברית תקנית וטבעית. המשימה: ליצור 3 גרסאות חלופיות שונות של הטקסט המשופר הבא - כל גרסה חייבת להיות שונה לחלוטין מהאחרות.
+
+<טקסט_מקורי>
+${text}
+</טקסט_מקורי>
+
+<טקסט_משופר_ראשי>
+${improvement.improvedText}
+</טקסט_משופר_ראשי>
+
+הקשר: ${contextInfo}
+${professionGuidance ? `\n${professionGuidance}` : ''}
+${goalGuidance ? `\n${goalGuidance}` : ''}
+
+**חשוב מאוד:** כל גרסה חייבת להיות שונה לחלוטין מהאחרות! אל תחזיר אותו טקסט 3 פעמים.
+
+צור:
+1. **alternative1** - תיקון מינימלי בלבד - רק את הבעיות הקריטיות ביותר, שינוי מינימלי מהטקסט המקורי
+2. **alternative2** - תיקון בינוני-מתקדם - שיפור נרחב יותר, החלפת ביטויים AI בניסוחים עבריים טבעיים
+3. **alternative3** - תיקון מקסימלי - שיפור מלא, כתיבה עברית טבעית לחלוטין, החלפת כל ביטוי AI אפשרי
+
+**דרישות:**
+- כל גרסה חייבת להיות שונה מהאחרות
+- alternative1: מינימלי - רק תיקונים קריטיים
+- alternative2: בינוני - שיפורים נרחבים יותר
+- alternative3: מקסימלי - שיפור מלא
+- שמור על המשמעות המקורית בכל הגרסאות
+
+**חשוב מאוד:** החזר רק JSON תקין בלבד, ללא markdown, ללא הסברים נוספים, ללא backticks.
+
+פורמט JSON:
+{
+  "alternatives": [
+    {
+      "text": "גרסה 1 - תיקון מינימלי בלבד (רק בעיות קריטיות)",
+      "explanation": "תיקון מינימלי - רק את הבעיות הקריטיות ביותר",
+      "context": "מינימלי"
+    },
+    {
+      "text": "גרסה 2 - תיקון בינוני-מתקדם (שיפורים נרחבים)",
+      "explanation": "שיפורים נרחבים יותר בביטויים וניסוחים",
+      "context": "בינוני-מתקדם"
+    },
+    {
+      "text": "גרסה 3 - תיקון מקסימלי (שיפור מלא)",
+      "explanation": "שיפור מלא - עברית טבעית לחלוטין",
+      "context": "מקסימלי"
+    }
+  ]
+}`;
+
+      const alternativesSystemPrompt = `אתה מומחה בעברית תקנית וטבעית. אתה מספק גרסאות משופרות של טקסטים. **חשוב מאוד:** כל גרסה חייבת להיות שונה לחלוטין מהאחרות - לא לחזור על אותו טקסט. החזר תמיד JSON תקין בלבד, ללא markdown, ללא backticks, ללא טקסט נוסף.`;
+
+      const alternativesResponse = await generateText({
+        prompt: alternativesPrompt,
+        systemPrompt: alternativesSystemPrompt,
+        maxTokens: 4096,
+        temperature: 0.5,
+      });
+
+      let cleanedAlternatives = alternativesResponse.trim();
+      if (cleanedAlternatives.includes('```json')) {
+        const start = cleanedAlternatives.indexOf('```json') + 7;
+        const end = cleanedAlternatives.lastIndexOf('```');
+        if (end > start) {
+          cleanedAlternatives = cleanedAlternatives.substring(start, end).trim();
+        }
+      } else if (cleanedAlternatives.startsWith('```')) {
+        const start = cleanedAlternatives.indexOf('\n') + 1;
+        const end = cleanedAlternatives.lastIndexOf('```');
+        if (end > start) {
+          cleanedAlternatives = cleanedAlternatives.substring(start, end).trim();
+        }
+      }
+      const jsonStart = cleanedAlternatives.indexOf('{');
+      const jsonEnd = cleanedAlternatives.lastIndexOf('}');
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        cleanedAlternatives = cleanedAlternatives.substring(jsonStart, jsonEnd + 1);
+      }
+      
+      const alternativesData = JSON.parse(cleanedAlternatives);
+      alternatives = alternativesData.alternatives || [];
+    } catch (altError) {
+      console.warn('Failed to generate alternatives (non-critical):', altError);
+      // ממשיכים בלי alternatives - לא קריטי
+    }
+
     return NextResponse.json({
       success: true,
       improvement,
+      alternatives,
       sources: relevantInfo.length > 0 ? relevantInfo.map(r => ({
         title: r.title,
         url: r.url,
