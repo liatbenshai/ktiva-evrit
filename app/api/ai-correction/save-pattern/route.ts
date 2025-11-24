@@ -125,6 +125,38 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // בדיקה - שמירת דפוסים רק למילים וביטויים קצרים (עד 50 תווים)
+    // לא שומרים טקסטים שלמים או משפטים ארוכים
+    const MAX_PATTERN_LENGTH = 50;
+    
+    if (originalText.length > MAX_PATTERN_LENGTH || correctedText.length > MAX_PATTERN_LENGTH) {
+      return NextResponse.json(
+        { 
+          error: 'Pattern too long',
+          message: 'דפוסים ארוכים מדי לא נשמרים. שמור רק מילים וביטויים קצרים (עד 50 תווים).',
+          suggestion: 'בחר רק את המילה או הביטוי הקצר שהשתנה, ולא את כל הטקסט.'
+        },
+        { status: 400 }
+      );
+    }
+
+    // בדיקה נוספת - לא לשמור משפטים שלמים (יותר ממילה אחת)
+    // אבל כן לאפשר ביטויים קצרים (2-3 מילים)
+    const originalWords = originalText.trim().split(/\s+/).length;
+    const correctedWords = correctedText.trim().split(/\s+/).length;
+    
+    // אם יש יותר מדי מילים (יותר מ-4), זה כנראה משפט שלם ולא דפוס
+    if (originalWords > 4 || correctedWords > 4) {
+      return NextResponse.json(
+        { 
+          error: 'Pattern contains too many words',
+          message: 'דפוסים יכולים להכיל עד 4 מילים. שמור רק מילים או ביטויים קצרים, לא משפטים שלמים.',
+          suggestion: 'בחר רק את המילה או הביטוי הקצר שהשתנה.'
+        },
+        { status: 400 }
+      );
+    }
+
     // בדיקה אם Prisma מוכן
     if (!prisma) {
       return NextResponse.json({
