@@ -24,6 +24,13 @@ import { useSession } from 'next-auth/react';
 
 const creationCards = [
   {
+    title: 'עוזר כתיבה AI',
+    description: 'שאלי כל שאלה או כתבי מה את צריכה, ואני אענה בעברית תקנית. אפשר לשאול שאלות המשך.',
+    icon: Brain,
+    href: '/dashboard/claude-assistant',
+    gradient: 'from-indigo-500 via-purple-600 to-pink-600',
+  },
+  {
     title: 'מאמרים מקצועיים',
     description: 'כתיבה ושיפור מאמרים בעברית טבעית עם אופטימיזציה מתקדמת.',
     icon: FileText,
