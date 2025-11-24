@@ -42,7 +42,7 @@ export default function ClaudeAssistant() {
     setError(null);
 
     // הוספת הודעת המשתמש להיסטוריה
-    const updatedHistory = [...history, { role: 'user', content: userMessage }];
+    const updatedHistory: Message[] = [...history, { role: 'user' as const, content: userMessage }];
     setHistory(updatedHistory);
     setIsLoading(true);
 
@@ -65,7 +65,7 @@ export default function ClaudeAssistant() {
       const data = await response.json();
       
       // הוספת תגובת העוזר להיסטוריה
-      setHistory([...updatedHistory, { role: 'assistant', content: data.message }]);
+      setHistory([...updatedHistory, { role: 'assistant' as const, content: data.message }]);
       
       // הצגת הודעה אם הוחלו דפוסים
       if (data.appliedPatterns && data.appliedPatterns.length > 0) {
