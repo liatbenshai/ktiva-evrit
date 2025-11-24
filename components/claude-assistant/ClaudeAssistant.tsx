@@ -106,19 +106,19 @@ export default function ClaudeAssistant() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)] bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-200px)] bg-white rounded-xl shadow-xl border-2 border-gray-300 overflow-hidden">
       {/* כותרת */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">עוזר כתיבה AI</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <h2 className="text-2xl font-bold text-white">liatAI</h2>
+            <p className="text-sm text-white/90 mt-1">
               שאלי כל שאלה או כתבי מה את צריכה, ואני אענה בעברית תקנית. אפשר לשאול שאלות המשך.
             </p>
           </div>
-        {history.length > 0 && (
+          {history.length > 0 && (
           <button
             onClick={handleClear}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-white hover:bg-white/20 rounded-lg transition-colors border border-white/30"
           >
             <Trash2 className="w-4 h-4" />
             נקה שיחה
@@ -158,10 +158,10 @@ export default function ClaudeAssistant() {
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+              className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
                 msg.role === 'user'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white border border-gray-200 text-gray-900'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
+                  : 'bg-white border-2 border-gray-200 text-gray-900'
               }`}
             >
               <div className="whitespace-pre-wrap break-words">{msg.content}</div>
@@ -224,7 +224,7 @@ export default function ClaudeAssistant() {
           <button
             onClick={handleSend}
             disabled={!message.trim() || isLoading}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

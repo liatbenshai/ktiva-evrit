@@ -86,7 +86,7 @@ export default function DashboardPageWrapper({
         <div className="fixed bottom-4 left-4 z-50 w-80 max-w-[calc(100vw-2rem)] hidden lg:block">
           <div className="bg-white rounded-lg shadow-2xl border-2 border-gray-200 overflow-hidden max-h-[600px] flex flex-col">
             <div className={`bg-gradient-to-r ${theme.buttonFrom} ${theme.buttonTo} text-white px-4 py-2 font-semibold text-sm`}>
-              עוזר כתיבה AI
+              liatAI
             </div>
             <div className="flex-1 overflow-hidden" style={{ maxHeight: '550px' }}>
               <ClaudeAssistant />

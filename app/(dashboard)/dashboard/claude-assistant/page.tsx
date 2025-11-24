@@ -11,7 +11,7 @@ export default function ClaudeAssistantPage() {
   return (
     <DashboardPageWrapper
       icon={Brain}
-      title="עוזר כתיבה AI"
+      title="liatAI"
       description="שאלי כל שאלה או כתבי מה את צריכה, ואני אענה בעברית תקנית. אפשר לשאול שאלות המשך."
       theme={theme}
       showBot={false}

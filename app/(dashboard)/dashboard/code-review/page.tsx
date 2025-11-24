@@ -5,6 +5,7 @@ import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import PageHeader, { PageHeaderLink } from '@/components/layout/PageHeader';
+import CodeChatAssistant from '@/components/code-review/CodeChatAssistant';
 import {
   Code2,
   Upload,
@@ -425,6 +426,24 @@ export default function CodeReviewPage() {
           </Card>
         </div>
       </main>
+
+      {/* דו-שיח לתיקון קוד */}
+      {code.trim() && (
+        <CodeChatAssistant
+          originalCode={code}
+          fileName={fileName}
+          onCodeGenerated={(fixedCode) => {
+            setCode(fixedCode);
+            // עדכון הקובץ המקורי אם יש
+            if (uploadedFile) {
+              // יצירת קובץ חדש עם הקוד המתוקן
+              const blob = new Blob([fixedCode], { type: uploadedFile.type });
+              const newFile = new File([blob], fileName, { type: uploadedFile.type });
+              setUploadedFile(newFile);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

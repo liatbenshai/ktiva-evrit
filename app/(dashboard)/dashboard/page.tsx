@@ -24,7 +24,7 @@ import { useSession } from 'next-auth/react';
 
 const creationCards = [
   {
-    title: 'עוזר כתיבה AI',
+    title: 'liatAI',
     description: 'שאלי כל שאלה או כתבי מה את צריכה, ואני אענה בעברית תקנית. אפשר לשאול שאלות המשך.',
     icon: Brain,
     href: '/dashboard/claude-assistant',
