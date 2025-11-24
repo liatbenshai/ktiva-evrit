@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Mail, Calendar, User as UserIcon, Shield, Lock, Unlock, Copy, Check } from 'lucide-react';
+import { Users, Mail, Calendar, User as UserIcon, Shield, Lock, Unlock, Copy, Check, Trash2, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 
 interface User {
@@ -20,6 +20,8 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -66,6 +68,42 @@ export default function UsersPage() {
       setTimeout(() => setCopiedId(null), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, userEmail: string) => {
+    if (!confirm(`האם אתה בטוח שברצונך למחוק את המשתמש ${userEmail}?\n\nפעולה זו לא ניתנת לביטול וכל הנתונים הקשורים למשתמש יימחקו.`)) {
+      return;
+    }
+
+    setDeletingUserId(userId);
+    setError('');
+
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'שגיאה במחיקת משתמש');
+      }
+
+      // Remove user from list
+      setUsers(users.filter(user => user.id !== userId));
+      alert(`משתמש ${userEmail} נמחק בהצלחה`);
+    } catch (err: any) {
+      console.error('Error deleting user:', err);
+      setError(err.message || 'שגיאה במחיקת משתמש');
+      alert(`שגיאה במחיקת משתמש: ${err.message}`);
+    } finally {
+      setDeletingUserId(null);
+      setShowDeleteConfirm(null);
     }
   };
 
@@ -130,6 +168,7 @@ export default function UsersPage() {
                         <th className="text-right py-4 px-4 font-semibold text-gray-700">סיסמה</th>
                         <th className="text-right py-4 px-4 font-semibold text-gray-700">תאריך הרשמה</th>
                         <th className="text-right py-4 px-4 font-semibold text-gray-700">עדכון אחרון</th>
+                        <th className="text-right py-4 px-4 font-semibold text-gray-700">פעולות</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -215,6 +254,31 @@ export default function UsersPage() {
                             <span className="text-gray-600 text-sm">
                               {formatDate(user.updatedAt)}
                             </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            {!user.isAdmin && (
+                              <button
+                                onClick={() => handleDeleteUser(user.id, user.email)}
+                                disabled={deletingUserId === user.id}
+                                className="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="מחק משתמש"
+                              >
+                                {deletingUserId === user.id ? (
+                                  <>
+                                    <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                                    מוחק...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Trash2 className="w-4 h-4" />
+                                    מחק
+                                  </>
+                                )}
+                              </button>
+                            )}
+                            {user.isAdmin && (
+                              <span className="text-gray-400 text-xs">לא ניתן למחוק</span>
+                            )}
                           </td>
                         </tr>
                       ))}

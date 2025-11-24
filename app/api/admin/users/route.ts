@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 
+// Helper function to check if user is admin
+function isAdminUser(email: string | null | undefined): boolean {
+  return email === 'admin@ktiva-evrit.com';
+}
+
 export async function GET(req: NextRequest) {
   try {
     // Check authentication
@@ -15,9 +20,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Check if user is admin
-    const isAdmin = session.user.email === 'admin@ktiva-evrit.com';
-    
-    if (!isAdmin) {
+    if (!isAdminUser(session.user.email)) {
       return NextResponse.json(
         { error: 'אין הרשאה - רק אדמין יכול לראות משתמשים' },
         { status: 403 }
@@ -48,7 +51,7 @@ export async function GET(req: NextRequest) {
       passwordHash: user.password ? `${user.password.substring(0, 10)}...` : null, // Show first 10 chars of hash (just for identification)
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      isAdmin: user.email === 'admin@ktiva-evrit.com',
+      isAdmin: isAdminUser(user.email),
     }));
 
     return NextResponse.json({
@@ -60,6 +63,84 @@ export async function GET(req: NextRequest) {
     console.error('Error fetching users:', error);
     return NextResponse.json(
       { error: 'שגיאה בטעינת משתמשים: ' + error.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    // Check authentication
+    const session = await auth();
+    
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'לא מאומת' },
+        { status: 401 }
+      );
+    }
+
+    // Check if user is admin
+    if (!isAdminUser(session.user.email)) {
+      return NextResponse.json(
+        { error: 'אין הרשאה - רק אדמין יכול למחוק משתמשים' },
+        { status: 403 }
+      );
+    }
+
+    // Get user ID from request body
+    const body = await req.json();
+    const { userId } = body;
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'נא לספק ID של משתמש למחיקה' },
+        { status: 400 }
+      );
+    }
+
+    // Get the user to be deleted
+    const userToDelete = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
+
+    if (!userToDelete) {
+      return NextResponse.json(
+        { error: 'משתמש לא נמצא' },
+        { status: 404 }
+      );
+    }
+
+    // Prevent deleting admin user
+    if (isAdminUser(userToDelete.email)) {
+      return NextResponse.json(
+        { error: 'לא ניתן למחוק את משתמש האדמין' },
+        { status: 403 }
+      );
+    }
+
+    // Prevent deleting yourself
+    if (userToDelete.email === session.user.email) {
+      return NextResponse.json(
+        { error: 'לא ניתן למחוק את עצמך' },
+        { status: 403 }
+      );
+    }
+
+    // Delete user (cascade will delete related data)
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `משתמש ${userToDelete.email} נמחק בהצלחה`,
+    });
+  } catch (error: any) {
+    console.error('Error deleting user:', error);
+    return NextResponse.json(
+      { error: 'שגיאה במחיקת משתמש: ' + error.message },
       { status: 500 }
     );
   }
