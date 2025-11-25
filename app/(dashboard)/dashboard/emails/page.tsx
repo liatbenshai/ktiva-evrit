@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Home, Mail, Reply, Sparkles } from 'lucide-react';
-import PageHeader, { PageHeaderLink } from '@/components/layout/PageHeader';
+import { Mail, Reply, Sparkles } from 'lucide-react';
+import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
+import { getPageTheme } from '@/lib/page-themes';
 import CreateEmail from '@/components/emails/CreateEmail';
 import ReplyEmail from '@/components/emails/ReplyEmail';
 import ImproveEmail from '@/components/emails/ImproveEmail';
@@ -11,24 +12,15 @@ type Mode = 'create' | 'reply' | 'improve';
 
 export default function EmailsPage() {
   const [mode, setMode] = useState<Mode>('create');
+  const theme = getPageTheme('emails');
 
   return (
-    <div className="min-h-screen bg-slate-50" dir="rtl">
-      <PageHeader
-        icon={Mail}
-        title="מיילים"
-        description="כתיבה, מענה ושיפור מיילים בעברית תקנית"
-        actions={
-          <PageHeaderLink
-            href="/dashboard"
-            label="חזרה לדשבורד"
-            icon={Home}
-            variant="outline"
-          />
-        }
-      />
-
-      <main className="mx-auto w-full max-w-5xl px-4 py-5 sm:py-8">
+    <DashboardPageWrapper
+      icon={Mail}
+      title="מיילים"
+      description="כתיבה, מענה ושיפור מיילים בעברית תקנית"
+      theme={theme}
+    >
         <div className="mb-5 flex flex-col gap-2 sm:mb-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
           <button
             onClick={() => setMode('create')}
@@ -70,7 +62,6 @@ export default function EmailsPage() {
           {mode === 'reply' && <ReplyEmail />}
           {mode === 'improve' && <ImproveEmail />}
         </div>
-      </main>
-    </div>
+    </DashboardPageWrapper>
   );
 }

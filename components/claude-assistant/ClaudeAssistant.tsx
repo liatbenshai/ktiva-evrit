@@ -135,19 +135,9 @@ export default function ClaudeAssistant() {
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 בואי נתחיל
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600">
                 שאלי כל שאלה או כתבי מה את צריכה, ואני אענה בעברית תקנית וזורמת.
               </p>
-              <div className="space-y-2 text-sm text-gray-500 text-right">
-                <p className="font-medium">דוגמאות:</p>
-                <ul className="space-y-1">
-                  <li>• כתוב עבודה עבור הבן שלי בן ה-12 בנושא סכנות של אלימות</li>
-                  <li>• מה ההבדל בין תיאור לתיאוריות?</li>
-                  <li>• כתוב מכתב תודה ללקוח</li>
-                  <li>• איך כותבים נכון "אין לי" או "אין לי"?</li>
-                  <li>• כתוב עבור הבן שלי עבודה על סכנות של אלימות, ותתייחס למקרה שקרה בבית הספר</li>
-                </ul>
-              </div>
             </div>
           </div>
         )}

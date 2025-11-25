@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import PageHeader, { PageHeaderLink } from '@/components/layout/PageHeader';
+import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
+import { getPageTheme } from '@/lib/page-themes';
 import CodeChatAssistant from '@/components/code-review/CodeChatAssistant';
 import {
   Code2,
@@ -167,24 +167,15 @@ export default function CodeReviewPage() {
     return 'text-red-600';
   };
 
-  return (
-    <div dir="rtl" className="min-h-screen bg-slate-50">
-      <PageHeader
-        icon={Code2}
-        title="בדיקת קוד"
-        description="העלי קובץ קוד או הדבקי קוד ישירות. המערכת תנתח את הקוד, תזהה בעיות, ותציע תיקונים מקצועיים."
-        actions={
-          <PageHeaderLink
-            href="/dashboard"
-            label="חזרה לדשבורד"
-            icon={Home}
-            variant="outline"
-            className="text-sm sm:text-base"
-          />
-        }
-      />
+  const theme = getPageTheme('code-review');
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:py-8">
+  return (
+    <DashboardPageWrapper
+      icon={Code2}
+      title="בדיקת קוד"
+      description="העלי קובץ קוד או הדבקי קוד ישירות. המערכת תנתח את הקוד, תזהה בעיות, ותציע תיקונים מקצועיים."
+      theme={theme}
+    >
 
         <div className="grid gap-6 lg:grid-cols-2 mt-6">
           {/* פאנל קלט */}
@@ -425,7 +416,6 @@ export default function CodeReviewPage() {
             )}
           </Card>
         </div>
-      </main>
 
       {/* דו-שיח לתיקון קוד */}
       {code.trim() && (
@@ -444,7 +434,7 @@ export default function CodeReviewPage() {
           }}
         />
       )}
-    </div>
+    </DashboardPageWrapper>
   );
 }
 

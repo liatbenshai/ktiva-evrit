@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Home, FileText, Sparkles } from 'lucide-react';
-import PageHeader, { PageHeaderLink } from '@/components/layout/PageHeader';
+import { FileText, Sparkles } from 'lucide-react';
+import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
+import { getPageTheme } from '@/lib/page-themes';
 import CreateArticle from '@/components/articles/CreateArticle';
 import ImproveArticle from '@/components/articles/ImproveArticle';
 
@@ -10,25 +11,15 @@ type Mode = 'create' | 'improve';
 
 export default function ArticlesPage() {
   const [mode, setMode] = useState<Mode>('create');
+  const theme = getPageTheme('articles');
 
   return (
-    <div className="min-h-screen bg-slate-50" dir="rtl">
-      <PageHeader
-        icon={FileText}
-        title="מאמרים"
-        description="כתיבת מאמרים מקצועיים עם אופטימיזציה ל-SEO"
-        actions={
-          <PageHeaderLink
-            href="/dashboard"
-            label="חזרה לדשבורד"
-            icon={Home}
-            variant="outline"
-            className="text-sm sm:text-base"
-          />
-        }
-      />
-
-      <main className="mx-auto w-full max-w-5xl px-4 py-5 sm:py-8">
+    <DashboardPageWrapper
+      icon={FileText}
+      title="מאמרים"
+      description="כתיבת מאמרים מקצועיים עם אופטימיזציה ל-SEO"
+      theme={theme}
+    >
         <div className="mb-5 sm:mb-8">
           <div className="flex w-full flex-col gap-2 sm:inline-flex sm:flex-row sm:items-center sm:gap-3">
             <button
@@ -59,7 +50,6 @@ export default function ArticlesPage() {
         <div>
           {mode === 'create' ? <CreateArticle /> : <ImproveArticle />}
         </div>
-      </main>
-    </div>
+    </DashboardPageWrapper>
   );
 }
