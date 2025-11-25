@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Home, Sparkles, Copy, Check, Loader2, ArrowLeft, Edit2, X, Languages, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Copy, Check, Loader2, Edit2, X, Languages, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import PageHeader, { PageHeaderLink } from '@/components/layout/PageHeader';
+import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
+import { getPageTheme } from '@/lib/page-themes';
 
 interface ContentChange {
   type: 'style' | 'tone' | 'clarity' | 'grammar' | 'terminology' | 'other';
@@ -278,24 +279,15 @@ export default function ContentImprovementPage() {
     return 'text-orange-600';
   };
 
-  return (
-    <div dir="rtl" className="min-h-screen bg-slate-50">
-      <PageHeader
-        icon={Sparkles}
-        title="שיפור תוכן"
-        description="הזיני טקסט ובחרי מקצוע או מטרה, והמערכת תשפר את התוכן בהתאם."
-        actions={
-          <PageHeaderLink
-            href="/dashboard"
-            label="חזרה לדשבורד"
-            icon={Home}
-            variant="outline"
-            className="text-sm sm:text-base"
-          />
-        }
-      />
+  const theme = getPageTheme('content-improvement');
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:py-8">
+  return (
+    <DashboardPageWrapper
+      icon={Sparkles}
+      title="שיפור תוכן"
+      description="הזיני טקסט ובחרי מקצוע או מטרה, והמערכת תשפר את התוכן בהתאם."
+      theme={theme}
+    >
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Input Panel */}
           <Card className="p-6">
@@ -811,8 +803,7 @@ export default function ContentImprovementPage() {
             )}
           </Card>
         </div>
-      </main>
-    </div>
+    </DashboardPageWrapper>
   );
 }
 

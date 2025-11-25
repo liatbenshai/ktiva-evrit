@@ -35,6 +35,7 @@ interface DashboardPageWrapperProps {
   theme: PageColorTheme;
   children: ReactNode;
   showBot?: boolean;
+  actions?: ReactNode;
 }
 
 export default function DashboardPageWrapper({
@@ -44,6 +45,7 @@ export default function DashboardPageWrapper({
   theme,
   children,
   showBot = true,
+  actions,
 }: DashboardPageWrapperProps) {
   return (
     <div 
@@ -66,6 +68,7 @@ export default function DashboardPageWrapper({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {actions}
             <Link
               href="/dashboard"
               className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors bg-gradient-to-r ${theme.buttonFrom} ${theme.buttonTo} text-white hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2`}

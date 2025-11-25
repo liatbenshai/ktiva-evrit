@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeftRight, Upload, Copy, Download, RotateCcw, FileText, Loader2 } from 'lucide-react';
-import Link from 'next/link';
+import { Upload, Copy, Download, RotateCcw, FileText, Loader2 } from 'lucide-react';
+import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
+import { getPageTheme } from '@/lib/page-themes';
 
 export default function FlipDocumentPage() {
   const [inputText, setInputText] = useState('');
@@ -205,21 +206,15 @@ export default function FlipDocumentPage() {
     setFileError(null);
   };
 
-  return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <header className="sticky top-0 z-30 border-b border-white/40 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 transition"
-          >
-            <ArrowLeftRight className="h-5 w-5 rotate-90" />
-            <span className="text-sm font-semibold">חזרה לדשבורד</span>
-          </Link>
-        </div>
-      </header>
+  const theme = getPageTheme('flip-document');
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-8">
+  return (
+    <DashboardPageWrapper
+      icon={RotateCcw}
+      title="היפוך מסמך עברי"
+      description="הופך מסמך עברית שנסרק הפוך - הופך כל שורה בנפרד. מעולה למסמכים שנסרקו בכיוון הלא נכון."
+      theme={theme}
+    >
           <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">היפוך מסמך עברי</h1>
           <p className="text-slate-600">
@@ -359,8 +354,7 @@ export default function FlipDocumentPage() {
             </ul>
           </div>
         </div>
-      </main>
-    </div>
+    </DashboardPageWrapper>
   );
 }
 

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Save, X, BookOpen, Sparkles, Upload, Download } from 'lucide-react';
+import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
+import { getPageTheme } from '@/lib/page-themes';
 
 interface Synonym {
   id: string;
@@ -282,24 +284,12 @@ export default function SynonymsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50" dir="rtl">
-      <header className="bg-white/80 backdrop-blur-sm shadow-lg border-b border-purple-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg">
-              <BookOpen className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                מילים נרדפות
-              </h1>
-              <p className="text-gray-600 mt-1">מאגר מילים נרדפות בעברית - צורה מועדפת וחלופות</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <DashboardPageWrapper
+      icon={BookOpen}
+      title="מילים נרדפות"
+      description="מאגר מילים נרדפות בעברית - צורה מועדפת וחלופות"
+      theme={getPageTheme('default')}
+    >
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-purple-100 p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -483,7 +473,6 @@ export default function SynonymsPage() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+    </DashboardPageWrapper>
   );
 }

@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Home, RefreshCw, CheckCircle, XCircle, Edit3, DatabaseZap } from 'lucide-react'
-import Link from 'next/link'
+import { RefreshCw, CheckCircle, XCircle, Edit3, DatabaseZap } from 'lucide-react'
+import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
+import { getPageTheme } from '@/lib/page-themes';
 
 interface TextSample {
   id: string
@@ -148,32 +149,12 @@ export default function LearnPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50" dir="rtl">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm shadow-lg border-b border-blue-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                🧠 למידת תיקון טקסטים
-              </h1>
-              <p className="text-gray-600 mt-1">
-                למד את המערכת לתקן טקסטים ולהפוך אותם לעברית תקנית
-              </p>
-            </div>
-            <Link
-              href="/dashboard"
-              className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
-            >
-              <Home className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              חזרה לדשבורד
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <DashboardPageWrapper
+      icon={DatabaseZap}
+      title="למידת תיקון טקסטים"
+      description="למד את המערכת לתקן טקסטים ולהפוך אותם לעברית תקנית"
+      theme={getPageTheme('default')}
+    >
         {/* Progress */}
         <div className="mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -335,7 +316,6 @@ export default function LearnPage() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </DashboardPageWrapper>
   )
 }

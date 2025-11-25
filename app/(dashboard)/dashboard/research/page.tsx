@@ -1,19 +1,22 @@
 'use client';
 
 import Research from '@/components/research/Research';
-import PageHeader from '@/components/layout/PageHeader';
+import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
+import { getPageTheme } from '@/lib/page-themes';
 import { Search } from 'lucide-react';
 
 export default function ResearchPage() {
+  const theme = getPageTheme('research');
+
   return (
-    <div className="space-y-6">
-      <PageHeader
-        icon={Search}
-        title="מחקר מעמיק"
-        description="שאל שאלה וקבל מחקר מעמיק עם מידע ממקורות שונים ברשת, כולל הפניות למקורות"
-      />
+    <DashboardPageWrapper
+      icon={Search}
+      title="מחקר מעמיק"
+      description="שאל שאלה וקבל מחקר מעמיק עם מידע ממקורות שונים ברשת, כולל הפניות למקורות"
+      theme={theme}
+    >
       <Research />
-    </div>
+    </DashboardPageWrapper>
   );
 }
 

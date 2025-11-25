@@ -10,12 +10,13 @@ import {
   RefreshCw,
   BookOpen,
   Globe2,
-  Home,
   ListChecks,
   Trophy,
   GraduationCap,
 } from 'lucide-react'
 import StructuredLessons from '@/components/languages/StructuredLessons'
+import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
+import { getPageTheme } from '@/lib/page-themes';
 
 type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french' | 'russian'
 
@@ -464,29 +465,15 @@ export default function LanguagesPage() {
     window.speechSynthesis.speak(utterance)
   }
 
+  const theme = getPageTheme('languages');
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-pink-50" dir="rtl">
-      <header className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-lg">
-        <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-10 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-2">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white/80 sm:text-sm">
-              <Sparkles className="h-4 w-4" /> לימוד שפות מותאם לדוברי עברית
-            </span>
-            <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
-              גשר בין עברית לאנגלית, רומנית, איטלקית, צרפתית ורוסית
-            </h1>
-            <p className="text-sm text-white/85 sm:text-base">
-              הזיני ביטוי בעברית, בחרי שפה רצויה וקבלי תרגום טבעי, הגייה ודוגמאות שימוש. את המונחים שתשמרי נגיש לך בכל כלי הכתיבה.
-            </p>
-          </div>
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 rounded-full border border-white/70 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
-          >
-            <Home className="h-4 w-4" /> דשבורד הבית
-          </Link>
-        </div>
-      </header>
+    <DashboardPageWrapper
+      icon={LanguagesIcon}
+      title="לימוד שפות"
+      description="גשר בין עברית לאנגלית, רומנית, איטלקית, צרפתית ורוסית. הזיני ביטוי בעברית, בחרי שפה רצויה וקבלי תרגום טבעי, הגייה ודוגמאות שימוש."
+      theme={theme}
+    >
 
       {/* Tab Navigation */}
       <div className="mx-auto w-full max-w-5xl px-4 pt-6">
@@ -915,7 +902,6 @@ export default function LanguagesPage() {
           )}
         </section>
         )}
-      </main>
-    </div>
+    </DashboardPageWrapper>
   )
 }

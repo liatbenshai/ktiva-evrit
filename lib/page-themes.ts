@@ -205,6 +205,18 @@ export const pageThemes: Record<string, PageColorTheme> = {
     iconColor: 'text-emerald-600',
     borderColor: 'border-emerald-100',
   },
+  'quotes': {
+    bgFrom: 'from-yellow-50',
+    bgVia: 'via-amber-50',
+    bgTo: 'to-orange-50',
+    headerFrom: 'from-yellow-600',
+    headerTo: 'to-orange-600',
+    buttonFrom: 'from-yellow-500',
+    buttonTo: 'to-orange-600',
+    iconBg: 'bg-yellow-100',
+    iconColor: 'text-yellow-600',
+    borderColor: 'border-yellow-100',
+  },
   'ai-correction': {
     bgFrom: 'from-violet-50',
     bgVia: 'via-purple-50',

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowRight, Loader2, Languages, Copy, Check, RotateCcw, Edit2, Save, X } from 'lucide-react';
-import Link from 'next/link';
+import { Loader2, Languages, Copy, Check, RotateCcw, Edit2, Save, X } from 'lucide-react';
+import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
+import { getPageTheme } from '@/lib/page-themes';
 
 export default function TranslatePage() {
   const [text, setText] = useState('');
@@ -239,28 +240,15 @@ export default function TranslatePage() {
     window.getSelection()?.removeAllRanges();
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-4">
-            <Link 
-              href="/dashboard"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowRight className="w-6 h-6" />
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">תרגום מתוחכם</h1>
-              <p className="mt-2 text-gray-600">
-                תרגום אוטומטי מאנגלית לעברית ומעברית לאנגלית עם למידה מתיקונים
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+  const theme = getPageTheme('prompts');
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  return (
+    <DashboardPageWrapper
+      icon={Languages}
+      title="תרגום מתוחכם"
+      description="תרגום אוטומטי מאנגלית לעברית ומעברית לאנגלית עם למידה מתיקונים"
+      theme={theme}
+    >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Input Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
@@ -662,7 +650,6 @@ export default function TranslatePage() {
             )}
           </div>
         </div>
-      </main>
-    </div>
+    </DashboardPageWrapper>
   );
 }

@@ -1,19 +1,22 @@
 'use client';
 
 import LegalCases from '@/components/legal-cases/LegalCases';
-import PageHeader from '@/components/layout/PageHeader';
+import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
+import { getPageTheme } from '@/lib/page-themes';
 import { Scale } from 'lucide-react';
 
 export default function LegalCasesPage() {
+  const theme = getPageTheme('legal-cases');
+
   return (
-    <div className="space-y-6">
-      <PageHeader
-        icon={Scale}
-        title="חיפוש פסקי דין"
-        description="חפשי פסקי דין רלוונטיים לפי נושאים משפטיים, כולל הפניות למקורות"
-      />
+    <DashboardPageWrapper
+      icon={Scale}
+      title="חיפוש פסקי דין"
+      description="חפשי פסקי דין רלוונטיים לפי נושאים משפטיים, כולל הפניות למקורות"
+      theme={theme}
+    >
       <LegalCases />
-    </div>
+    </DashboardPageWrapper>
   );
 }
 

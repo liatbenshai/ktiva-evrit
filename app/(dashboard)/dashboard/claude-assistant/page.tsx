@@ -14,7 +14,6 @@ export default function ClaudeAssistantPage() {
       title="liatAI"
       description="שאלי כל שאלה או כתבי מה את צריכה, ואני אענה בעברית תקנית. אפשר לשאול שאלות המשך."
       theme={theme}
-      showBot={false}
     >
       <ClaudeAssistant />
     </DashboardPageWrapper>
