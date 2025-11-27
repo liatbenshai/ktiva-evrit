@@ -96,32 +96,37 @@ export async function POST(request: NextRequest) {
       });
       
       // Track image order as they appear in the document
-      let imageIndex = 0;
       const imageOrder: Array<{ index: number; name: string }> = [];
       
-      // Use convertToHtml with transformImage to detect image positions
-      const htmlResult = await mammoth.convertToHtml({ 
-        buffer,
-        transformImage: (image: any) => {
-          // Extract image name from src (e.g., "media/image1.png" -> "image1.png")
-          const imagePath = image.src || '';
-          const imageName = imagePath.split('/').pop() || imagePath.split('\\').pop() || `image_${imageIndex}`;
-          
-          // Track the order and name
-          imageOrder.push({ index: imageIndex, name: imageName });
-          imageIndex++;
-          
-          // Return placeholder in HTML that we'll replace with text marker
-          return { src: `[IMAGE_PLACEHOLDER_${imageIndex - 1}]` };
-        }
+      // Use convertToHtml to get HTML with image references
+      const htmlResult = await mammoth.convertToHtml({ buffer });
+      const html = htmlResult.value;
+      
+      // Extract image references from HTML (images appear as <img> tags with src pointing to media/)
+      const imageRegex = /<img[^>]+src="([^"]+)"[^>]*>/gi;
+      const imageMatches = Array.from(html.matchAll(imageRegex));
+      
+      // Track images in order they appear in HTML
+      imageMatches.forEach((match, idx) => {
+        const imagePath = match[1] || '';
+        // Extract image name from path (e.g., "media/image1.png" -> "image1.png")
+        const imageName = imagePath.split('/').pop() || imagePath.split('\\').pop() || `image_${idx}`;
+        imageOrder.push({ index: idx, name: imageName });
       });
       
       // Extract text from HTML while preserving structure
-      const html = htmlResult.value;
+      // First, replace image tags with placeholders before removing HTML
+      let htmlWithPlaceholders = html;
+      imageMatches.forEach((match, idx) => {
+        htmlWithPlaceholders = htmlWithPlaceholders.replace(
+          match[0],
+          `\n\n[תמונה ${idx + 1}]\n\n`
+        );
+      });
       
-      // Convert HTML to text while preserving structure and image placeholders
+      // Convert HTML to text while preserving structure
       // Remove HTML tags but keep newlines for structure
-      let documentText = html
+      let documentText = htmlWithPlaceholders
         .replace(/<p[^>]*>/gi, '\n') // Paragraphs become newlines
         .replace(/<\/p>/gi, '\n')
         .replace(/<br[^>]*>/gi, '\n') // Line breaks
@@ -136,14 +141,6 @@ export async function POST(request: NextRequest) {
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'");
-      
-      // Replace image placeholders with markers that preserve position
-      imageOrder.forEach((placeholder, idx) => {
-        documentText = documentText.replace(
-          `[IMAGE_PLACEHOLDER_${placeholder.index}]`,
-          `\n\n[תמונה ${idx + 1}]\n\n`
-        );
-      });
       
       // Also get raw text for fallback if HTML extraction fails
       const rawTextResult = await mammoth.extractRawText({ buffer });
