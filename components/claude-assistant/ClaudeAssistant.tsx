@@ -179,13 +179,33 @@ export default function ClaudeAssistant() {
         const result = await response.json();
         text = result.text;
         
-        // If the document contains images, process them with OCR
+        // If the document contains images, process them with OCR and replace placeholders
         if (result.hasImages && result.images && result.images.length > 0) {
           alert(`נמצאו ${result.images.length} תמונות במסמך. מעבד תמונות... זה עלול לקחת זמן.`);
           try {
-            const imagesText = await processImagesFromBase64(result.images);
-            if (imagesText && imagesText.trim()) {
-              text = text ? `${text}\n\n${imagesText}` : imagesText;
+            const imageResults = await processImagesFromBase64(result.images);
+            
+            // Replace image placeholders in the text with OCR results
+            // Placeholders are in format: [תמונה 1], [תמונה 2], etc.
+            imageResults.forEach((result, idx) => {
+              const placeholder = `[תמונה ${idx + 1}]`;
+              if (text.includes(placeholder)) {
+                if (result.text && result.text.trim()) {
+                  // Replace placeholder with OCR text, preserving structure
+                  text = text.replace(placeholder, result.text);
+                } else {
+                  // If OCR failed, replace with error message
+                  const errorMsg = result.error || 'לא נמצא טקסט';
+                  text = text.replace(placeholder, `[שגיאה בעיבוד תמונה: ${errorMsg}]`);
+                }
+              }
+            });
+            
+            // If there are any remaining placeholders (shouldn't happen, but just in case)
+            // or if images were processed but placeholders weren't found, append them
+            const remainingPlaceholders = text.match(/\[תמונה \d+\]/g);
+            if (remainingPlaceholders && remainingPlaceholders.length > 0) {
+              console.warn('Some image placeholders were not replaced:', remainingPlaceholders);
             }
           } catch (error) {
             console.error('Error processing images from DOCX:', error);

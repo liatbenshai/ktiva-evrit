@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Sparkles, Copy, Check, Loader2, Edit2, X, Languages, ChevronDown, ChevronUp, Upload } from 'lucide-react';
-import { extractTextFromImageClient, processImagesFromBase64 } from '@/lib/ocr-client';
+import { extractTextFromImageClient, processImagesFromBase64Legacy } from '@/lib/ocr-client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
@@ -123,7 +123,7 @@ export default function ContentImprovementPage() {
         if (result.hasImages && result.images && result.images.length > 0) {
           alert(`נמצאו ${result.images.length} תמונות במסמך. מעבד תמונות... זה עלול לקחת זמן.`);
           try {
-            const imagesText = await processImagesFromBase64(result.images);
+            const imagesText = await processImagesFromBase64Legacy(result.images);
             if (imagesText && imagesText.trim()) {
               text = text ? `${text}\n\n${imagesText}` : imagesText;
             }

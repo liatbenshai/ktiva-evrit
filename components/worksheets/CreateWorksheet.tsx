@@ -6,7 +6,7 @@ import { exportWorksheetToPDF } from '@/lib/pdfExport';
 import { exportToTXT, exportToWord } from '@/lib/export-utils';
 import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
-import { extractTextFromImageClient, processImagesFromBase64 } from '@/lib/ocr-client';
+import { extractTextFromImageClient, processImagesFromBase64Legacy } from '@/lib/ocr-client';
 
 export default function CreateWorksheet() {
   const [instruction, setInstruction] = useState('');
@@ -86,7 +86,7 @@ export default function CreateWorksheet() {
         if (result.hasImages && result.images && result.images.length > 0) {
           alert(`נמצאו ${result.images.length} תמונות במסמך. מעבד תמונות... זה עלול לקחת זמן.`);
           try {
-            const imagesText = await processImagesFromBase64(result.images);
+            const imagesText = await processImagesFromBase64Legacy(result.images);
             if (imagesText && imagesText.trim()) {
               text = text ? `${text}\n\n${imagesText}` : imagesText;
             }

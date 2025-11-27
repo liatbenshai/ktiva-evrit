@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Film, Loader2, RefreshCw, Upload, Download, FileText } from 'lucide-react';
-import { extractTextFromImageClient, processImagesFromBase64 } from '@/lib/ocr-client';
+import { extractTextFromImageClient, processImagesFromBase64Legacy } from '@/lib/ocr-client';
 import { exportToTXT, exportToWord, exportToPDF } from '@/lib/export-utils';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
@@ -61,7 +61,7 @@ export default function CreateScript() {
         if (result.hasImages && result.images && result.images.length > 0) {
           alert(`נמצאו ${result.images.length} תמונות במסמך. מעבד תמונות... זה עלול לקחת זמן.`);
           try {
-            const imagesText = await processImagesFromBase64(result.images);
+            const imagesText = await processImagesFromBase64Legacy(result.images);
             if (imagesText && imagesText.trim()) {
               text = text ? `${text}\n\n${imagesText}` : imagesText;
             }

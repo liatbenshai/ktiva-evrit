@@ -7,7 +7,7 @@ import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
 import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
-import { processImagesFromBase64 } from '@/lib/ocr-client';
+import { processImagesFromBase64Legacy } from '@/lib/ocr-client';
 
 type InputMode = 'text' | 'file';
 
@@ -74,7 +74,7 @@ export default function CreateSummary() {
       if (result.hasImages && result.images && result.images.length > 0) {
         alert(`נמצאו ${result.images.length} תמונות במסמך. מעבד תמונות... זה עלול לקחת זמן.`);
         try {
-          const imagesText = await processImagesFromBase64(result.images);
+          const imagesText = await processImagesFromBase64Legacy(result.images);
           if (imagesText && imagesText.trim()) {
             extractedText = extractedText ? `${extractedText}\n\n${imagesText}` : imagesText;
           }

@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { Loader2, Wand2, Upload } from 'lucide-react';
 import ArticleEditor from './ArticleEditor';
-import { extractTextFromImageClient, processImagesFromBase64 } from '@/lib/ocr-client';
+import { extractTextFromImageClient, processImagesFromBase64Legacy } from '@/lib/ocr-client';
 
 export default function ImproveArticle() {
   const [existingContent, setExistingContent] = useState('');
@@ -54,7 +54,7 @@ export default function ImproveArticle() {
         if (result.hasImages && result.images && result.images.length > 0) {
           alert(`נמצאו ${result.images.length} תמונות במסמך. מעבד תמונות... זה עלול לקחת זמן.`);
           try {
-            const imagesText = await processImagesFromBase64(result.images);
+            const imagesText = await processImagesFromBase64Legacy(result.images);
             if (imagesText && imagesText.trim()) {
               text = text ? `${text}\n\n${imagesText}` : imagesText;
             }

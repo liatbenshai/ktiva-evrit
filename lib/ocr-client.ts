@@ -196,13 +196,13 @@ export function base64ToBlob(base64: string, mimeType: string): Blob {
 
 /**
  * Process multiple images from base64 data
+ * Returns an array of texts in the same order as the images
  */
 export async function processImagesFromBase64(
   images: Array<{ data: string; mimeType: string; name: string }>,
   onProgress?: (current: number, total: number, imageName: string) => void
-): Promise<string> {
-  const texts: string[] = [];
-  const errors: string[] = [];
+): Promise<Array<{ index: number; text: string; error?: string }>> {
+  const results: Array<{ index: number; text: string; error?: string }> = [];
   
   for (let i = 0; i < images.length; i++) {
     const img = images[i];
@@ -227,18 +227,41 @@ export async function processImagesFromBase64(
       
       if (text && text.trim()) {
         // Preserve the structure of the extracted text
-        // Add image label but keep the original text structure intact
-        texts.push(`[תמונה ${i + 1}: ${img.name}]\n${text}`);
+        results.push({ index: i, text: text });
       } else {
-        errors.push(`תמונה ${i + 1} (${img.name}): לא נמצא טקסט`);
+        results.push({ index: i, text: '', error: `לא נמצא טקסט` });
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'שגיאה לא ידועה';
       console.error(`Error processing image ${img.name}:`, error);
-      errors.push(`תמונה ${i + 1} (${img.name}): ${errorMsg}`);
+      results.push({ index: i, text: '', error: errorMsg });
       // Continue with other images even if one fails
     }
   }
+  
+  return results;
+}
+
+/**
+ * Process multiple images from base64 data (legacy version that returns string)
+ * This is kept for backward compatibility with other components
+ */
+export async function processImagesFromBase64Legacy(
+  images: Array<{ data: string; mimeType: string; name: string }>,
+  onProgress?: (current: number, total: number, imageName: string) => void
+): Promise<string> {
+  const results = await processImagesFromBase64(images, onProgress);
+  const texts: string[] = [];
+  const errors: string[] = [];
+  
+  results.forEach((result, idx) => {
+    if (result.text && result.text.trim()) {
+      texts.push(`[תמונה ${idx + 1}: ${images[idx].name}]\n${result.text}`);
+    } else {
+      const errorMsg = result.error || 'לא נמצא טקסט';
+      errors.push(`תמונה ${idx + 1} (${images[idx].name}): ${errorMsg}`);
+    }
+  });
   
   // Add error summary if there were errors
   if (errors.length > 0 && texts.length > 0) {
@@ -249,8 +272,6 @@ export async function processImagesFromBase64(
     throw new Error(`כל התמונות נכשלו בעיבוד:\n${errors.join('\n')}`);
   }
   
-  // Join texts with double newline to preserve structure between images
-  // This maintains paragraph breaks and structure from each image
   return texts.join('\n\n');
 }
 
