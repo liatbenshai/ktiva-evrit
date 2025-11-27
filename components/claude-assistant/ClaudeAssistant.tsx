@@ -189,14 +189,16 @@ export default function ClaudeAssistant() {
             // Placeholders are in format: [תמונה 1], [תמונה 2], etc.
             imageResults.forEach((result, idx) => {
               const placeholder = `[תמונה ${idx + 1}]`;
+              // Use replace with regex to replace all occurrences (though there should be only one)
+              const placeholderRegex = new RegExp(`\\[תמונה ${idx + 1}\\]`, 'g');
               if (text.includes(placeholder)) {
                 if (result.text && result.text.trim()) {
                   // Replace placeholder with OCR text, preserving structure
-                  text = text.replace(placeholder, result.text);
+                  text = text.replace(placeholderRegex, result.text);
                 } else {
                   // If OCR failed, replace with error message
                   const errorMsg = result.error || 'לא נמצא טקסט';
-                  text = text.replace(placeholder, `[שגיאה בעיבוד תמונה: ${errorMsg}]`);
+                  text = text.replace(placeholderRegex, `[שגיאה בעיבוד תמונה: ${errorMsg}]`);
                 }
               }
             });

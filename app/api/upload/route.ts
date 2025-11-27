@@ -95,10 +95,11 @@ export async function POST(request: NextRequest) {
         imageMap.set(img.name, img);
       });
       
-      // Track image order as they appear in the document
-      const imageOrder: Array<{ index: number; name: string }> = [];
+      // Extract text from document
+      const rawTextResult = await mammoth.extractRawText({ buffer });
+      text = rawTextResult.value;
       
-      // Use convertToHtml to get HTML with image references
+      // Use convertToHtml to try to detect image positions
       const htmlResult = await mammoth.convertToHtml({ buffer });
       const html = htmlResult.value;
       
@@ -106,54 +107,71 @@ export async function POST(request: NextRequest) {
       const imageRegex = /<img[^>]+src="([^"]+)"[^>]*>/gi;
       const imageMatches = Array.from(html.matchAll(imageRegex));
       
-      // Track images in order they appear in HTML
-      imageMatches.forEach((match, idx) => {
-        const imagePath = match[1] || '';
-        // Extract image name from path (e.g., "media/image1.png" -> "image1.png")
-        const imageName = imagePath.split('/').pop() || imagePath.split('\\').pop() || `image_${idx}`;
-        imageOrder.push({ index: idx, name: imageName });
-      });
+      // Track image order - use HTML matches if available, otherwise use extracted images order
+      const imageOrder: Array<{ index: number; name: string }> = [];
       
-      // Extract text from HTML while preserving structure
-      // First, replace image tags with placeholders before removing HTML
-      let htmlWithPlaceholders = html;
-      imageMatches.forEach((match, idx) => {
-        htmlWithPlaceholders = htmlWithPlaceholders.replace(
-          match[0],
-          `\n\n[תמונה ${idx + 1}]\n\n`
-        );
-      });
-      
-      // Convert HTML to text while preserving structure
-      // Remove HTML tags but keep newlines for structure
-      let documentText = htmlWithPlaceholders
-        .replace(/<p[^>]*>/gi, '\n') // Paragraphs become newlines
-        .replace(/<\/p>/gi, '\n')
-        .replace(/<br[^>]*>/gi, '\n') // Line breaks
-        .replace(/<div[^>]*>/gi, '\n') // Divs become newlines
-        .replace(/<\/div>/gi, '\n')
-        .replace(/<h[1-6][^>]*>/gi, '\n\n') // Headings get extra space
-        .replace(/<\/h[1-6]>/gi, '\n\n')
-        .replace(/<[^>]+>/g, '') // Remove all other HTML tags
-        .replace(/&nbsp;/g, ' ') // HTML entities
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'");
-      
-      // Also get raw text for fallback if HTML extraction fails
-      const rawTextResult = await mammoth.extractRawText({ buffer });
-      const rawText = rawTextResult.value;
-      
-      // Use HTML-extracted text if we have image placeholders, otherwise use raw text
-      if (imageOrder.length > 0 && documentText.trim()) {
-        text = documentText;
-      } else {
-        text = rawText;
+      if (imageMatches.length > 0) {
+        // If images found in HTML, use their order
+        imageMatches.forEach((match, idx) => {
+          const imagePath = match[1] || '';
+          // Extract image name from path (e.g., "media/image1.png" -> "image1.png")
+          const imageName = imagePath.split('/').pop() || imagePath.split('\\').pop() || `image_${idx}`;
+          imageOrder.push({ index: idx, name: imageName });
+        });
+        
+        // Replace image tags in HTML with placeholders before converting to text
+        let htmlWithPlaceholders = html;
+        imageMatches.forEach((match, idx) => {
+          htmlWithPlaceholders = htmlWithPlaceholders.replace(
+            match[0],
+            `\n\n[תמונה ${idx + 1}]\n\n`
+          );
+        });
+        
+        // Convert HTML to text while preserving structure
+        let documentText = htmlWithPlaceholders
+          .replace(/<p[^>]*>/gi, '\n')
+          .replace(/<\/p>/gi, '\n')
+          .replace(/<br[^>]*>/gi, '\n')
+          .replace(/<div[^>]*>/gi, '\n')
+          .replace(/<\/div>/gi, '\n')
+          .replace(/<h[1-6][^>]*>/gi, '\n\n')
+          .replace(/<\/h[1-6]>/gi, '\n\n')
+          .replace(/<[^>]+>/g, '')
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'");
+        
+        // Use HTML text if it contains placeholders
+        if (documentText.includes('[תמונה')) {
+          text = documentText;
+        }
+      } else if (images.length > 0) {
+        // If no images in HTML but we have extracted images, add placeholders after each paragraph
+        // This is a fallback - we'll insert placeholders at logical break points
+        const paragraphs = text.split('\n\n');
+        const textWithPlaceholders: string[] = [];
+        
+        images.forEach((img, idx) => {
+          if (idx < paragraphs.length) {
+            textWithPlaceholders.push(paragraphs[idx]);
+            textWithPlaceholders.push(`\n\n[תמונה ${idx + 1}]\n\n`);
+          }
+          imageOrder.push({ index: idx, name: img.name });
+        });
+        
+        // Add remaining paragraphs
+        if (paragraphs.length > images.length) {
+          textWithPlaceholders.push(...paragraphs.slice(images.length));
+        }
+        
+        text = textWithPlaceholders.join('\n\n');
       }
       
-      // Convert images to base64 in the order they appear in the document
+      // Convert images to base64 in the order they appear
       const imageData = imageOrder.length > 0
         ? imageOrder.map(placeholder => {
             const img = imageMap.get(placeholder.name);
@@ -166,22 +184,34 @@ export async function POST(request: NextRequest) {
             }
             return null;
           }).filter((img): img is { data: string; mimeType: string; name: string } => img !== null)
-        : images.map(img => ({
+        : images.length > 0
+        ? images.map(img => ({
             data: img.data.toString('base64'),
             mimeType: img.mimeType,
             name: img.name
-          }));
+          }))
+        : [];
       
       // Normalize text (trim and consolidate excessive newlines, but preserve structure)
       text = text.trim().replace(/\n{4,}/g, '\n\n\n');
       
-      // If there are images, include them in the response
-      if (imageData.length > 0) {
+      // If there are images, always include them in the response
+      // Even if we couldn't find their exact position in HTML, we still send them
+      if (images.length > 0) {
+        // If imageData is empty but we have images, use all images
+        const finalImageData = imageData.length > 0 
+          ? imageData 
+          : images.map(img => ({
+              data: img.data.toString('base64'),
+              mimeType: img.mimeType,
+              name: img.name
+            }));
+        
         return NextResponse.json({ 
           text,
-          images: imageData,
+          images: finalImageData,
           hasImages: true,
-          imageOrder: imageOrder.map(p => p.name) // Include order information for client
+          imageOrder: imageOrder.length > 0 ? imageOrder.map(p => p.name) : images.map(img => img.name)
         });
       }
     } else if (fileName.endsWith('.txt')) {
