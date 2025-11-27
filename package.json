@@ -47,6 +47,7 @@
     "tesseract.js": "^5.0.4"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
     "@types/bcryptjs": "^2.4.6",
     "eslint": "^9",
     "eslint-config-next": "15.1.0",
