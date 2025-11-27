@@ -899,9 +899,10 @@ export default function LanguagesPage() {
               </div>
             </div>
           </section>
-          )}
+        )}
         </section>
         )}
+      </main>
     </DashboardPageWrapper>
   )
 }
