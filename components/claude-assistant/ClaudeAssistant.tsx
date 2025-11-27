@@ -119,6 +119,11 @@ export default function ClaudeAssistant() {
       return;
     }
 
+    const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|tiff|tif)$/i.test(file.name);
+    if (isImage) {
+      alert('מעבד תמונה... זה עלול לקחת כמה שניות.');
+    }
+
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -129,18 +134,25 @@ export default function ClaudeAssistant() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to process file');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Failed to process file');
       }
 
       const { text } = await response.json();
       
+      if (!text || text.trim().length === 0) {
+        alert('לא נמצא טקסט בקובץ. אם זו תמונה, ייתכן שהתמונה לא מכילה טקסט ברור.');
+        return;
+      }
+      
       // הוספת הטקסט להודעה הנוכחית
       setMessage((prev) => (prev ? `${prev}\n\n${text}` : text));
       
-      alert('הקובץ נקרא בהצלחה! הטקסט נוסף להודעה.');
+      alert(`הקובץ נקרא בהצלחה! נמצאו ${text.length} תווים. הטקסט נוסף להודעה.`);
     } catch (error) {
       console.error('Error reading file:', error);
-      alert('שגיאה בקריאת הקובץ');
+      const errorMessage = error instanceof Error ? error.message : 'שגיאה בקריאת הקובץ';
+      alert(`שגיאה בקריאת הקובץ: ${errorMessage}`);
     }
   };
 

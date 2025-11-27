@@ -12,12 +12,22 @@ async function getPdfParser() {
 }
 
 async function extractTextFromImage(imageBuffer: Buffer): Promise<string> {
-  const worker = await createWorker('heb+eng');
+  let worker;
   try {
+    console.log('Starting OCR worker...');
+    worker = await createWorker('heb+eng');
+    console.log('OCR worker created, recognizing text...');
     const { data: { text } } = await worker.recognize(imageBuffer);
-    return text;
+    console.log('OCR completed, extracted text length:', text.length);
+    return text || '';
+  } catch (error) {
+    console.error('OCR Error:', error);
+    throw new Error(`שגיאה בחילוץ טקסט מהתמונה: ${error instanceof Error ? error.message : 'Unknown error'}`);
   } finally {
-    await worker.terminate();
+    if (worker) {
+      await worker.terminate();
+      console.log('OCR worker terminated');
+    }
   }
 }
 
@@ -41,9 +51,12 @@ export async function POST(request: NextRequest) {
     const isImage = imageExtensions.some(ext => fileName.endsWith(ext));
 
     if (isImage) {
+      console.log('Processing image file:', fileName);
       const arrayBuffer = await file.arrayBuffer();
       const imageBuffer = Buffer.from(arrayBuffer);
+      console.log('Image buffer size:', imageBuffer.length);
       text = await extractTextFromImage(imageBuffer);
+      console.log('Extracted text from image:', text.substring(0, 100));
     } else if (fileName.endsWith('.docx')) {
       const arrayBuffer = await file.arrayBuffer();
       const result = await mammoth.extractRawText({ buffer: Buffer.from(arrayBuffer) });
@@ -67,8 +80,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ text });
   } catch (error) {
     console.error('Error processing file:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to process file';
     return NextResponse.json(
-      { error: 'Failed to process file' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
