@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Upload, Copy, Download, RotateCcw, FileText, Loader2 } from 'lucide-react';
+import { Upload, Copy, Download, RotateCcw, FileText, Loader2, ArrowLeftRight } from 'lucide-react';
 import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
 import { getPageTheme } from '@/lib/page-themes';
 
