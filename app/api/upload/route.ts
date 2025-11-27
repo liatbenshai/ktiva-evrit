@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mammoth from 'mammoth';
+import { createWorker } from 'tesseract.js';
 
 let cachedPdfParse: ((data: Buffer) => Promise<{ text: string }>) | null = null;
 async function getPdfParser() {
@@ -8,6 +9,16 @@ async function getPdfParser() {
     cachedPdfParse = (pdfModule.default ?? pdfModule) as (data: Buffer) => Promise<{ text: string }>;
   }
   return cachedPdfParse;
+}
+
+async function extractTextFromImage(imageBuffer: Buffer): Promise<string> {
+  const worker = await createWorker('heb+eng');
+  try {
+    const { data: { text } } = await worker.recognize(imageBuffer);
+    return text;
+  } finally {
+    await worker.terminate();
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -25,7 +36,15 @@ export async function POST(request: NextRequest) {
     const fileName = file.name.toLowerCase();
     let text = '';
 
-    if (fileName.endsWith('.docx')) {
+    // Check if it's an image file
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff', '.tif'];
+    const isImage = imageExtensions.some(ext => fileName.endsWith(ext));
+
+    if (isImage) {
+      const arrayBuffer = await file.arrayBuffer();
+      const imageBuffer = Buffer.from(arrayBuffer);
+      text = await extractTextFromImage(imageBuffer);
+    } else if (fileName.endsWith('.docx')) {
       const arrayBuffer = await file.arrayBuffer();
       const result = await mammoth.extractRawText({ buffer: Buffer.from(arrayBuffer) });
       text = result.value;
@@ -38,7 +57,7 @@ export async function POST(request: NextRequest) {
       text = pdfText;
     } else {
       return NextResponse.json(
-        { error: 'Unsupported file type. Please upload TXT, DOCX or PDF' },
+        { error: 'Unsupported file type. Please upload TXT, DOCX, PDF, or image files (JPG, PNG, etc.)' },
         { status: 400 }
       );
     }

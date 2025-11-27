@@ -26,8 +26,8 @@ export default function CreateScript() {
       return;
     }
 
-    if (!file.name.match(/\.(pdf|docx|txt)$/i)) {
-      alert('נא להעלות קובץ מסוג: PDF, DOCX או TXT');
+    if (!file.name.match(/\.(pdf|docx|txt|jpg|jpeg|png|gif|bmp|webp|tiff|tif)$/i)) {
+      alert('נא להעלות קובץ מסוג: PDF, DOCX, TXT או תמונה (JPG, PNG וכו\')');
       return;
     }
 
@@ -154,14 +154,14 @@ export default function CreateScript() {
                   className="inline-flex items-center gap-2 rounded-lg border border-indigo-300 px-3 py-1.5 text-sm font-medium text-indigo-700 transition hover:border-indigo-400 hover:bg-indigo-50"
                 >
                   <Upload className="h-4 w-4" />
-                  העלה קובץ (PDF / DOCX / TXT)
+                  העלה קובץ (PDF / DOCX / TXT / תמונות)
                 </button>
                 <span className="text-xs text-gray-500">הטקסט ייכנס לנושא התסריט</span>
               </div>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf,.docx,.txt"
+                accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.tif"
                 onChange={handleFileUpload}
                 className="hidden"
               />

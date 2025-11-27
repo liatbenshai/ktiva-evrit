@@ -114,8 +114,8 @@ export default function ClaudeAssistant() {
       return;
     }
 
-    if (!file.name.match(/\.(pdf|docx|txt)$/i)) {
-      alert('נא להעלות קובץ מסוג: PDF, DOCX או TXT');
+    if (!file.name.match(/\.(pdf|docx|txt|jpg|jpeg|png|gif|bmp|webp|tiff|tif)$/i)) {
+      alert('נא להעלות קובץ מסוג: PDF, DOCX, TXT או תמונה (JPG, PNG וכו\')');
       return;
     }
 
@@ -277,12 +277,12 @@ export default function ClaudeAssistant() {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf,.docx,.txt"
+          accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.tif"
           onChange={handleFileUpload}
           className="hidden"
         />
         <p className="text-xs text-gray-500 mt-2 text-right">
-          לחצי Enter לשליחה, Shift+Enter לשורה חדשה • ניתן להעלות קבצי PDF, DOCX או TXT
+          לחצי Enter לשליחה, Shift+Enter לשורה חדשה • ניתן להעלות קבצי PDF, DOCX, TXT או תמונות
         </p>
       </div>
     </div>
