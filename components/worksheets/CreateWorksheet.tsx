@@ -51,8 +51,8 @@ export default function CreateWorksheet() {
       return;
     }
 
-    if (!file.name.match(/\.(pdf|docx|txt)$/i)) {
-      alert('נא להעלות קובץ מסוג: PDF, DOCX או TXT');
+    if (!file.name.match(/\.(pdf|docx|txt|jpg|jpeg|png|gif|bmp|webp|tiff|tif)$/i)) {
+      alert('נא להעלות קובץ מסוג: PDF, DOCX, TXT או תמונה (JPG, PNG וכו\')');
       return;
     }
 
@@ -664,14 +664,14 @@ export default function CreateWorksheet() {
                 className="inline-flex items-center gap-2 rounded-lg border border-yellow-300 px-3 py-1.5 text-sm font-medium text-yellow-700 transition hover:border-yellow-400 hover:bg-yellow-50"
               >
                 <Upload className="h-4 w-4" />
-                העלי קובץ (PDF / DOCX / TXT)
+                העלי קובץ (PDF / DOCX / TXT / תמונות)
               </button>
               <span>נייבא את הטקסט לשדה ההוראות.</span>
             </div>
             <input
               ref={instructionFileInputRef}
               type="file"
-              accept=".pdf,.docx,.txt"
+              accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.tif"
               onChange={(event) => handleFileUpload(event, 'instruction')}
               className="hidden"
             />
@@ -699,14 +699,14 @@ export default function CreateWorksheet() {
                 className="inline-flex items-center gap-2 rounded-lg border border-yellow-300 px-3 py-1.5 text-sm font-medium text-yellow-700 transition hover:border-yellow-400 hover:bg-yellow-50"
               >
                 <Upload className="h-4 w-4" />
-                העלי קובץ (PDF / DOCX / TXT)
+                העלי קובץ (PDF / DOCX / TXT / תמונות)
               </button>
               <span>הטקסט ייכנס לשדה הסיפור.</span>
             </div>
             <input
               ref={storyFileInputRef}
               type="file"
-              accept=".pdf,.docx,.txt"
+              accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.tif"
               onChange={(event) => handleFileUpload(event, 'story')}
               className="hidden"
             />
