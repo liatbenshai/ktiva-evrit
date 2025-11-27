@@ -89,8 +89,9 @@ export async function extractTextFromImageClient(
     // Show progress for worker initialization
     if (onProgress) onProgress(0.1);
     
-    // Create worker with Hebrew and English languages
-    worker = await createWorker('heb+eng', 1, {
+    // Create worker with Hebrew, English, and Russian languages
+    // Using multiple languages for better recognition of mixed content
+    worker = await createWorker('heb+eng+rus', 1, {
       logger: (m: any) => {
         // Report progress if callback provided
         if (onProgress && m.status === 'recognizing text') {
@@ -99,7 +100,7 @@ export async function extractTextFromImageClient(
       },
     });
     
-    // Configure worker for better Hebrew recognition
+    // Configure worker for better multi-language recognition
     await worker.setParameters({
       tessedit_pageseg_mode: '1', // Automatic page segmentation
       tessedit_char_whitelist: '', // Allow all characters
