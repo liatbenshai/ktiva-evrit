@@ -31,6 +31,10 @@ async function extractTextFromImage(imageBuffer: Buffer): Promise<string> {
   }
 }
 
+// Configure route for longer timeout (Vercel Pro allows up to 60s, Hobby is 10s)
+export const maxDuration = 60;
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -43,6 +47,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check file size (Vercel has 4.5MB limit for Hobby, 50MB for Pro)
+    const maxSize = 4.5 * 1024 * 1024; // 4.5MB
+    if (file.size > maxSize) {
+      return NextResponse.json(
+        { error: `הקובץ גדול מדי (${(file.size / 1024 / 1024).toFixed(1)}MB). מקסימום: 4.5MB. נסי להקטין את התמונה או להשתמש בקובץ קטן יותר.` },
+        { status: 413 }
+      );
+    }
+
     const fileName = file.name.toLowerCase();
     let text = '';
 
@@ -51,7 +64,13 @@ export async function POST(request: NextRequest) {
     const isImage = imageExtensions.some(ext => fileName.endsWith(ext));
 
     if (isImage) {
-      console.log('Processing image file:', fileName);
+      console.log('Processing image file:', fileName, 'Size:', file.size, 'bytes');
+      
+      // For large images, warn that it might take time
+      if (file.size > 2 * 1024 * 1024) {
+        console.log('Large image detected, OCR may take longer...');
+      }
+      
       const arrayBuffer = await file.arrayBuffer();
       const imageBuffer = Buffer.from(arrayBuffer);
       console.log('Image buffer size:', imageBuffer.length);

@@ -119,9 +119,21 @@ export default function ClaudeAssistant() {
       return;
     }
 
+    // Check file size (4.5MB limit)
+    const maxSize = 4.5 * 1024 * 1024; // 4.5MB
+    if (file.size > maxSize) {
+      alert(`הקובץ גדול מדי (${(file.size / 1024 / 1024).toFixed(1)}MB). מקסימום: 4.5MB.\nנסי להקטין את התמונה או להשתמש בקובץ קטן יותר.`);
+      return;
+    }
+
     const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|tiff|tif)$/i.test(file.name);
     if (isImage) {
-      alert('מעבד תמונה... זה עלול לקחת כמה שניות.');
+      const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+      if (file.size > 2 * 1024 * 1024) {
+        alert(`מעבד תמונה גדולה (${sizeMB}MB)... זה עלול לקחת 30-60 שניות. אנא המתיני בסבלנות.`);
+      } else {
+        alert('מעבד תמונה... זה עלול לקחת כמה שניות.');
+      }
     }
 
     try {
