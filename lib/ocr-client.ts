@@ -20,8 +20,9 @@ async function preprocessImage(file: File | Blob): Promise<Blob> {
     
     img.onload = () => {
       try {
-        // Calculate optimal size (max 2000px on longest side for better OCR)
-        const maxDimension = 2000;
+        // Keep original dimensions for better structure preservation
+        // Only resize if image is extremely large (over 3000px) to avoid memory issues
+        const maxDimension = 3000;
         let width = img.width;
         let height = img.height;
         
@@ -31,18 +32,18 @@ async function preprocessImage(file: File | Blob): Promise<Blob> {
           height = Math.round(height * ratio);
         }
         
-        // Set canvas size
+        // Set canvas size to exact dimensions (no scaling artifacts)
         canvas.width = width;
         canvas.height = height;
         
-        // Use high-quality image rendering
+        // Use highest quality image rendering to preserve structure
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         
-        // Draw image with better quality
+        // Draw image with exact dimensions
         ctx.drawImage(img, 0, 0, width, height);
         
-        // Convert to blob with high quality
+        // Convert to blob with maximum quality to preserve structure
         canvas.toBlob(
           (blob) => {
             // Clean up object URL
@@ -55,7 +56,7 @@ async function preprocessImage(file: File | Blob): Promise<Blob> {
             }
           },
           'image/png',
-          0.95 // High quality
+          1.0 // Maximum quality to preserve structure
         );
       } catch (error) {
         URL.revokeObjectURL(url);
@@ -100,11 +101,16 @@ export async function extractTextFromImageClient(
       },
     });
     
-    // Configure worker for better multi-language recognition
+    // Configure worker for better structure preservation
+    // PSM mode 1: Automatic page segmentation - best for preserving structure in complex layouts
+    // This mode automatically detects text blocks, paragraphs, and line breaks
     await worker.setParameters({
-      tessedit_pageseg_mode: '1', // Automatic page segmentation
+      tessedit_pageseg_mode: '1', // Automatic page segmentation - preserves structure best
       tessedit_char_whitelist: '', // Allow all characters
-      preserve_interword_spaces: '1', // Preserve spaces
+      preserve_interword_spaces: '1', // Preserve spaces between words
+      tessedit_create_hocr: '0', // Don't create hOCR (we just want text)
+      tessedit_create_tsv: '0', // Don't create TSV
+      tessedit_create_pdf: '0', // Don't create PDF
     });
     
     if (onProgress) onProgress(0.2);
@@ -121,7 +127,7 @@ export async function extractTextFromImageClient(
       // Continue with original image if preprocessing fails
     }
     
-    // Perform OCR recognition
+    // Perform OCR recognition with structure preservation
     const { data } = await worker.recognize(imageToProcess);
     
     if (onProgress) onProgress(0.95);
@@ -131,12 +137,23 @@ export async function extractTextFromImageClient(
       // Blob will be garbage collected automatically
     }
     
-    const text = data.text || '';
+    let text = data.text || '';
+    
+    // Preserve structure: keep line breaks and paragraphs
+    // Only trim excessive whitespace at the edges, not internal structure
+    text = text.trim();
+    
+    // Preserve multiple newlines (paragraph breaks) but normalize excessive ones
+    // Keep double newlines (paragraph breaks) but reduce 3+ to 2
+    text = text.replace(/\n{3,}/g, '\n\n');
+    
+    // Preserve spaces between words (already handled by OCR parameter)
+    // Don't collapse multiple spaces within lines as they might be intentional
     
     if (onProgress) onProgress(1.0);
     
-    // Return text even if empty - let the caller decide what to do
-    return text.trim();
+    // Return text with preserved structure
+    return text;
   } catch (error) {
     console.error('OCR Error:', error);
     
@@ -209,7 +226,9 @@ export async function processImagesFromBase64(
       const text = await extractTextFromImageClient(blob, progressCallback);
       
       if (text && text.trim()) {
-        texts.push(`[תמונה ${i + 1}: ${img.name}]\n${text.trim()}`);
+        // Preserve the structure of the extracted text
+        // Add image label but keep the original text structure intact
+        texts.push(`[תמונה ${i + 1}: ${img.name}]\n${text}`);
       } else {
         errors.push(`תמונה ${i + 1} (${img.name}): לא נמצא טקסט`);
       }
@@ -230,6 +249,8 @@ export async function processImagesFromBase64(
     throw new Error(`כל התמונות נכשלו בעיבוד:\n${errors.join('\n')}`);
   }
   
+  // Join texts with double newline to preserve structure between images
+  // This maintains paragraph breaks and structure from each image
   return texts.join('\n\n');
 }
 
