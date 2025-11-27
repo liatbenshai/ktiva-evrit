@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Loader2, Send, Trash2, Copy, Check, Upload } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { extractTextFromImageClient } from '@/lib/ocr-client';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -127,30 +128,38 @@ export default function ClaudeAssistant() {
     }
 
     const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|tiff|tif)$/i.test(file.name);
-    if (isImage) {
-      const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-      if (file.size > 2 * 1024 * 1024) {
-        alert(`מעבד תמונה גדולה (${sizeMB}MB)... זה עלול לקחת 30-60 שניות. אנא המתיני בסבלנות.`);
-      } else {
-        alert('מעבד תמונה... זה עלול לקחת כמה שניות.');
-      }
-    }
-
+    
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      let text = '';
+      
+      if (isImage) {
+        // Process images on client side with OCR
+        const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+        if (file.size > 2 * 1024 * 1024) {
+          alert(`מעבד תמונה גדולה (${sizeMB}MB)... זה עלול לקחת 30-60 שניות. אנא המתיני בסבלנות.`);
+        } else {
+          alert('מעבד תמונה... זה עלול לקחת כמה שניות.');
+        }
+        
+        text = await extractTextFromImageClient(file);
+      } else {
+        // Process other files on server
+        const formData = new FormData();
+        formData.append('file', file);
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || 'Failed to process file');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || 'Failed to process file');
+        }
+
+        const result = await response.json();
+        text = result.text;
       }
-
-      const { text } = await response.json();
       
       if (!text || text.trim().length === 0) {
         alert('לא נמצא טקסט בקובץ. אם זו תמונה, ייתכן שהתמונה לא מכילה טקסט ברור.');

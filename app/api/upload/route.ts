@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mammoth from 'mammoth';
-import { createWorker } from 'tesseract.js';
 
 let cachedPdfParse: ((data: Buffer) => Promise<{ text: string }>) | null = null;
 async function getPdfParser() {
@@ -10,30 +9,6 @@ async function getPdfParser() {
   }
   return cachedPdfParse;
 }
-
-async function extractTextFromImage(imageBuffer: Buffer): Promise<string> {
-  let worker;
-  try {
-    console.log('Starting OCR worker...');
-    worker = await createWorker('heb+eng');
-    console.log('OCR worker created, recognizing text...');
-    const { data: { text } } = await worker.recognize(imageBuffer);
-    console.log('OCR completed, extracted text length:', text.length);
-    return text || '';
-  } catch (error) {
-    console.error('OCR Error:', error);
-    throw new Error(`שגיאה בחילוץ טקסט מהתמונה: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  } finally {
-    if (worker) {
-      await worker.terminate();
-      console.log('OCR worker terminated');
-    }
-  }
-}
-
-// Configure route for longer timeout (Vercel Pro allows up to 60s, Hobby is 10s)
-export const maxDuration = 60;
-export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,23 +34,16 @@ export async function POST(request: NextRequest) {
     const fileName = file.name.toLowerCase();
     let text = '';
 
-    // Check if it's an image file
+    // Check if it's an image file - images should be processed on client side
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff', '.tif'];
     const isImage = imageExtensions.some(ext => fileName.endsWith(ext));
 
     if (isImage) {
-      console.log('Processing image file:', fileName, 'Size:', file.size, 'bytes');
-      
-      // For large images, warn that it might take time
-      if (file.size > 2 * 1024 * 1024) {
-        console.log('Large image detected, OCR may take longer...');
-      }
-      
-      const arrayBuffer = await file.arrayBuffer();
-      const imageBuffer = Buffer.from(arrayBuffer);
-      console.log('Image buffer size:', imageBuffer.length);
-      text = await extractTextFromImage(imageBuffer);
-      console.log('Extracted text from image:', text.substring(0, 100));
+      // Images should be processed on client side to avoid timeout issues
+      return NextResponse.json(
+        { error: 'תמונות מעובדות בצד הלקוח. אנא השתמשי בפונקציית העלאת התמונה בקומפוננטה.' },
+        { status: 400 }
+      );
     } else if (fileName.endsWith('.docx')) {
       const arrayBuffer = await file.arrayBuffer();
       const result = await mammoth.extractRawText({ buffer: Buffer.from(arrayBuffer) });

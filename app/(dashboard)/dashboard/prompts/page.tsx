@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { Loader2, Languages, Copy, Check, RotateCcw, Edit2, Save, X, Upload } from 'lucide-react';
 import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
 import { getPageTheme } from '@/lib/page-themes';
+import { extractTextFromImageClient } from '@/lib/ocr-client';
 
 export default function TranslatePage() {
   const [text, setText] = useState('');
@@ -49,20 +50,31 @@ export default function TranslatePage() {
       return;
     }
 
+    const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|tiff|tif)$/i.test(file.name);
+
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      let text = '';
+      
+      if (isImage) {
+        alert('מעבד תמונה... זה עלול לקחת כמה שניות.');
+        text = await extractTextFromImageClient(file);
+      } else {
+        const formData = new FormData();
+        formData.append('file', file);
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to process file');
+        if (!response.ok) {
+          throw new Error('Failed to process file');
+        }
+
+        const result = await response.json();
+        text = result.text;
       }
 
-      const { text } = await response.json();
       setText(text);
       alert('הקובץ נקרא בהצלחה! הטקסט הועתק לשדה התרגום.');
     } catch (error) {

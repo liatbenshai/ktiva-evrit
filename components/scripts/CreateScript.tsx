@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Film, Loader2, RefreshCw, Upload } from 'lucide-react';
+import { extractTextFromImageClient } from '@/lib/ocr-client';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
@@ -31,20 +32,31 @@ export default function CreateScript() {
       return;
     }
 
+    const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|tiff|tif)$/i.test(file.name);
+
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      let text = '';
+      
+      if (isImage) {
+        alert('מעבד תמונה... זה עלול לקחת כמה שניות.');
+        text = await extractTextFromImageClient(file);
+      } else {
+        const formData = new FormData();
+        formData.append('file', file);
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to process file');
+        if (!response.ok) {
+          throw new Error('Failed to process file');
+        }
+
+        const result = await response.json();
+        text = result.text;
       }
 
-      const { text } = await response.json();
       setTopic((prev) => (prev ? `${prev}\n\n${text}` : text));
       alert('הקובץ נקרא בהצלחה! הטקסט נוסף לנושא התסריט.');
     } catch (error) {

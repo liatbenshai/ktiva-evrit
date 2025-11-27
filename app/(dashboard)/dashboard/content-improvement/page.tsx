@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Sparkles, Copy, Check, Loader2, Edit2, X, Languages, ChevronDown, ChevronUp, Upload } from 'lucide-react';
+import { extractTextFromImageClient } from '@/lib/ocr-client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
@@ -94,20 +95,31 @@ export default function ContentImprovementPage() {
       return;
     }
 
+    const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|tiff|tif)$/i.test(file.name);
+
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      let text = '';
+      
+      if (isImage) {
+        alert('מעבד תמונה... זה עלול לקחת כמה שניות.');
+        text = await extractTextFromImageClient(file);
+      } else {
+        const formData = new FormData();
+        formData.append('file', file);
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to process file');
+        if (!response.ok) {
+          throw new Error('Failed to process file');
+        }
+
+        const result = await response.json();
+        text = result.text;
       }
 
-      const { text } = await response.json();
       setText(text);
       alert('הקובץ נקרא בהצלחה! הטקסט הועתק לשדה התוכן.');
     } catch (error) {
