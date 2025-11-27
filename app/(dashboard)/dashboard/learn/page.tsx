@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import Link from 'next/link'
 import { RefreshCw, CheckCircle, XCircle, Edit3, DatabaseZap } from 'lucide-react'
 import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
 import { getPageTheme } from '@/lib/page-themes';
