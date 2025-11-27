@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Loader2, Send, Trash2, Copy, Check, Upload, Download, FileText } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { extractTextFromImageClient, processImagesFromBase64 } from '@/lib/ocr-client';
+import { extractTextFromImageClient, processImagesFromBase64Legacy } from '@/lib/ocr-client';
 import { exportToTXT, exportToWord, exportToPDF } from '@/lib/export-utils';
 
 interface Message {
@@ -179,35 +179,14 @@ export default function ClaudeAssistant() {
         const result = await response.json();
         text = result.text;
         
-        // If the document contains images, process them with OCR and replace placeholders
+        // If the document contains images, process them with OCR
         if (result.hasImages && result.images && result.images.length > 0) {
           alert(`נמצאו ${result.images.length} תמונות במסמך. מעבד תמונות... זה עלול לקחת זמן.`);
           try {
-            const imageResults = await processImagesFromBase64(result.images);
-            
-            // Replace image placeholders in the text with OCR results
-            // Placeholders are in format: [תמונה 1], [תמונה 2], etc.
-            imageResults.forEach((result, idx) => {
-              const placeholder = `[תמונה ${idx + 1}]`;
-              // Use replace with regex to replace all occurrences (though there should be only one)
-              const placeholderRegex = new RegExp(`\\[תמונה ${idx + 1}\\]`, 'g');
-              if (text.includes(placeholder)) {
-                if (result.text && result.text.trim()) {
-                  // Replace placeholder with OCR text, preserving structure
-                  text = text.replace(placeholderRegex, result.text);
-                } else {
-                  // If OCR failed, replace with error message
-                  const errorMsg = result.error || 'לא נמצא טקסט';
-                  text = text.replace(placeholderRegex, `[שגיאה בעיבוד תמונה: ${errorMsg}]`);
-                }
-              }
-            });
-            
-            // If there are any remaining placeholders (shouldn't happen, but just in case)
-            // or if images were processed but placeholders weren't found, append them
-            const remainingPlaceholders = text.match(/\[תמונה \d+\]/g);
-            if (remainingPlaceholders && remainingPlaceholders.length > 0) {
-              console.warn('Some image placeholders were not replaced:', remainingPlaceholders);
+            const imagesText = await processImagesFromBase64Legacy(result.images);
+            if (imagesText && imagesText.trim()) {
+              // Add OCR text from images after the document text
+              text = text ? `${text}\n\n${imagesText}` : imagesText;
             }
           } catch (error) {
             console.error('Error processing images from DOCX:', error);
