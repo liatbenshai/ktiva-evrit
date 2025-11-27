@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Film, Loader2, RefreshCw, Upload } from 'lucide-react';
-import { extractTextFromImageClient } from '@/lib/ocr-client';
+import { Film, Loader2, RefreshCw, Upload, Download, FileText } from 'lucide-react';
+import { extractTextFromImageClient, processImagesFromBase64 } from '@/lib/ocr-client';
+import { exportToTXT, exportToWord, exportToPDF } from '@/lib/export-utils';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
@@ -55,6 +56,20 @@ export default function CreateScript() {
 
         const result = await response.json();
         text = result.text;
+        
+        // If the document contains images, process them with OCR
+        if (result.hasImages && result.images && result.images.length > 0) {
+          alert(`נמצאו ${result.images.length} תמונות במסמך. מעבד תמונות... זה עלול לקחת זמן.`);
+          try {
+            const imagesText = await processImagesFromBase64(result.images);
+            if (imagesText && imagesText.trim()) {
+              text = text ? `${text}\n\n${imagesText}` : imagesText;
+            }
+          } catch (error) {
+            console.error('Error processing images from DOCX:', error);
+            // Continue with text even if image processing fails
+          }
+        }
       }
 
       setTopic((prev) => (prev ? `${prev}\n\n${text}` : text));
@@ -88,6 +103,24 @@ export default function CreateScript() {
       setResult((prev) => applyPatternToText(prev, pattern));
     },
   });
+
+  const handleExport = async (text: string, format: 'txt' | 'docx' | 'pdf') => {
+    try {
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `script-${timestamp}`;
+      
+      if (format === 'txt') {
+        exportToTXT(text, filename);
+      } else if (format === 'docx') {
+        await exportToWord(text, filename);
+      } else if (format === 'pdf') {
+        await exportToPDF(text, filename);
+      }
+    } catch (error) {
+      console.error('Error exporting:', error);
+      alert(`שגיאה בייצוא: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
@@ -284,8 +317,36 @@ export default function CreateScript() {
                 <h3 className="text-xl font-semibold text-slate-900">התסריט שנוצר</h3>
                 <p className="text-sm text-slate-500">אפשר לערוך כאן ישירות – כל שינוי ישפיע על הטקסט שבו נטפל בהמשך.</p>
               </div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" /> טיול בזמן אמת
+              <div className="flex items-center gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" /> טיול בזמן אמת
+                </div>
+                <div className="flex items-center gap-1 border border-slate-200 rounded-lg px-2 py-1 bg-white">
+                  <button
+                    onClick={() => handleExport(result, 'txt')}
+                    className="flex items-center gap-1 text-xs text-slate-600 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-slate-50"
+                    title="ייצא ל-TXT"
+                  >
+                    <FileText className="w-3 h-3" />
+                    TXT
+                  </button>
+                  <button
+                    onClick={() => handleExport(result, 'docx')}
+                    className="flex items-center gap-1 text-xs text-slate-600 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-slate-50"
+                    title="ייצא ל-Word"
+                  >
+                    <FileText className="w-3 h-3" />
+                    DOCX
+                  </button>
+                  <button
+                    onClick={() => handleExport(result, 'pdf')}
+                    className="flex items-center gap-1 text-xs text-slate-600 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-slate-50"
+                    title="ייצא ל-PDF"
+                  >
+                    <Download className="w-3 h-3" />
+                    PDF
+                  </button>
+                </div>
               </div>
             </div>
 

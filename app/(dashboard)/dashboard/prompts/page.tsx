@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { Loader2, Languages, Copy, Check, RotateCcw, Edit2, Save, X, Upload } from 'lucide-react';
 import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
 import { getPageTheme } from '@/lib/page-themes';
-import { extractTextFromImageClient } from '@/lib/ocr-client';
+import { extractTextFromImageClient, processImagesFromBase64 } from '@/lib/ocr-client';
 
 export default function TranslatePage() {
   const [text, setText] = useState('');
@@ -73,6 +73,20 @@ export default function TranslatePage() {
 
         const result = await response.json();
         text = result.text;
+        
+        // If the document contains images, process them with OCR
+        if (result.hasImages && result.images && result.images.length > 0) {
+          alert(`נמצאו ${result.images.length} תמונות במסמך. מעבד תמונות... זה עלול לקחת זמן.`);
+          try {
+            const imagesText = await processImagesFromBase64(result.images);
+            if (imagesText && imagesText.trim()) {
+              text = text ? `${text}\n\n${imagesText}` : imagesText;
+            }
+          } catch (error) {
+            console.error('Error processing images from DOCX:', error);
+            // Continue with text even if image processing fails
+          }
+        }
       }
 
       setText(text);

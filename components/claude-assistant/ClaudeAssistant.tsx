@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Send, Trash2, Copy, Check, Upload } from 'lucide-react';
+import { Loader2, Send, Trash2, Copy, Check, Upload, Download, FileText } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { extractTextFromImageClient } from '@/lib/ocr-client';
+import { extractTextFromImageClient, processImagesFromBase64 } from '@/lib/ocr-client';
+import { exportToTXT, exportToWord, exportToPDF } from '@/lib/export-utils';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -107,6 +108,24 @@ export default function ClaudeAssistant() {
     }
   };
 
+  const handleExport = async (text: string, format: 'txt' | 'docx' | 'pdf') => {
+    try {
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `claude-assistant-${timestamp}`;
+      
+      if (format === 'txt') {
+        exportToTXT(text, filename);
+      } else if (format === 'docx') {
+        await exportToWord(text, filename);
+      } else if (format === 'pdf') {
+        await exportToPDF(text, filename);
+      }
+    } catch (error) {
+      console.error('Error exporting:', error);
+      alert(`שגיאה בייצוא: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -159,6 +178,22 @@ export default function ClaudeAssistant() {
 
         const result = await response.json();
         text = result.text;
+        
+        // If the document contains images, process them with OCR
+        if (result.hasImages && result.images && result.images.length > 0) {
+          alert(`נמצאו ${result.images.length} תמונות במסמך. מעבד תמונות... זה עלול לקחת זמן.`);
+          try {
+            const imagesText = await processImagesFromBase64(result.images);
+            if (imagesText && imagesText.trim()) {
+              text = text ? `${text}\n\n${imagesText}` : imagesText;
+            }
+          } catch (error) {
+            console.error('Error processing images from DOCX:', error);
+            const errorMsg = error instanceof Error ? error.message : 'שגיאה לא ידועה';
+            alert(`שגיאה בעיבוד תמונות מהמסמך: ${errorMsg}\nהטקסט מהמסמך נוסף, אך התמונות לא עובדו.`);
+            // Continue with text even if image processing fails
+          }
+        }
       }
       
       if (!text || text.trim().length === 0) {
@@ -173,7 +208,18 @@ export default function ClaudeAssistant() {
     } catch (error) {
       console.error('Error reading file:', error);
       const errorMessage = error instanceof Error ? error.message : 'שגיאה בקריאת הקובץ';
-      alert(`שגיאה בקריאת הקובץ: ${errorMessage}`);
+      
+      // Provide more helpful error messages
+      let userMessage = errorMessage;
+      if (errorMessage.includes('רשת')) {
+        userMessage = 'שגיאת חיבור לאינטרנט. בדקי את החיבור ונסי שוב.';
+      } else if (errorMessage.includes('מודל')) {
+        userMessage = 'שגיאה בטעינת מודל OCR. נסי לרענן את הדף.';
+      } else if (errorMessage.includes('לא נמצא טקסט')) {
+        userMessage = 'לא נמצא טקסט בתמונה. ודאי שהתמונה מכילה טקסט ברור ונסי שוב.';
+      }
+      
+      alert(`שגיאה בקריאת הקובץ: ${userMessage}`);
     }
   };
 
@@ -228,22 +274,50 @@ export default function ClaudeAssistant() {
             >
               <div className="whitespace-pre-wrap break-words">{msg.content}</div>
               {msg.role === 'assistant' && (
-                <button
-                  onClick={() => handleCopy(msg.content, index)}
-                  className="mt-2 flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  {copiedIndex === index ? (
-                    <>
-                      <Check className="w-3 h-3" />
-                      הועתק!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3" />
-                      העתק
-                    </>
-                  )}
-                </button>
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={() => handleCopy(msg.content, index)}
+                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    {copiedIndex === index ? (
+                      <>
+                        <Check className="w-3 h-3" />
+                        הועתק!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        העתק
+                      </>
+                    )}
+                  </button>
+                  <div className="flex items-center gap-1 border-l border-gray-300 pl-2">
+                    <button
+                      onClick={() => handleExport(msg.content, 'txt')}
+                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                      title="ייצא ל-TXT"
+                    >
+                      <FileText className="w-3 h-3" />
+                      TXT
+                    </button>
+                    <button
+                      onClick={() => handleExport(msg.content, 'docx')}
+                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                      title="ייצא ל-Word"
+                    >
+                      <FileText className="w-3 h-3" />
+                      DOCX
+                    </button>
+                    <button
+                      onClick={() => handleExport(msg.content, 'pdf')}
+                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                      title="ייצא ל-PDF"
+                    >
+                      <Download className="w-3 h-3" />
+                      PDF
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -271,6 +345,36 @@ export default function ClaudeAssistant() {
 
       {/* אזור הקלט */}
       <div className="border-t border-gray-200 bg-white p-4">
+        {message.trim() && (
+          <div className="mb-2 flex items-center gap-2 justify-end">
+            <div className="flex items-center gap-1 border border-gray-200 rounded-lg px-2 py-1 bg-gray-50">
+              <button
+                onClick={() => handleExport(message, 'txt')}
+                className="flex items-center gap-1 text-xs text-gray-600 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-white"
+                title="ייצא ל-TXT"
+              >
+                <FileText className="w-3 h-3" />
+                TXT
+              </button>
+              <button
+                onClick={() => handleExport(message, 'docx')}
+                className="flex items-center gap-1 text-xs text-gray-600 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-white"
+                title="ייצא ל-Word"
+              >
+                <FileText className="w-3 h-3" />
+                DOCX
+              </button>
+              <button
+                onClick={() => handleExport(message, 'pdf')}
+                className="flex items-center gap-1 text-xs text-gray-600 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-white"
+                title="ייצא ל-PDF"
+              >
+                <Download className="w-3 h-3" />
+                PDF
+              </button>
+            </div>
+          </div>
+        )}
         <div className="flex gap-3 items-end">
           <textarea
             ref={textareaRef}

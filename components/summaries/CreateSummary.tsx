@@ -7,6 +7,7 @@ import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
 import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
+import { processImagesFromBase64 } from '@/lib/ocr-client';
 
 type InputMode = 'text' | 'file';
 
@@ -67,7 +68,22 @@ export default function CreateSummary() {
       }
 
       const result = await response.json();
-      const { text: extractedText } = result;
+      let extractedText = result.text;
+      
+      // If the document contains images, process them with OCR
+      if (result.hasImages && result.images && result.images.length > 0) {
+        alert(`נמצאו ${result.images.length} תמונות במסמך. מעבד תמונות... זה עלול לקחת זמן.`);
+        try {
+          const imagesText = await processImagesFromBase64(result.images);
+          if (imagesText && imagesText.trim()) {
+            extractedText = extractedText ? `${extractedText}\n\n${imagesText}` : imagesText;
+          }
+        } catch (error) {
+          console.error('Error processing images from DOCX:', error);
+          // Continue with text even if image processing fails
+        }
+      }
+      
       setText(extractedText);
       alert('הקובץ נקרא בהצלחה!');
     } catch (error) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mammoth from 'mammoth';
+import AdmZip from 'adm-zip';
 
 let cachedPdfParse: ((data: Buffer) => Promise<{ text: string }>) | null = null;
 async function getPdfParser() {
@@ -8,6 +9,45 @@ async function getPdfParser() {
     cachedPdfParse = (pdfModule.default ?? pdfModule) as (data: Buffer) => Promise<{ text: string }>;
   }
   return cachedPdfParse;
+}
+
+/**
+ * Extract images from DOCX file
+ * DOCX files are ZIP archives, images are stored in word/media/
+ */
+function extractImagesFromDocx(buffer: Buffer): Array<{ data: Buffer; name: string; mimeType: string }> {
+  const images: Array<{ data: Buffer; name: string; mimeType: string }> = [];
+  try {
+    const zip = new AdmZip(buffer);
+    const zipEntries = zip.getEntries();
+    
+    for (const entry of zipEntries) {
+      // Images in DOCX are stored in word/media/
+      if (entry.entryName.startsWith('word/media/') && !entry.isDirectory) {
+        const entryData = entry.getData();
+        const fileName = entry.entryName.split('/').pop() || '';
+        const extension = fileName.split('.').pop()?.toLowerCase() || '';
+        
+        // Determine MIME type
+        let mimeType = 'image/png';
+        if (extension === 'jpg' || extension === 'jpeg') mimeType = 'image/jpeg';
+        else if (extension === 'png') mimeType = 'image/png';
+        else if (extension === 'gif') mimeType = 'image/gif';
+        else if (extension === 'bmp') mimeType = 'image/bmp';
+        else if (extension === 'webp') mimeType = 'image/webp';
+        
+        images.push({
+          data: entryData,
+          name: fileName,
+          mimeType
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error extracting images from DOCX:', error);
+  }
+  
+  return images;
 }
 
 export async function POST(request: NextRequest) {
@@ -46,8 +86,30 @@ export async function POST(request: NextRequest) {
       );
     } else if (fileName.endsWith('.docx')) {
       const arrayBuffer = await file.arrayBuffer();
-      const result = await mammoth.extractRawText({ buffer: Buffer.from(arrayBuffer) });
+      const buffer = Buffer.from(arrayBuffer);
+      
+      // Extract text from document
+      const result = await mammoth.extractRawText({ buffer });
       text = result.value;
+      
+      // Extract images from document
+      const images = extractImagesFromDocx(buffer);
+      
+      // Convert images to base64 for client-side OCR processing
+      const imageData = images.map(img => ({
+        data: img.data.toString('base64'),
+        mimeType: img.mimeType,
+        name: img.name
+      }));
+      
+      // If there are images, include them in the response
+      if (imageData.length > 0) {
+        return NextResponse.json({ 
+          text,
+          images: imageData,
+          hasImages: true
+        });
+      }
     } else if (fileName.endsWith('.txt')) {
       text = await file.text();
     } else if (fileName.endsWith('.pdf')) {

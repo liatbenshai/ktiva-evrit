@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { FileText, Users, ListChecks, Loader2, Upload } from 'lucide-react';
-import { extractTextFromImageClient } from '@/lib/ocr-client';
+import { extractTextFromImageClient, processImagesFromBase64 } from '@/lib/ocr-client';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import { SynonymButton } from '@/components/SynonymButton';
 import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
@@ -54,13 +54,38 @@ export default function CreateProtocol() {
 
         const result = await response.json();
         text = result.text;
+        
+        // If the document contains images, process them with OCR
+        if (result.hasImages && result.images && result.images.length > 0) {
+          alert(`נמצאו ${result.images.length} תמונות במסמך. מעבד תמונות... זה עלול לקחת זמן.`);
+          try {
+            const imagesText = await processImagesFromBase64(result.images);
+            if (imagesText && imagesText.trim()) {
+              text = text ? `${text}\n\n${imagesText}` : imagesText;
+            }
+          } catch (error) {
+            console.error('Error processing images from DOCX:', error);
+            const errorMsg = error instanceof Error ? error.message : 'שגיאה לא ידועה';
+            alert(`שגיאה בעיבוד תמונות מהמסמך: ${errorMsg}\nהטקסט מהמסמך נוסף, אך התמונות לא עובדו.`);
+            // Continue with text even if image processing fails
+          }
+        }
       }
 
       setTranscript(text);
       alert('הקובץ נקרא בהצלחה! הטקסט הועתק לשדה התמלול.');
     } catch (error) {
       console.error('Error reading file:', error);
-      alert('שגיאה בקריאת הקובץ');
+      const errorMessage = error instanceof Error ? error.message : 'שגיאה בקריאת הקובץ';
+      let userMessage = errorMessage;
+      if (errorMessage.includes('רשת')) {
+        userMessage = 'שגיאת חיבור לאינטרנט. בדקי את החיבור ונסי שוב.';
+      } else if (errorMessage.includes('מודל')) {
+        userMessage = 'שגיאה בטעינת מודל OCR. נסי לרענן את הדף.';
+      } else if (errorMessage.includes('לא נמצא טקסט')) {
+        userMessage = 'לא נמצא טקסט בתמונה. ודאי שהתמונה מכילה טקסט ברור ונסי שוב.';
+      }
+      alert(`שגיאה בקריאת הקובץ: ${userMessage}`);
     }
   };
 
