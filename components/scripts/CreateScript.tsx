@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Film, Loader2, RefreshCw } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Film, Loader2, RefreshCw, Upload } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
@@ -16,6 +16,42 @@ export default function CreateScript() {
   const [additionalInstructions, setAdditionalInstructions] = useState('');
   const [result, setResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.name.match(/\.(pdf|docx|txt)$/i)) {
+      alert('נא להעלות קובץ מסוג: PDF, DOCX או TXT');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process file');
+      }
+
+      const { text } = await response.json();
+      setTopic((prev) => (prev ? `${prev}\n\n${text}` : text));
+      alert('הקובץ נקרא בהצלחה! הטקסט נוסף לנושא התסריט.');
+    } catch (error) {
+      console.error('Error reading file:', error);
+      alert('שגיאה בקריאת הקובץ');
+    }
+  };
 
   const applyPatternToText = (text: string, pattern: SavedPatternInfo) => {
     if (!text) return text;
@@ -110,6 +146,24 @@ export default function CreateScript() {
                 placeholder='לדוגמה: "הקלדה עיוורת - מיקום האצבעות", "שורת הבית והאותיות הבסיסיות", "טכניקות להגברת מהירות"...'
                 rows={3}
                 className="w-full rounded-2xl border border-indigo-100 bg-white/80 px-4 py-3 text-sm text-slate-800 shadow-sm focus:border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              />
+              <div className="mt-2 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-2 rounded-lg border border-indigo-300 px-3 py-1.5 text-sm font-medium text-indigo-700 transition hover:border-indigo-400 hover:bg-indigo-50"
+                >
+                  <Upload className="h-4 w-4" />
+                  העלה קובץ (PDF / DOCX / TXT)
+                </button>
+                <span className="text-xs text-gray-500">הטקסט ייכנס לנושא התסריט</span>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx,.txt"
+                onChange={handleFileUpload}
+                className="hidden"
               />
             </div>
 

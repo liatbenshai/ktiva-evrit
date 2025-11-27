@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Loader2, Wand2 } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Loader2, Wand2, Upload } from 'lucide-react';
 import ArticleEditor from './ArticleEditor';
 
 export default function CreateArticle() {
@@ -11,6 +11,42 @@ export default function CreateArticle() {
   const [additionalInstructions, setAdditionalInstructions] = useState('');
   const [generatedContent, setGeneratedContent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.name.match(/\.(pdf|docx|txt)$/i)) {
+      alert('נא להעלות קובץ מסוג: PDF, DOCX או TXT');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process file');
+      }
+
+      const { text } = await response.json();
+      setAdditionalInstructions((prev) => (prev ? `${prev}\n\n${text}` : text));
+      alert('הקובץ נקרא בהצלחה! הטקסט נוסף להנחיות הנוספות.');
+    } catch (error) {
+      console.error('Error reading file:', error);
+      alert('שגיאה בקריאת הקובץ');
+    }
+  };
 
   const handleGenerate = async () => {
     if (!title.trim() || !keywords.trim()) {
@@ -148,6 +184,24 @@ export default function CreateArticle() {
             rows={3}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             dir="rtl"
+          />
+          <div className="mt-2 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-lg border border-blue-300 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:border-blue-400 hover:bg-blue-50"
+            >
+              <Upload className="h-4 w-4" />
+              העלה קובץ (PDF / DOCX / TXT)
+            </button>
+            <span className="text-xs text-gray-500">הטקסט ייכנס להנחיות הנוספות</span>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.docx,.txt"
+            onChange={handleFileUpload}
+            className="hidden"
           />
         </div>
 

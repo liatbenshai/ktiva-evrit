@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Send, Trash2, Copy, Check } from 'lucide-react';
+import { Loader2, Send, Trash2, Copy, Check, Upload } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 interface Message {
@@ -18,6 +18,7 @@ export default function ClaudeAssistant() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const userId = session?.user?.email || 'default-user';
 
@@ -102,6 +103,44 @@ export default function ClaudeAssistant() {
       setTimeout(() => setCopiedIndex(null), 2000);
     } catch (error) {
       console.error('Failed to copy:', error);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.name.match(/\.(pdf|docx|txt)$/i)) {
+      alert('נא להעלות קובץ מסוג: PDF, DOCX או TXT');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process file');
+      }
+
+      const { text } = await response.json();
+      
+      // הוספת הטקסט להודעה הנוכחית
+      setMessage((prev) => (prev ? `${prev}\n\n${text}` : text));
+      
+      alert('הקובץ נקרא בהצלחה! הטקסט נוסף להודעה.');
+    } catch (error) {
+      console.error('Error reading file:', error);
+      alert('שגיאה בקריאת הקובץ');
     }
   };
 
@@ -212,6 +251,15 @@ export default function ClaudeAssistant() {
             disabled={isLoading}
           />
           <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isLoading}
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed transition-all"
+            title="העלה קובץ"
+          >
+            <Upload className="w-5 h-5" />
+          </button>
+          <button
             onClick={handleSend}
             disabled={!message.trim() || isLoading}
             className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
@@ -226,8 +274,15 @@ export default function ClaudeAssistant() {
             )}
           </button>
         </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.docx,.txt"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
         <p className="text-xs text-gray-500 mt-2 text-right">
-          לחצי Enter לשליחה, Shift+Enter לשורה חדשה
+          לחצי Enter לשליחה, Shift+Enter לשורה חדשה • ניתן להעלות קבצי PDF, DOCX או TXT
         </p>
       </div>
     </div>
