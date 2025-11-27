@@ -102,6 +102,9 @@ export async function POST(request: NextRequest) {
         name: img.name
       }));
       
+      // Normalize text (trim and consolidate excessive newlines)
+      text = text.trim().replace(/\n{3,}/g, '\n\n');
+      
       // If there are images, include them in the response
       if (imageData.length > 0) {
         return NextResponse.json({ 
