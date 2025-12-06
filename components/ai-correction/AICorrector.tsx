@@ -1,164 +1,101 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Edit2, Save, X, Copy, Check, Loader2, Languages, ChevronDown, ChevronUp, BookOpen, ThumbsUp, ThumbsDown, RotateCcw } from 'lucide-react';
-import AIChatBot from './AIChatBot';
+import { Edit2, Save, X, Copy, Check, Loader2, Languages, ChevronDown, ChevronUp } from 'lucide-react';
 
-interface TranslationIssue {
-  type: string;
-  original: string;
-  suggestion: string;
-  confidence: number;
-  explanation: string;
-  startIndex: number;
-  endIndex: number;
-}
+// Import types
+import {
+  TranslationIssue,
+  AnalysisResult,
+  Suggestion,
+  Alternative,
+  AppliedPattern,
+  SuggestedPattern,
+  Stats,
+  BatchResults,
+  RevisionLevel,
+  ContentStyle,
+  IssueStatus,
+} from './types';
 
-interface AnalysisResult {
-  issues: TranslationIssue[];
-  score: number;
-  suggestions: string[];
-}
-
-interface Suggestion {
-  text: string;
-  explanation?: string;
-  tone?: string;
-  whenToUse?: string;
-}
+// Import components
+import ControlPanel from './ControlPanel';
+import StatsModal from './StatsModal';
+import TrainingModeModal from './TrainingModeModal';
+import BatchLearningModal from './BatchLearningModal';
+import IssuesPanel from './IssuesPanel';
 
 export default function AICorrector(): React.JSX.Element {
+  // State declarations
   const [originalText, setOriginalText] = useState('');
   const [correctedText, setCorrectedText] = useState('');
   const [editedText, setEditedText] = useState('');
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   
-  // 🆕 דפוסים שהוחלו אוטומטית
-  const [appliedPatterns, setAppliedPatterns] = useState<Array<{ from: string; to: string }>>([]);
+  // דפוסים שהוחלו אוטומטית
+  const [appliedPatterns, setAppliedPatterns] = useState<AppliedPattern[]>([]);
   
-  // 🆕 בקרת למידה אוטומטית
+  // בקרת למידה אוטומטית
   const [autoApplyPatterns, setAutoApplyPatterns] = useState(true);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
   
-  // 🆕 Training Mode
+  // Training Mode
   const [showTrainingMode, setShowTrainingMode] = useState(false);
-  const [suggestedPatterns, setSuggestedPatterns] = useState<any[]>([]);
+  const [suggestedPatterns, setSuggestedPatterns] = useState<SuggestedPattern[]>([]);
   const [isLoadingTraining, setIsLoadingTraining] = useState(false);
   
-  // 🆕 Batch Learning
+  // Batch Learning
   const [showBatchMode, setShowBatchMode] = useState(false);
   const [batchTexts, setBatchTexts] = useState('');
-  const [batchResults, setBatchResults] = useState<any>(null);
+  const [batchResults, setBatchResults] = useState<BatchResults | null>(null);
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
+  
   const [isEditing, setIsEditing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   
-  // הצעות לטקסט נבחר (בדיוק כמו בתכונת התרגום)
+  // הצעות לטקסט נבחר
   const [selectedText, setSelectedText] = useState<string>('');
   const [selectionSuggestions, setSelectionSuggestions] = useState<Suggestion[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [showSelectionSuggestions, setShowSelectionSuggestions] = useState(false);
   
-  // אפשרויות חלופיות לטקסט המלא (כמו בתכונת התרגום)
-  const [alternatives, setAlternatives] = useState<Array<{
-    text: string;
-    explanation?: string;
-    context?: string;
-  }>>([]);
+  // אפשרויות חלופיות לטקסט המלא
+  const [alternatives, setAlternatives] = useState<Alternative[]>([]);
   const [selectedAlternative, setSelectedAlternative] = useState<string | null>(null);
 
-  // מילים נרדפות למילים בודדות (כמו בתכונת התרגום)
-const [wordAlternatives, setWordAlternatives] = useState<{ [key: string]: string[] }>({});
-const [showWordAlternatives, setShowWordAlternatives] = useState(false);
+  // מילים נרדפות למילים בודדות
+  const [wordAlternatives, setWordAlternatives] = useState<{ [key: string]: string[] }>({});
+  const [showWordAlternatives, setShowWordAlternatives] = useState(false);
 
-// מצב הרחבה/צמצום של הגרסאות החלופיות
-const [expandedAlternatives, setExpandedAlternatives] = useState<{ [key: number]: boolean }>({});
+  // מצב הרחבה/צמצום של הגרסאות החלופיות
+  const [expandedAlternatives, setExpandedAlternatives] = useState<{ [key: number]: boolean }>({});
 
-// טקסט נבחר מתוך גרסה חלופית (לשמירה חלקית)
-const [selectedAlternativeText, setSelectedAlternativeText] = useState<{ text: string; index: number } | null>(null);
+  // טקסט נבחר מתוך גרסה חלופית
+  const [selectedAlternativeText, setSelectedAlternativeText] = useState<{ text: string; index: number } | null>(null);
 
-// החלטות על דפוסים (אישור/דחייה)
-const [issueStates, setIssueStates] = useState<Record<string, 'accepted' | 'dismissed'>>({});
+  // החלטות על דפוסים (אישור/דחייה)
+  const [issueStates, setIssueStates] = useState<Record<string, IssueStatus>>({});
 
-// שדות לתיקון ידני של דפוסים
-const [issueCustomInputs, setIssueCustomInputs] = useState<Record<string, string>>({});
-const [issueCustomActive, setIssueCustomActive] = useState<Record<string, boolean>>({});
-const [issueCustomApplied, setIssueCustomApplied] = useState<Record<string, string | undefined>>({});
+  // שדות לתיקון ידני של דפוסים
+  const [issueCustomInputs, setIssueCustomInputs] = useState<Record<string, string>>({});
+  const [issueCustomActive, setIssueCustomActive] = useState<Record<string, boolean>>({});
+  const [issueCustomApplied, setIssueCustomApplied] = useState<Record<string, string | undefined>>({});
 
-// רמת עומק התיקון
-const [revisionLevel, setRevisionLevel] = useState<'minimal' | 'balanced' | 'deep'>('balanced');
+  // רמת עומק התיקון
+  const [revisionLevel, setRevisionLevel] = useState<RevisionLevel>('balanced');
 
-// סוג התוכן / הסגנון המבוקש
-const [contentStyle, setContentStyle] = useState<'general' | 'legal' | 'academic' | 'marketing' | 'friendly'>('general');
+  // סוג התוכן / הסגנון המבוקש
+  const [contentStyle, setContentStyle] = useState<ContentStyle>('general');
 
-const getIssueKey = (issue: TranslationIssue, index: number) =>
-  `${issue.startIndex}-${issue.endIndex}-${issue.original}-${index}`;
-
-const getIssueStatus = (issue: TranslationIssue, index: number): 'accepted' | 'dismissed' | 'pending' => {
-  const state = issueStates[getIssueKey(issue, index)];
-  return state ?? 'pending';
-};
-
-const revisionLevelOptions: Array<{
-  value: 'minimal' | 'balanced' | 'deep';
-  label: string;
-  description: string;
-}> = [
-  {
-    value: 'minimal',
-    label: 'מינימלי',
-    description: 'רק תיקונים קריטיים',
-  },
-  {
-    value: 'balanced',
-    label: 'מאוזן',
-    description: 'שיפור משמעותי אך שומר על הסגנון',
-  },
-  {
-    value: 'deep',
-    label: 'עמוק',
-    description: 'שכתוב עברי טבעי ומלא',
-  },
-];
-
-const contentStyleOptions: Array<{
-  value: 'general' | 'legal' | 'academic' | 'marketing' | 'friendly';
-  label: string;
-  description: string;
-}> = [
-  {
-    value: 'general',
-    label: 'כללי',
-    description: 'עברית תקנית ומקצועית',
-  },
-  {
-    value: 'legal',
-    label: 'משפטי',
-    description: 'ניסוח חוזים וכתיבה פורמלית',
-  },
-  {
-    value: 'academic',
-    label: 'אקדמי',
-    description: 'סגנון מחקרי ורשמי',
-  },
-  {
-    value: 'marketing',
-    label: 'שיווקי',
-    description: 'טון משכנע וסוחף',
-  },
-  {
-    value: 'friendly',
-    label: 'ידידותי',
-    description: 'כתיבה קלילה ושיחית',
-  },
-];
+  // Helper functions
+  const getIssueKey = (issue: TranslationIssue, index: number) =>
+    `${issue.startIndex}-${issue.endIndex}-${issue.original}-${index}`;
 
   // טעינת סטטיסטיקות
   const loadStats = async () => {
@@ -183,7 +120,6 @@ const contentStyleOptions: Array<{
     }
 
     try {
-      // ייבוא הדפוסים מהקובץ
       const { convertToDBFormat } = await import('@/lib/common-ai-patterns');
       const patterns = convertToDBFormat('default-user');
 
@@ -199,7 +135,7 @@ const contentStyleOptions: Array<{
       const data = await response.json();
       if (data.success) {
         alert(`✅ ${data.message}\n\nיובאו ${data.imported} דפוסים חדשים!`);
-        await loadStats(); // רענון סטטיסטיקות
+        await loadStats();
       } else {
         throw new Error(data.error || 'Import failed');
       }
@@ -210,12 +146,10 @@ const contentStyleOptions: Array<{
   };
 
   // מחיקת דפוס מההצגה
-  const removeAppliedPattern = async (pattern: { from: string; to: string }, index: number) => {
-    // הסרה מהרשימה המקומית
+  const removeAppliedPattern = async (pattern: AppliedPattern, index: number) => {
     const newPatterns = appliedPatterns.filter((_, i) => i !== index);
     setAppliedPatterns(newPatterns);
 
-    // החזרת הטקסט לפני החלת הדפוס הזה
     const newText = editedText.replace(
       new RegExp(pattern.to.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
       pattern.from
@@ -259,7 +193,7 @@ const contentStyleOptions: Array<{
   };
 
   // אישור דפוס (Training Mode)
-  const approvePattern = async (pattern: any, index: number) => {
+  const approvePattern = async (pattern: SuggestedPattern, index: number) => {
     try {
       const response = await fetch('/api/ai-correction/save-pattern', {
         method: 'POST',
@@ -273,7 +207,6 @@ const contentStyleOptions: Array<{
 
       const data = await response.json();
       if (data.success) {
-        // הסרה מהרשימה
         setSuggestedPatterns(prev => prev.filter((_, i) => i !== index));
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 2000);
@@ -307,7 +240,6 @@ const contentStyleOptions: Array<{
           })),
         };
 
-        // יצירת קובץ JSON
         const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -398,7 +330,7 @@ const contentStyleOptions: Array<{
           `דפוסים שנשמרו: ${data.patternsSaved}\n` +
           `ציון ממוצע: ${Math.round(data.averageScore)}/100`
         );
-        await loadStats(); // רענון סטטיסטיקות
+        await loadStats();
       } else {
         throw new Error(data.error || 'Batch analysis failed');
       }
@@ -419,14 +351,14 @@ const contentStyleOptions: Array<{
 
     setIsAnalyzing(true);
     try {
-    const response = await fetch('/api/ai-correction/analyze', {
+      const response = await fetch('/api/ai-correction/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: originalText,
           userId: 'default-user',
-          applyPatterns: autoApplyPatterns, // 🆕 שימוש בהגדרת toggle
-        revisionLevel,
+          applyPatterns: autoApplyPatterns,
+          revisionLevel,
           contentStyle,
         }),
       });
@@ -447,27 +379,19 @@ const contentStyleOptions: Array<{
       setIssueCustomActive({});
       setIssueCustomApplied({});
       
-      // 🆕 דפוסים שהוחלו אוטומטית
       const patternsApplied = data.result?.appliedPatterns || [];
       setAppliedPatterns(patternsApplied);
-      console.log(`✅ ${patternsApplied.length} patterns were applied automatically`, patternsApplied);
       
-      // אפשרויות חלופיות לטקסט המלא - לוודא שיש לפחות 3 גרסאות
       const receivedAlternatives = data.alternatives || [];
-      if (receivedAlternatives.length === 0) {
-        console.warn('No alternatives received from API');
-      }
       setAlternatives(receivedAlternatives);
       
-      // הטקסט המתוקן מתחיל עם התיקון הראשי המומלץ (כולל דפוסים שהוחלו)
       const mainCorrectedText = data.result?.analyzedText || originalText;
       setCorrectedText(mainCorrectedText);
       setEditedText(mainCorrectedText);
       setSelectedAlternative(null);
       
-      // איפוס מילים נרדפות - נטען מחדש כשמסמנים טקסט
       setWordAlternatives({});
-      setShowWordAlternatives(true); // הצג מיד כשהן זמינות
+      setShowWordAlternatives(true);
     } catch (error) {
       console.error('Error analyzing text:', error);
       const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
@@ -477,11 +401,47 @@ const contentStyleOptions: Array<{
     }
   };
 
-  const handleAcceptIssue = async (issue: TranslationIssue, index: number) => {
-    const key = getIssueKey(issue, index);
-    if (issueStates[key] === 'accepted') {
+  // שמירה נקודתית אוטומטית
+  const savePatternAutomatically = async (original: string, corrected: string) => {
+    if (!original || !corrected || original.trim() === corrected.trim()) {
       return;
     }
+
+    if (original.trim().length < 2 && corrected.trim().length < 2) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/ai-correction/save-pattern', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalText: original.trim(),
+          correctedText: corrected.trim(),
+          userId: 'default-user',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to save pattern`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+      }
+    } catch (error) {
+      console.error('Error saving pattern automatically:', error);
+    }
+  };
+
+  // Issue handlers
+  const handleAcceptIssue = async (issue: TranslationIssue, index: number) => {
+    const key = getIssueKey(issue, index);
+    if (issueStates[key] === 'accepted') return;
 
     const currentText = editedText || correctedText || '';
     const escapedOriginal = issue.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -493,8 +453,6 @@ const contentStyleOptions: Array<{
       replaceRegex.lastIndex = 0;
       newText = currentText.replace(replaceRegex, issue.suggestion);
       textChanged = newText !== currentText;
-    } else if (!issue.original || !currentText.includes(issue.original)) {
-      console.warn('Original issue text not found in current edited text. Marking as accepted without direct replacement.', issue);
     }
 
     if (textChanged) {
@@ -512,184 +470,110 @@ const contentStyleOptions: Array<{
       return [...prev, { from: issue.original, to: issue.suggestion }];
     });
 
-    setIssueStates((prev) => ({
-      ...prev,
-      [key]: 'accepted',
-    }));
-
-  setIssueCustomApplied((prev) => {
-    const updated = { ...prev };
-    delete updated[key];
-    return updated;
-  });
-
-  setIssueCustomInputs((prev) => {
-    const updated = { ...prev };
-    delete updated[key];
-    return updated;
-  });
-
-  setIssueCustomActive((prev) => {
-    const updated = { ...prev };
-    delete updated[key];
-    return updated;
-  });
+    setIssueStates((prev) => ({ ...prev, [key]: 'accepted' }));
+    setIssueCustomApplied((prev) => { const u = { ...prev }; delete u[key]; return u; });
+    setIssueCustomInputs((prev) => { const u = { ...prev }; delete u[key]; return u; });
+    setIssueCustomActive((prev) => { const u = { ...prev }; delete u[key]; return u; });
   };
 
   const handleDismissIssue = (issue: TranslationIssue, index: number) => {
     const key = getIssueKey(issue, index);
-    if (issueStates[key] === 'dismissed') {
-      return;
-    }
-
-    setIssueStates((prev) => ({
-      ...prev,
-      [key]: 'dismissed',
-    }));
+    if (issueStates[key] === 'dismissed') return;
+    setIssueStates((prev) => ({ ...prev, [key]: 'dismissed' }));
   };
 
   const handleUndoIssueDecision = (issue: TranslationIssue, index: number) => {
     const key = getIssueKey(issue, index);
     const currentState = issueStates[key];
+    if (!currentState) return;
 
-    if (!currentState) {
+    if (currentState === 'accepted') {
+      const customAppliedText = issueCustomApplied[key];
+      const currentText = editedText || correctedText || '';
+      const originalSuggestion = customAppliedText || issue.suggestion;
+      const escapedSuggestion = originalSuggestion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const revertRegex = new RegExp(escapedSuggestion);
+
+      if (revertRegex.test(currentText)) {
+        revertRegex.lastIndex = 0;
+        const revertedText = currentText.replace(revertRegex, issue.original);
+        setEditedText(revertedText);
+        setCorrectedText(revertedText);
+        setIsEditing(true);
+      }
+
+      setAppliedPatterns((prev) =>
+        prev.filter((pattern) => !(pattern.from === issue.original && pattern.to === originalSuggestion))
+      );
+    }
+
+    setIssueStates((prev) => { const u = { ...prev }; delete u[key]; return u; });
+    setIssueCustomApplied((prev) => { const u = { ...prev }; delete u[key]; return u; });
+    setIssueCustomInputs((prev) => { const u = { ...prev }; delete u[key]; return u; });
+    setIssueCustomActive((prev) => { const u = { ...prev }; delete u[key]; return u; });
+  };
+
+  const toggleCustomIssueInput = (issue: TranslationIssue, index: number) => {
+    const key = getIssueKey(issue, index);
+    const existingCustom = issueCustomApplied[key];
+    setIssueCustomActive((prev) => ({ ...prev, [key]: !prev[key] }));
+    setIssueCustomInputs((prev) => ({
+      ...prev,
+      [key]: prev[key] ?? existingCustom ?? issue.suggestion ?? '',
+    }));
+  };
+
+  const handleCustomInputChange = (issue: TranslationIssue, index: number, value: string) => {
+    const key = getIssueKey(issue, index);
+    setIssueCustomInputs((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleApplyCustomIssue = async (issue: TranslationIssue, index: number) => {
+    const key = getIssueKey(issue, index);
+    const customText = issueCustomInputs[key]?.trim();
+
+    if (!customText) {
+      alert('אנא כתבי את התיקון הרצוי לפני אישור.');
       return;
     }
 
-  if (currentState === 'accepted') {
-    const customAppliedText = issueCustomApplied[key];
-      const currentText = editedText || correctedText || '';
-    const originalSuggestion = customAppliedText || issue.suggestion;
-    const escapedSuggestion = originalSuggestion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const revertRegex = new RegExp(escapedSuggestion);
+    const currentText = editedText || correctedText || '';
+    const escapedOriginal = issue.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const replaceRegex = new RegExp(escapedOriginal);
+    let newText = currentText;
 
-    if (revertRegex.test(currentText)) {
-      revertRegex.lastIndex = 0;
-      const revertedText = currentText.replace(revertRegex, issue.original);
-      setEditedText(revertedText);
-      setCorrectedText(revertedText);
+    if (issue.original && replaceRegex.test(currentText)) {
+      replaceRegex.lastIndex = 0;
+      newText = currentText.replace(replaceRegex, customText);
+    } else if (issue.original && currentText.includes(issue.original)) {
+      newText = currentText.replace(issue.original, customText);
+    }
+
+    if (newText !== currentText) {
+      setEditedText(newText);
+      setCorrectedText(newText);
       setIsEditing(true);
     }
 
-    setAppliedPatterns((prev) =>
-      prev.filter((pattern) => !(pattern.from === issue.original && pattern.to === originalSuggestion))
-    );
-    }
+    await savePatternAutomatically(issue.original, customText);
 
-    setIssueStates((prev) => {
-      const updated = { ...prev };
-      delete updated[key];
-      return updated;
+    setAppliedPatterns((prev) => {
+      if (prev.some((p) => p.from === issue.original && p.to === customText)) return prev;
+      return [...prev, { from: issue.original, to: customText }];
     });
 
-  setIssueCustomApplied((prev) => {
-    const updated = { ...prev };
-    delete updated[key];
-    return updated;
-  });
-
-  setIssueCustomInputs((prev) => {
-    const updated = { ...prev };
-    delete updated[key];
-    return updated;
-  });
-
-  setIssueCustomActive((prev) => {
-    const updated = { ...prev };
-    delete updated[key];
-    return updated;
-  });
+    setIssueStates((prev) => ({ ...prev, [key]: 'accepted' }));
+    setIssueCustomApplied((prev) => ({ ...prev, [key]: customText }));
+    setIssueCustomActive((prev) => ({ ...prev, [key]: false }));
+    setIssueCustomInputs((prev) => ({ ...prev, [key]: customText }));
   };
 
-const toggleCustomIssueInput = (issue: TranslationIssue, index: number) => {
-  const key = getIssueKey(issue, index);
-  const existingCustom = issueCustomApplied[key];
-  setIssueCustomActive((prev) => ({
-    ...prev,
-    [key]: !prev[key],
-  }));
-  setIssueCustomInputs((prev) => ({
-    ...prev,
-    [key]: prev[key] ?? existingCustom ?? issue.suggestion ?? '',
-  }));
-};
+  const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
+    const key = getIssueKey(issue, index);
+    setIssueCustomActive((prev) => ({ ...prev, [key]: false }));
+  };
 
-const handleCustomInputChange = (issue: TranslationIssue, index: number, value: string) => {
-  const key = getIssueKey(issue, index);
-  setIssueCustomInputs((prev) => ({
-    ...prev,
-    [key]: value,
-  }));
-};
-
-const handleApplyCustomIssue = async (issue: TranslationIssue, index: number) => {
-  const key = getIssueKey(issue, index);
-  const customText = issueCustomInputs[key]?.trim();
-
-  if (!customText) {
-    alert('אנא כתבי את התיקון הרצוי לפני אישור.');
-    return;
-  }
-
-  const currentText = editedText || correctedText || '';
-  const escapedOriginal = issue.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const replaceRegex = new RegExp(escapedOriginal);
-  let newText = currentText;
-
-  if (issue.original && replaceRegex.test(currentText)) {
-    replaceRegex.lastIndex = 0;
-    newText = currentText.replace(replaceRegex, customText);
-  } else if (issue.original && currentText.includes(issue.original)) {
-    newText = currentText.replace(issue.original, customText);
-  } else {
-    console.warn('Original issue text not found while applying custom correction. Appending note only.');
-  }
-
-  if (newText !== currentText) {
-    setEditedText(newText);
-    setCorrectedText(newText);
-    setIsEditing(true);
-  }
-
-  await savePatternAutomatically(issue.original, customText);
-
-  setAppliedPatterns((prev) => {
-    if (prev.some((p) => p.from === issue.original && p.to === customText)) {
-      return prev;
-    }
-    return [...prev, { from: issue.original, to: customText }];
-  });
-
-  setIssueStates((prev) => ({
-    ...prev,
-    [key]: 'accepted',
-  }));
-
-  setIssueCustomApplied((prev) => ({
-    ...prev,
-    [key]: customText,
-  }));
-
-  setIssueCustomActive((prev) => ({
-    ...prev,
-    [key]: false,
-  }));
-
-  setIssueCustomInputs((prev) => ({
-    ...prev,
-    [key]: customText,
-  }));
-};
-
-const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
-  const key = getIssueKey(issue, index);
-  setIssueCustomActive((prev) => ({
-    ...prev,
-    [key]: false,
-  }));
-};
-
-  // בחירת טקסט (בדיוק כמו בתכונת התרגום)
+  // בחירת טקסט
   const handleTextSelection = async () => {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
@@ -701,64 +585,13 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
     const selected = selection.toString().trim();
     if (selected.length > 0 && selected.length < 500) {
       setSelectedText(selected);
-      
-      // אם בעריכה - לא נביא הצעות, רק נשמור את הטקסט המסומן
-      if (isEditing) {
-        return; // נציג אפשרות לשמור שינוי נקודתי
-      } else {
-        // נקבל הצעות אוטומטית
+      if (!isEditing) {
         await handleGetSuggestions(selected);
       }
     } else {
       setSelectedText('');
       setShowSelectionSuggestions(false);
     }
-  };
-  
-  // שמירה נקודתית של שינוי מסומן בעריכה
-  const handleSaveSelectedChange = async () => {
-    if (!selectedText || !isEditing) return;
-    
-    // נמצא את הטקסט המסומן בטקסט המקורי
-    const originalIndex = originalText.indexOf(selectedText);
-    if (originalIndex === -1) {
-      // אם הטקסט המסומן לא קיים במקור, זה שינוי חדש
-      alert('הטקסט המסומן לא נמצא בטקסט המקורי - זה שינוי חדש. השתמשי במילים נרדפות או הצעות.');
-      return;
-    }
-    
-    // נמצא את הטקסט החדש במיקום הזה בטקסט המעודכן
-    const editedIndex = editedText.indexOf(selectedText);
-    if (editedIndex === -1) {
-      // הטקסט המסומן שונה - נמצא את המיקום בטקסט המעודכן
-      const textBefore = editedText.substring(0, originalIndex);
-      const textAfter = editedText.substring(originalIndex + selectedText.length);
-      // ננסה למצוא את הטקסט החדש
-      const words = editedText.split(/\s+/);
-      const originalWords = originalText.split(/\s+/);
-      
-      // נשמור את השינוי בין הטקסט המקורי לטקסט המעודכן
-      const originalTextSelected = selectedText;
-      const correctedTextSelected = editedText.substring(
-        Math.max(0, originalIndex - 10),
-        Math.min(editedText.length, originalIndex + selectedText.length + 10)
-      );
-      
-      // נשמור רק את החלק ששונה
-      await savePatternAutomatically(originalTextSelected, selectedText);
-    } else {
-      // הטקסט לא השתנה - אין מה לשמור
-      alert('הטקסט המסומן לא השתנה. סמני טקסט ששונה כדי לשמור אותו.');
-    }
-  };
-  
-  // שמירה נקודתית של שינוי בין מקור לתיקון
-  const handleSavePointChange = async (originalPart: string, correctedPart: string) => {
-    if (!originalPart || !correctedPart || originalPart === correctedPart) {
-      return;
-    }
-    
-    await savePatternAutomatically(originalPart, correctedPart);
   };
 
   // קבלת הצעות לטקסט נבחר
@@ -781,7 +614,7 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || errorData.details || `שגיאת שרת: ${response.status}`);
+        throw new Error(errorData.error || `שגיאת שרת: ${response.status}`);
       }
 
       const data = await response.json();
@@ -791,28 +624,22 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
       }
       
       setSelectionSuggestions(data.suggestions || []);
-      setWordAlternatives(data.wordAlternatives || {}); // מילים נרדפות
+      setWordAlternatives(data.wordAlternatives || {});
     } catch (error: any) {
       console.error('Error getting suggestions:', error);
-      const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
-      console.error('Error details:', errorMessage);
-      
-      // הצגת הודעת שגיאה למשתמש
-      alert(`שגיאה בקבלת הצעות: ${errorMessage}`);
+      alert(`שגיאה בקבלת הצעות: ${error.message}`);
       setSelectionSuggestions([]);
     } finally {
       setIsLoadingSuggestions(false);
     }
   };
 
-  // בחירת מילה נרדפת (כמו בתכונת התרגום)
+  // בחירת מילה נרדפת
   const handleSelectWordAlternative = (originalWord: string, alternativeWord: string) => {
     const currentText = editedText || correctedText;
-    // החלפת המילה הראשונה בלבד
     const escapedWord = originalWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
     const newTranslation = currentText.replace(regex, (match, offset) => {
-      // החלף רק את ההופעה הראשונה
       if (offset === currentText.toLowerCase().search(new RegExp(`\\b${escapedWord}\\b`, 'gi'))) {
         return alternativeWord;
       }
@@ -821,69 +648,10 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
     setEditedText(newTranslation);
     setCorrectedText(newTranslation);
     setIsEditing(true);
-    
-    // שמירה נקודתית אוטומטית
     savePatternAutomatically(originalWord, alternativeWord);
   };
 
-  // שמירה נקודתית אוטומטית (helper function)
-  const savePatternAutomatically = async (original: string, corrected: string) => {
-    // בדיקה בסיסית - אם אין שינוי, לא שומרים
-    if (!original || !corrected || original.trim() === corrected.trim()) {
-      console.warn('No change to save:', { original, corrected });
-      return;
-    }
-
-    // בדיקה שהטקסט לא ריק מדי
-    if (original.trim().length < 2 && corrected.trim().length < 2) {
-      console.warn('Text too short to save as pattern');
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/ai-correction/save-pattern', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          originalText: original.trim(),
-          correctedText: corrected.trim(),
-          userId: 'default-user',
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('Failed to save pattern:', errorData);
-        throw new Error(errorData.error || `HTTP ${response.status}: Failed to save pattern`);
-      }
-
-      const data = await response.json();
-      
-      console.log('Save pattern response:', {
-        success: data.success,
-        message: data.message,
-        error: data.error,
-        details: data.details,
-      });
-      
-      if (data.success) {
-        console.log('✅ Pattern saved successfully:', data);
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
-      } else {
-        console.error('❌ Pattern save failed:', data);
-        const errorMsg = data.message || data.error || 'שגיאה לא ידועה';
-        const details = data.details ? `\n\nפרטים: ${JSON.stringify(data.details)}` : '';
-        alert(`❌ שגיאה בשמירת הדפוס:\n${errorMsg}${details}\n\nבדקי את הקונסולה (F12) לפרטים נוספים.`);
-      }
-    } catch (error) {
-      console.error('Error saving pattern automatically:', error);
-      const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
-      alert(`שגיאה בשמירת הדפוס: ${errorMessage}`);
-    }
-  };
-
-  // בחירת הצעה לטקסט נבחר - עם שמירה נקודתית אוטומטית
+  // בחירת הצעה לטקסט נבחר
   const handleSelectSuggestion = async (suggestionText: string) => {
     if (!correctedText || !selectedText) return;
 
@@ -904,40 +672,12 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
     
     window.getSelection()?.removeAllRanges();
 
-    // שמירה נקודתית אוטומטית של השינוי הזה
-    try {
-      if (!selectedText || !suggestionText || selectedText.trim() === suggestionText.trim()) {
-        return; // אין שינוי לשמור
-      }
-
-      const response = await fetch('/api/ai-correction/save-pattern', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          originalText: selectedText.trim(),
-          correctedText: suggestionText,
-          userId: 'default-user',
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('Failed to save pattern:', errorData);
-        throw new Error(errorData.error || `HTTP ${response.status}: Failed to save pattern`);
-      }
-
-      const data = await response.json();
-      console.log('Pattern saved automatically:', data.message);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-    } catch (error) {
-      console.error('Error saving pattern automatically:', error);
-      const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
-      alert(`שגיאה בשמירת הדפוס: ${errorMessage}`);
+    if (selectedText.trim() !== suggestionText.trim()) {
+      await savePatternAutomatically(selectedText.trim(), suggestionText);
     }
   };
 
-  // בחירת אפשרות חלופית לטקסט המלא - שומרים אוטומטית את ההחלפה
+  // בחירת אפשרות חלופית לטקסט המלא
   const handleSelectAlternative = async (alternativeText: string) => {
     const previousText = correctedText || originalText;
     
@@ -946,35 +686,8 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
     setSelectedAlternative(alternativeText);
     setIsEditing(true);
     
-    // שמירה אוטומטית של השינוי - אם יש שינוי משמעותי
     if (previousText !== alternativeText && previousText.length > 0) {
-      // שמירת הדפוס בין הגרסה הקודמת לנוכחית
-      try {
-        const response = await fetch('/api/ai-correction/save-pattern', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            originalText: previousText,
-            correctedText: alternativeText,
-            userId: 'default-user',
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          console.error('Failed to save alternative pattern:', errorData);
-          throw new Error(errorData.error || `HTTP ${response.status}: Failed to save pattern`);
-        }
-
-        const data = await response.json();
-        console.log('Alternative pattern saved automatically:', data.message);
-        // לא נציג הודעה כי זה יכול להיות מפריע אם יש הרבה שינויים
-      } catch (error) {
-        console.error('Error saving alternative pattern:', error);
-        const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה';
-        // לא נציג alert כאן כי זה יכול להיות מפריע אם יש הרבה שינויים
-        // אבל נרשם בקונסולה
-      }
+      await savePatternAutomatically(previousText, alternativeText);
     }
   };
 
@@ -998,374 +711,84 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-
-  const acceptedIssuesCount = analysis
-    ? analysis.issues.reduce((count, issue, index) => (getIssueStatus(issue, index) === 'accepted' ? count + 1 : count), 0)
-    : 0;
-  const dismissedIssuesCount = analysis
-    ? analysis.issues.reduce((count, issue, index) => (getIssueStatus(issue, index) === 'dismissed' ? count + 1 : count), 0)
-    : 0;
-  const pendingIssuesCount = analysis ? analysis.issues.length - acceptedIssuesCount - dismissedIssuesCount : 0;
+  // Clear all
+  const handleClear = () => {
+    setOriginalText('');
+    setCorrectedText('');
+    setEditedText('');
+    setAnalysis(null);
+    setIsEditing(false);
+    setSelectedText('');
+    setSelectionSuggestions([]);
+    setShowSelectionSuggestions(false);
+    setAppliedPatterns([]);
+    setIssueStates({});
+    setIssueCustomInputs({});
+    setIssueCustomActive({});
+    setIssueCustomApplied({});
+    setAlternatives([]);
+  };
 
   return (
     <div className="space-y-6" dir="rtl">
       {/* פאנל בקרה עליון */}
-      <Card className="p-3 sm:p-4 bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200">
-        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 sm:gap-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
-            {/* Toggle להחלה אוטומטית */}
-            <div className="flex items-center gap-2 bg-white px-3 sm:px-4 py-2 rounded-lg border border-indigo-200 w-full sm:w-auto">
-              <input
-                type="checkbox"
-                id="autoApply"
-                checked={autoApplyPatterns}
-                onChange={(e) => setAutoApplyPatterns(e.target.checked)}
-                className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
-              />
-              <label htmlFor="autoApply" className="text-xs sm:text-sm font-medium text-gray-700 cursor-pointer">
-                {autoApplyPatterns ? '✅ החלה אוטומטית מופעלת' : '⏸️ החלה אוטומטית מושבתת'}
-              </label>
-            </div>
+      <ControlPanel
+        autoApplyPatterns={autoApplyPatterns}
+        onAutoApplyChange={setAutoApplyPatterns}
+        onImportPrebuiltPatterns={importPrebuiltPatterns}
+        onShowStats={() => { loadStats(); setShowStatsModal(true); }}
+        onStartTrainingMode={startTrainingMode}
+        onShowBatchMode={() => setShowBatchMode(true)}
+        onExportPatterns={exportPatterns}
+        onImportPatternsFromFile={importPatternsFromFile}
+        revisionLevel={revisionLevel}
+        onRevisionLevelChange={setRevisionLevel}
+        contentStyle={contentStyle}
+        onContentStyleChange={setContentStyle}
+        hasOriginalText={!!originalText.trim()}
+      />
 
-            {/* כפתור ייבוא דפוסים */}
-            <button
-              onClick={importPrebuiltPatterns}
-              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-xs sm:text-sm w-full sm:w-auto"
-            >
-              ⚡ ייבוא 50+ דפוסי AI נפוצים
-            </button>
+      {/* Modals */}
+      <StatsModal
+        isOpen={showStatsModal}
+        onClose={() => setShowStatsModal(false)}
+        isLoading={isLoadingStats}
+        stats={stats}
+      />
 
-            {/* כפתור סטטיסטיקות */}
-            <button
-              onClick={() => {
-                loadStats();
-                setShowStatsModal(true);
-              }}
-              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-xs sm:text-sm w-full sm:w-auto"
-            >
-              📊 הצג סטטיסטיקות
-            </button>
+      <TrainingModeModal
+        isOpen={showTrainingMode}
+        onClose={() => setShowTrainingMode(false)}
+        isLoading={isLoadingTraining}
+        suggestedPatterns={suggestedPatterns}
+        onApprovePattern={approvePattern}
+        onRejectPattern={rejectPattern}
+      />
 
-            {/* כפתור מצב אימון */}
-            <button
-              onClick={startTrainingMode}
-              disabled={!originalText.trim()}
-              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
-            >
-              🎓 מצב אימון
-            </button>
-
-            {/* כפתור Batch Learning */}
-            <button
-              onClick={() => setShowBatchMode(true)}
-              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-xs sm:text-sm w-full sm:w-auto"
-            >
-              🔄 למידה קבוצתית
-            </button>
-          </div>
-
-          {/* קישור לדפוסים */}
-          <Link
-            href="/dashboard/ai-correction/learned-patterns"
-            className="px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-xs sm:text-sm w-full sm:w-auto text-center"
-          >
-            📚 צפייה בכל הדפוסים
-          </Link>
-        </div>
-
-        {/* שורה שנייה - ייצוא/ייבוא */}
-        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-2 sm:gap-3 mt-3 text-xs sm:text-sm">
-          <span className="text-gray-600 font-medium w-full sm:w-auto">שיתוף דפוסים:</span>
-          <button
-            onClick={exportPatterns}
-            className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-xs sm:text-sm"
-          >
-            💾 ייצא דפוסים (JSON)
-          </button>
-          <button
-            onClick={importPatternsFromFile}
-            className="px-3 py-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors text-xs sm:text-sm"
-          >
-            📂 יבא דפוסים (JSON)
-          </button>
-        </div>
-
-        {/* בחירת עומק התיקון */}
-        <div className="mt-4 space-y-2">
-          <p className="text-xs sm:text-sm text-gray-700 font-medium">עומק התיקון הרצוי:</p>
-          <div className="flex flex-wrap items-center gap-2">
-            {revisionLevelOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setRevisionLevel(option.value)}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border text-xs sm:text-sm transition-all ${
-                  revisionLevel === option.value
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
-                    : 'bg-white text-gray-700 border-indigo-200 hover:bg-indigo-50'
-                }`}
-              >
-                <div className="flex flex-col items-center sm:items-start">
-                  <span className="font-semibold">{option.label}</span>
-                  <span className="text-[11px] sm:text-xs opacity-80">{option.description}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* בחירת סוג התוכן */}
-        <div className="mt-4 space-y-2">
-          <p className="text-xs sm:text-sm text-gray-700 font-medium">סגנון / סוג תוכן:</p>
-          <div className="flex flex-wrap items-center gap-2">
-            {contentStyleOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setContentStyle(option.value)}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border text-xs sm:text-sm transition-all ${
-                  contentStyle === option.value
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
-                    : 'bg-white text-gray-700 border-emerald-200 hover:bg-emerald-50'
-                }`}
-              >
-                <div className="flex flex-col items-center sm:items-start">
-                  <span className="font-semibold">{option.label}</span>
-                  <span className="text-[11px] sm:text-xs opacity-80">{option.description}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </Card>
-      
-      {/* מודל סטטיסטיקות */}
-      {showStatsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">📊 סטטיסטיקות למידה</h2>
-              <button
-                onClick={() => setShowStatsModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ✕
-              </button>
-            </div>
-
-            {isLoadingStats ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-                <span className="mr-3 text-gray-600">טוען סטטיסטיקות...</span>
-              </div>
-            ) : stats ? (
-              <div className="space-y-6">
-                {/* מספרים עיקריים */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-                    <div className="text-3xl font-bold text-blue-600">{stats.totalPatterns}</div>
-                    <div className="text-sm text-blue-800">דפוסים שנלמדו</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
-                    <div className="text-3xl font-bold text-green-600">{stats.patternsAppliedCount}</div>
-                    <div className="text-sm text-green-800">תיקונים שהוחלו</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
-                    <div className="text-3xl font-bold text-purple-600">{stats.estimatedTimeSavedMinutes}</div>
-                    <div className="text-sm text-purple-800">דקות שנחסכו ⏱️</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
-                    <div className="text-3xl font-bold text-orange-600">{Math.round(stats.averageConfidence * 100)}%</div>
-                    <div className="text-sm text-orange-800">ביטחון ממוצע</div>
-                  </div>
-                </div>
-
-                {/* הדפוסים הפופולריים ביותר */}
-                {stats.topPatterns && stats.topPatterns.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-bold mb-3">🏆 הדפוסים הכי שימושיים</h3>
-                    <div className="space-y-2">
-                      {stats.topPatterns.slice(0, 5).map((pattern: any, idx: number) => (
-                        <div key={idx} className="p-3 bg-yellow-50 rounded-lg border border-yellow-200 flex items-center gap-3">
-                          <span className="text-2xl">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '⭐'}</span>
-                          <span className="text-sm font-medium text-red-600 line-through">"{pattern.badPattern}"</span>
-                          <span className="text-gray-400">→</span>
-                          <span className="text-sm font-medium text-green-600">"{pattern.goodPattern}"</span>
-                          <span className="mr-auto"></span>
-                          <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">
-                            {pattern.occurrences} פעמים
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* פילוח לפי קטגוריות */}
-                {stats.categoriesBreakdown && Object.keys(stats.categoriesBreakdown).length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-bold mb-3">📂 פילוח לפי קטגוריות</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {Object.entries(stats.categoriesBreakdown).map(([category, count]) => (
-                        <div key={category} className="p-3 bg-indigo-50 rounded-lg border border-indigo-200">
-                          <div className="text-xl font-bold text-indigo-600">{count as number}</div>
-                          <div className="text-sm text-indigo-800">{category}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                לא נמצאו סטטיסטיקות
-              </div>
-            )}
-          </Card>
-        </div>
-      )}
-
-      {/* 🎓 מודל מצב אימון (Training Mode) */}
-      {showTrainingMode && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <Card className="max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">🎓 מצב אימון - אישור דפוסים</h2>
-              <button
-                onClick={() => setShowTrainingMode(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ✕
-              </button>
-            </div>
-
-            <p className="text-sm text-gray-600 mb-4">
-              המערכת מצאה {suggestedPatterns.length} דפוסים אפשריים בטקסט. אשר או דחה כל דפוס:
-            </p>
-
-            {isLoadingTraining ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
-                <span className="mr-3 text-gray-600">מחפש דפוסים...</span>
-              </div>
-            ) : suggestedPatterns.length > 0 ? (
-              <div className="space-y-3">
-                {suggestedPatterns.map((pattern, idx) => (
-                  <div key={idx} className="p-4 bg-purple-50 rounded-lg border-2 border-purple-200">
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-sm font-medium text-red-600 line-through">"{pattern.badPattern}"</span>
-                          <span className="text-gray-400">→</span>
-                          <span className="text-sm font-medium text-green-600">"{pattern.goodPattern}"</span>
-                        </div>
-                        <p className="text-xs text-gray-600 mb-1">{pattern.explanation}</p>
-                        <div className="flex gap-2">
-                          <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
-                            {pattern.context}
-                          </span>
-                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                            ביטחון: {Math.round(pattern.confidence * 100)}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => approvePattern(pattern, idx)}
-                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                      >
-                        ✓ אשר ושמור
-                      </button>
-                      <button
-                        onClick={() => rejectPattern(idx)}
-                        className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                      >
-                        ✕ דחה
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                לא נמצאו דפוסים חדשים להצעה 🎉
-              </div>
-            )}
-          </Card>
-        </div>
-      )}
-
-      {/* 🔄 מודל למידה קבוצתית (Batch Learning) */}
-      {showBatchMode && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <Card className="max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">🔄 למידה קבוצתית</h2>
-              <button
-                onClick={() => setShowBatchMode(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ✕
-              </button>
-            </div>
-
-            <p className="text-sm text-gray-600 mb-4">
-              הדבק מספר טקסטים (אחד בכל שורה) - המערכת תנתח את כולם ותחלץ דפוסים משותפים.
-            </p>
-
-            <textarea
-              value={batchTexts}
-              onChange={(e) => setBatchTexts(e.target.value)}
-              placeholder="הדבק טקסטים כאן... (אחד בכל שורה, עד 50 טקסטים)"
-              className="w-full h-64 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm mb-4"
-              dir="rtl"
-            />
-
-            <div className="flex gap-2">
-              <Button
-                onClick={processBatchTexts}
-                disabled={isProcessingBatch || !batchTexts.trim()}
-                className="flex-1 bg-pink-600 hover:bg-pink-700"
-              >
-                {isProcessingBatch ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    מעבד...
-                  </>
-                ) : (
-                  '🚀 נתח והפק דפוסים'
-                )}
-              </Button>
-            </div>
-
-            {batchResults && (
-              <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                <h3 className="font-bold text-green-800 mb-2">✅ תוצאות</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>טקסטים שנותחו: <strong>{batchResults.totalTexts}</strong></div>
-                  <div>דפוסים שנמצאו: <strong>{batchResults.totalPatternsFound}</strong></div>
-                  <div>דפוסים שנשמרו: <strong>{batchResults.patternsSaved}</strong></div>
-                  <div>ציון ממוצע: <strong>{Math.round(batchResults.averageScore)}/100</strong></div>
-                </div>
-              </div>
-            )}
-          </Card>
-        </div>
-      )}
+      <BatchLearningModal
+        isOpen={showBatchMode}
+        onClose={() => setShowBatchMode(false)}
+        batchTexts={batchTexts}
+        onBatchTextsChange={setBatchTexts}
+        isProcessing={isProcessingBatch}
+        onProcess={processBatchTexts}
+        results={batchResults}
+      />
 
       {/* הוראות שימוש */}
       <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
         <h3 className="text-lg font-bold mb-3">📖 איך זה עובד?</h3>
-          <ol className="list-decimal list-inside space-y-2 text-gray-700">
-          <li>הדבק טקסט שנוצר על ידי AI בתיבה "טקסט מקורי מ-AI"</li>
-          <li>לחץ על "🔍 נתח טקסט" - <strong className="text-green-600">המערכת תחיל אוטומטית דפוסים שנלמדו!</strong></li>
+        <ol className="list-decimal list-inside space-y-2 text-gray-700">
+          <li>הדבק טקסט שנוצר על ידי AI בתיבה &quot;טקסט מקורי מ-AI&quot;</li>
+          <li>לחץ על &quot;🔍 נתח טקסט&quot; - <strong className="text-green-600">המערכת תחיל אוטומטית דפוסים שנלמדו!</strong></li>
           <li>המערכת תזהה דפוסי AI נוספים ותתן ציון + גרסאות חלופיות</li>
           <li><strong>סמני מילה או משפט</strong> בטקסט המתוקן (עם העכבר) כדי לקבל 5-7 הצעות חלופיות</li>
-          <li>לחצי על הצעה כדי להחליף אותה - <strong>השינוי נשמר אוטומטית</strong> (שמירה נקודתית)</li>
+          <li>לחצי על הצעה כדי להחליף אותה - <strong>השינוי נשמר אוטומטית</strong></li>
           <li>ערוכי את הטקסט ידנית במידת הצורך</li>
         </ol>
       </Card>
       
-      {/* 🆕 הצגת דפוסים שהוחלו אוטומטית */}
+      {/* הצגת דפוסים שהוחלו אוטומטית */}
       {appliedPatterns.length > 0 && (
         <Card className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-green-300">
           <h3 className="text-lg font-bold mb-3 text-green-800">
@@ -1377,14 +800,11 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {appliedPatterns.map((pattern, idx) => (
               <div key={idx} className="p-3 bg-white rounded-lg border border-green-200 flex items-center gap-3">
-                <span className="text-sm font-medium text-red-600 line-through">"{pattern.from}"</span>
+                <span className="text-sm font-medium text-red-600 line-through">&quot;{pattern.from}&quot;</span>
                 <span className="text-gray-400">→</span>
-                <span className="text-sm font-medium text-green-600">"{pattern.to}"</span>
+                <span className="text-sm font-medium text-green-600">&quot;{pattern.to}&quot;</span>
                 <span className="mr-auto"></span>
-                <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
-                  ✓ הוחל
-                </span>
-                {/* כפתור ביטול */}
+                <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">✓ הוחל</span>
                 <button
                   onClick={() => removeAppliedPattern(pattern, idx)}
                   className="text-xs text-red-600 hover:text-red-800 hover:bg-red-100 px-2 py-1 rounded transition-colors"
@@ -1395,9 +815,6 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
               </div>
             ))}
           </div>
-          <p className="text-xs text-green-600 mt-3">
-            💡 <strong>טיפ:</strong> לחץ על "✕ בטל" כדי לבטל תיקון ספציפי ולהחזיר את הטקסט המקורי
-          </p>
         </Card>
       )}
 
@@ -1429,9 +846,9 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
           />
 
           <div className="flex gap-2">
-          <Button
-            onClick={analyzeText}
-            disabled={isAnalyzing || !originalText.trim()}
+            <Button
+              onClick={analyzeText}
+              disabled={isAnalyzing || !originalText.trim()}
               className="flex-1"
             >
               {isAnalyzing ? (
@@ -1444,28 +861,9 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
               )}
             </Button>
             {originalText && (
-              <Button
-                onClick={() => {
-                  setOriginalText('');
-                  setCorrectedText('');
-                  setEditedText('');
-                  setAnalysis(null);
-                  setIsEditing(false);
-                  setSelectedText('');
-                  setSelectionSuggestions([]);
-                  setShowSelectionSuggestions(false);
-                  setAppliedPatterns([]);
-                  setIssueStates({});
-                  setIssueCustomInputs({});
-                  setIssueCustomActive({});
-                  setIssueCustomApplied({});
-                }}
-                variant="outline"
-                className="px-4"
-                title="נקה הכל"
-              >
+              <Button onClick={handleClear} variant="outline" className="px-4" title="נקה הכל">
                 🗑️ נקה
-          </Button>
+              </Button>
             )}
           </div>
         </Card>
@@ -1476,34 +874,14 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
             <h2 className="text-xl font-bold">✅ טקסט מתוקן</h2>
             <div className="flex gap-2">
               {correctedText && !isEditing && (
-                <Button
-                  onClick={handleStartEdit}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
+                <Button onClick={handleStartEdit} variant="outline" size="sm" className="flex items-center gap-1">
                   <Edit2 className="w-4 h-4" />
                   ערוך
                 </Button>
               )}
               {correctedText && (
-                <Button
-                  onClick={handleCopy}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-4 h-4" />
-                      הועתק!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4" />
-                      העתק
-                    </>
-                  )}
+                <Button onClick={handleCopy} variant="outline" size="sm" className="flex items-center gap-1">
+                  {copied ? <><Check className="w-4 h-4" />הועתק!</> : <><Copy className="w-4 h-4" />העתק</>}
                 </Button>
               )}
             </div>
@@ -1521,122 +899,30 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
             <div className="space-y-4">
               {isEditing ? (
                 <>
-                  <div className="relative">
-          <textarea
-                      value={editedText}
-                      onChange={(e) => setEditedText(e.target.value)}
-                      onMouseUp={handleTextSelection}
-                      onTouchEnd={handleTextSelection}
-                      className="w-full h-96 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
-            dir="rtl"
-          />
-                    {selectedText && isEditing && (
-                      <div className="absolute top-2 right-2 bg-purple-500 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 shadow-lg z-10">
-                        <span>טקסט נבחר: "{selectedText.substring(0, 30)}{selectedText.length > 30 ? '...' : ''}"</span>
-                        <button
-                          onClick={async () => {
-                            // הטקסט המסומן הוא מהטקסט המעודכן
-                            const selectedInEdited = selectedText;
-                            
-                            // נמצא את המיקום בטקסט המעודכן
-                            const editedIndex = editedText.indexOf(selectedInEdited);
-                            if (editedIndex === -1) {
-                              alert('לא ניתן למצוא את הטקסט במיקום הצפוי');
-                              return;
-                            }
-                            
-                            // נמצא את החלק המתאים בטקסט המקורי
-                            // ננסה למצוא את הטקסט המקורי באותו אזור
-                            const wordsBefore = editedText.substring(0, editedIndex).split(/\s+/).length;
-                            const wordsAfter = editedText.substring(editedIndex + selectedInEdited.length).split(/\s+/).length;
-                            
-                            const originalWords = originalText.split(/\s+/);
-                            const editedWords = editedText.split(/\s+/);
-                            
-                            // נמצא את המילה/ביטוי המקורי במיקום הזה
-                            let originalPart = '';
-                            if (wordsBefore < originalWords.length) {
-                              const startWord = Math.max(0, wordsBefore);
-                              const endWord = Math.min(originalWords.length, wordsBefore + selectedInEdited.split(/\s+/).length);
-                              originalPart = originalWords.slice(startWord, endWord).join(' ');
-                            } else {
-                              // אם זה טקסט חדש, נשמור את הטקסט המסומן כשינוי
-                              originalPart = '';
-                            }
-                            
-                            // אם הטקסט המקורי והמעודכן שונים, נשמור את השינוי
-                            if (originalPart !== selectedInEdited && originalPart.length > 0) {
-                              await savePatternAutomatically(originalPart, selectedInEdited);
-                              alert(`השינוי נשמר: "${originalPart}" → "${selectedInEdited}"`);
-                            } else if (originalPart.length === 0) {
-                              // טקסט חדש - נשמור רק את הטקסט החדש
-                              await savePatternAutomatically(selectedInEdited, selectedInEdited);
-                              alert(`הטקסט החדש נשמר: "${selectedInEdited}"`);
-                            } else {
-                              alert('הטקסט המסומן לא השתנה מהמקור');
-                            }
-                            
-                            setSelectedText('');
-                            window.getSelection()?.removeAllRanges();
-                          }}
-                          className="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-xs font-medium"
-                        >
-                          שמור שינוי זה
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedText('');
-                            window.getSelection()?.removeAllRanges();
-                          }}
-                          className="hover:bg-purple-600 rounded px-1"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  <textarea
+                    value={editedText}
+                    onChange={(e) => setEditedText(e.target.value)}
+                    onMouseUp={handleTextSelection}
+                    className="w-full h-96 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+                    dir="rtl"
+                  />
                   <div className="flex gap-2">
-                    <Button
-                      onClick={handleCancelEdit}
-                      variant="outline"
-                      className="flex-1"
-                    >
+                    <Button onClick={handleCancelEdit} variant="outline" className="flex-1">
                       <X className="w-4 h-4 mr-2" />
                       ביטול
                     </Button>
                   </div>
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-800">
-                      💡 <strong>טיפ:</strong> סמני מילה או ביטוי בעריכה ולחצי על "שמור שינוי זה" כדי לשמור רק את השינוי המסומן, בלי לשמור את כל העריכה.
-                    </p>
-                  </div>
                 </>
               ) : (
                 <>
-                  <div className="p-4 border border-gray-300 rounded-lg bg-gray-50 min-h-[300px] relative">
+                  <div className="p-4 border border-gray-300 rounded-lg bg-gray-50 min-h-[300px]">
                     <p
                       className="whitespace-pre-wrap select-text text-base"
                       dir="rtl"
                       onMouseUp={handleTextSelection}
-                      onTouchEnd={handleTextSelection}
                     >
                       {correctedText}
                     </p>
-                    {selectedText && (
-                      <div className="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-2 shadow-lg z-10">
-                        <span>טקסט נבחר: "{selectedText.substring(0, 20)}{selectedText.length > 20 ? '...' : ''}"</span>
-                        <button
-                          onClick={() => {
-                            setSelectedText('');
-                            setShowSelectionSuggestions(false);
-                            window.getSelection()?.removeAllRanges();
-                          }}
-                          className="hover:bg-blue-600 rounded px-1"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    )}
                   </div>
                   
                   <button
@@ -1644,29 +930,18 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <Edit2 className="w-4 h-4" />
-                    ערוך את התיקון (כל שינוי נקודתי נשמר אוטומטית)
+                    ערוך את התיקון
                   </button>
-                  
-                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-xs text-yellow-800">
-                      💡 <strong>טיפ:</strong> סמני מילה או משפט בטקסט כדי לקבל הצעות חלופיות ספציפיות
-                    </p>
-                  </div>
                 </>
               )}
 
-              {/* אפשרויות חלופיות לטקסט המלא - 3 גרסאות שונות */}
-              {alternatives.length > 0 ? (
+              {/* אפשרויות חלופיות לטקסט המלא */}
+              {alternatives.length > 0 && (
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-blue-900 flex items-center gap-2">
-                      <Languages className="w-5 h-5" />
-                      אפשרויות חלופיות לטקסט המלא ({alternatives.length} גרסאות)
-                    </h3>
-                  </div>
-                  <p className="text-sm text-blue-700 mb-3">
-                    בחרי אחת מהגרסאות הבאות לשיפור הטקסט:
-                  </p>
+                  <h3 className="font-semibold text-blue-900 flex items-center gap-2 mb-3">
+                    <Languages className="w-5 h-5" />
+                    אפשרויות חלופיות ({alternatives.length} גרסאות)
+                  </h3>
                   <div className="space-y-3">
                     {alternatives.map((alt, index) => {
                       const isExpanded = expandedAlternatives[index] ?? false;
@@ -1677,12 +952,9 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
                         <div
                           key={index}
                           className={`p-3 bg-white rounded-lg border-2 transition-all ${
-                            isSelected
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-blue-200 hover:border-blue-300'
+                            isSelected ? 'border-blue-500 bg-blue-50' : 'border-blue-200 hover:border-blue-300'
                           }`}
                         >
-                          {/* כותרת הגרסה עם כפתורי הרחבה/צמצם */}
                           <div className="flex items-center justify-between gap-2 mb-2">
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded">
@@ -1694,161 +966,31 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setExpandedAlternatives(prev => ({
-                                    ...prev,
-                                    [index]: !prev[index]
-                                  }));
-                                }}
-                                className="text-blue-600 hover:text-blue-800 p-1"
-                                title={isExpanded ? 'צמצם' : 'הרחב'}
-                              >
-                                {isExpanded ? (
-                                  <ChevronUp className="w-4 h-4" />
-                                ) : (
-                                  <ChevronDown className="w-4 h-4" />
-                                )}
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* טקסט הגרסה */}
-                          <div 
-                            className="relative"
-                            onMouseUp={(e) => {
-                              // רק אם לא לוחצים על כפתור
-                              if ((e.target as HTMLElement).tagName === 'BUTTON') return;
-                              
-                              const selection = window.getSelection();
-                              if (selection && selection.toString().trim().length > 0) {
-                                const selected = selection.toString().trim();
-                                if (selected.length > 0 && selected.length < alt.text.length) {
-                                  setSelectedAlternativeText({ text: selected, index });
-                                }
-                              }
-                            }}
-                            onTouchEnd={(e) => {
-                              // רק אם לא לוחצים על כפתור
-                              if ((e.target as HTMLElement).tagName === 'BUTTON') return;
-                              
-                              const selection = window.getSelection();
-                              if (selection && selection.toString().trim().length > 0) {
-                                const selected = selection.toString().trim();
-                                if (selected.length > 0 && selected.length < alt.text.length) {
-                                  setSelectedAlternativeText({ text: selected, index });
-                                }
-                              }
-                            }}
-                          >
-                            <p
-                              className={`font-medium mb-1 cursor-pointer select-text ${isExpanded ? '' : 'line-clamp-2'}`}
-                              dir="rtl"
+                            <button
+                              onClick={() => setExpandedAlternatives(prev => ({ ...prev, [index]: !prev[index] }))}
+                              className="text-blue-600 hover:text-blue-800 p-1"
                             >
-                              {displayText}
-                            </p>
-                            
-                            {/* תיבה לשמירה חלקית */}
-                            {selectedAlternativeText && selectedAlternativeText.index === index && (
-                              <div className="absolute top-0 right-0 bg-purple-500 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 shadow-lg z-20">
-                                <span>טקסט נבחר: "{selectedAlternativeText.text.substring(0, 30)}{selectedAlternativeText.text.length > 30 ? '...' : ''}"</span>
-                                <button
-                                  onClick={async (e) => {
-                                    e.stopPropagation();
-                                    const selectedPart = selectedAlternativeText.text;
-                                    
-                                    // נמצא את הטקסט המקורי במיקום הזה - נחפש את החלק הזה בטקסט המקורי
-                                    const originalIndex = originalText.indexOf(selectedPart);
-                                    
-                                    if (originalIndex === -1) {
-                                      // הטקסט לא קיים במקור - זה חלק חדש מהגרסה החלופית
-                                      // נשמור את החלק הזה כשינוי חדש
-                                      // ננסה למצוא את החלק הקרוב ביותר בטקסט המקורי
-                                      const words = selectedPart.split(/\s+/);
-                                      if (words.length > 0) {
-                                        // נחפש את המילה הראשונה בטקסט המקורי
-                                        const firstWord = words[0];
-                                        const originalFirstWordIndex = originalText.indexOf(firstWord);
-                                        if (originalFirstWordIndex !== -1) {
-                                          // נמצא את החלק המקורי המתאים
-                                          const originalWords = originalText.split(/\s+/);
-                                          const selectedWords = selectedPart.split(/\s+/);
-                                          const startIndex = originalText.substring(0, originalFirstWordIndex).split(/\s+/).length;
-                                          const originalPart = originalWords.slice(startIndex, startIndex + selectedWords.length).join(' ');
-                                          
-                                          if (originalPart !== selectedPart && originalPart.trim().length > 0) {
-                                            try {
-                                              await savePatternAutomatically(originalPart, selectedPart);
-                                              alert(`החלק נשמר: "${originalPart}" → "${selectedPart}"`);
-                                            } catch (error) {
-                                              console.error('Error saving pattern part:', error);
-                                              // השגיאה כבר מוצגת ב-savePatternAutomatically
-                                            }
-                                          } else if (originalPart.trim().length === 0) {
-                                            // חלק חדש לחלוטין - לא נשמור דפוס עבור טקסט חדש
-                                            alert('זה טקסט חדש - לא נשמר כדפוס');
-                                          } else {
-                                            alert('החלק שנבחר זהה למקור');
-                                          }
-                                        }
-                                      }
-                                    } else {
-                                      // הטקסט קיים במקור - אין שינוי
-                                      alert('החלק שנבחר זהה למקור - אין שינוי לשמור');
-                                    }
-                                    
-                                    setSelectedAlternativeText(null);
-                                    window.getSelection()?.removeAllRanges();
-                                  }}
-                                  className="bg-purple-600 hover:bg-purple-700 px-2 py-1 rounded text-xs"
-                                >
-                                  שמור חלק זה
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedAlternativeText(null);
-                                    window.getSelection()?.removeAllRanges();
-                                  }}
-                                  className="hover:bg-purple-600 rounded px-1"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              </div>
-                            )}
-      </div>
-
+                              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          <p className={`font-medium mb-1 ${isExpanded ? '' : 'line-clamp-2'}`} dir="rtl">
+                            {displayText}
+                          </p>
                           {alt.explanation && (
-                            <p className="text-xs text-gray-600 mb-2 mt-1">
-                              {alt.explanation}
-                            </p>
+                            <p className="text-xs text-gray-600 mb-2">{alt.explanation}</p>
                           )}
-
-                          {/* כפתורי פעולה */}
                           <div className="flex gap-2 mt-2">
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSelectAlternative(alt.text);
-                              }}
+                              onClick={() => handleSelectAlternative(alt.text)}
                               className={`flex-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
-                                isSelected
-                                  ? 'bg-blue-600 text-white'
-                                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                isSelected ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                               }`}
                             >
                               {isSelected ? '✓ נבחרה' : 'אשר גרסה זו'}
                             </button>
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // העתקה ללוח
-                                navigator.clipboard.writeText(alt.text);
-                                alert('הגרסה הועתקה ללוח');
-                              }}
-                              className="px-3 py-2 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors"
+                              onClick={() => { navigator.clipboard.writeText(alt.text); alert('הגרסה הועתקה'); }}
+                              className="px-3 py-2 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
                             >
                               העתק
                             </button>
@@ -1858,28 +1000,18 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
                     })}
                   </div>
                 </div>
-              ) : (
-                <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    ⏳ המערכת עדיין יוצרת גרסאות חלופיות... אם זה לוקח זמן רב, נסי לסמן טקסט ספציפי כדי לקבל הצעות.
-                  </p>
-                </div>
               )}
 
-              {/* הצעות לטקסט נבחר (בדיוק כמו בתכונת התרגום) */}
+              {/* הצעות לטקסט נבחר */}
               {showSelectionSuggestions && selectedText && (
                 <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-orange-900 flex items-center gap-2">
                       <Languages className="w-5 h-5" />
-                      הצעות חלופיות ל-"{selectedText.length > 30 ? selectedText.substring(0, 30) + '...' : selectedText}"
+                      הצעות ל-&quot;{selectedText.length > 30 ? selectedText.substring(0, 30) + '...' : selectedText}&quot;
                     </h3>
                     <button
-                      onClick={() => {
-                        setShowSelectionSuggestions(false);
-                        setSelectedText('');
-                        window.getSelection()?.removeAllRanges();
-                      }}
+                      onClick={() => { setShowSelectionSuggestions(false); setSelectedText(''); window.getSelection()?.removeAllRanges(); }}
                       className="text-orange-600 hover:text-orange-800"
                     >
                       <X className="w-4 h-4" />
@@ -1899,35 +1031,21 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
                           className="p-4 bg-white rounded-lg border-2 border-orange-200 hover:border-orange-400 transition-all cursor-pointer"
                           onClick={() => handleSelectSuggestion(suggestion.text)}
                         >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1">
-                              <p
-                                className="font-medium mb-2 text-lg"
-                                dir="rtl"
-                              >
-                                {suggestion.text}
-                              </p>
-                              {suggestion.explanation && (
-                                <p className="text-sm text-gray-600 mb-1">
-                                  {suggestion.explanation}
-                                </p>
-                              )}
-                              <div className="flex flex-wrap gap-2 mt-2">
-                                {suggestion.tone && (
-                                  <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">
-                                    טון: {suggestion.tone}
-                                  </span>
-                                )}
-                                {suggestion.whenToUse && (
-                                  <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                                    {suggestion.whenToUse}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-orange-600">
-                              <Check className="w-5 h-5" />
-                            </div>
+                          <p className="font-medium mb-2 text-lg" dir="rtl">{suggestion.text}</p>
+                          {suggestion.explanation && (
+                            <p className="text-sm text-gray-600 mb-1">{suggestion.explanation}</p>
+                          )}
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {suggestion.tone && (
+                              <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">
+                                טון: {suggestion.tone}
+                              </span>
+                            )}
+                            {suggestion.whenToUse && (
+                              <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                                {suggestion.whenToUse}
+                              </span>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -1938,13 +1056,13 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
                     </p>
                   )}
 
-                  {/* אפשרויות חלופיות למילים בודדות (מילים נרדפות) */}
+                  {/* מילים נרדפות */}
                   {Object.keys(wordAlternatives).length > 0 && (
                     <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="font-semibold text-purple-900 flex items-center gap-2">
                           <Languages className="w-5 h-5" />
-                          אפשרויות חלופיות למילים בודדות
+                          מילים נרדפות
                         </h3>
                         <button
                           onClick={() => setShowWordAlternatives(!showWordAlternatives)}
@@ -1955,13 +1073,11 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
                       </div>
                       {showWordAlternatives && (
                         <div className="space-y-3">
-                          {Object.entries(wordAlternatives).map(([word, alternatives]) => (
+                          {Object.entries(wordAlternatives).map(([word, alts]) => (
                             <div key={word} className="p-3 bg-white rounded-lg border border-purple-200">
-                              <p className="font-medium text-purple-900 mb-2">
-                                &quot;{word}&quot; →
-                              </p>
+                              <p className="font-medium text-purple-900 mb-2">&quot;{word}&quot; →</p>
                               <div className="flex flex-wrap gap-2">
-                                {alternatives.map((alt, idx) => (
+                                {alts.map((alt, idx) => (
                                   <button
                                     key={idx}
                                     onClick={() => handleSelectWordAlternative(word, alt)}
@@ -1971,9 +1087,9 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
                                   </button>
                                 ))}
                               </div>
-              </div>
-            ))}
-          </div>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   )}
@@ -1988,165 +1104,22 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
         </Card>
       </div>
 
-      {/* ניתוח ובעיות - ניהול קבלה או דחייה */}
+      {/* ניתוח ובעיות */}
       {analysis && analysis.issues.length > 0 && (
-        <Card className="p-6 space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-bold">⚠️ בעיות שזוהו ({analysis.issues.length})</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                לכל דפוס תוכלי לאשר את ההצעה, לדחות אותה או להזין תיקון משלך כדי ללמד את המערכת כיצד לנסח בעתיד.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 text-xs sm:text-sm">
-              <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-lg">
-                ממתין: {pendingIssuesCount}
-              </span>
-              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-lg">
-                אושרו: {acceptedIssuesCount}
-              </span>
-              <span className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg">
-                נדחו: {dismissedIssuesCount}
-              </span>
-            </div>
-          </div>
-          <div className="space-y-3">
-            {analysis.issues.map((issue, idx) => {
-              const status = getIssueStatus(issue, idx);
-              const key = getIssueKey(issue, idx);
-              const customAppliedText = issueCustomApplied[key];
-              const containerClasses =
-                status === 'accepted'
-                  ? 'border-green-400 bg-green-50'
-                  : status === 'dismissed'
-                    ? 'border-gray-300 bg-gray-50'
-                    : 'border-yellow-400 bg-yellow-50';
-              const statusLabel =
-                status === 'accepted'
-                  ? customAppliedText
-                    ? 'אושר (תיקון שלך)'
-                    : 'אושר'
-                  : status === 'dismissed'
-                    ? 'נדחה'
-                    : 'ממתין להחלטה';
-              const statusBadgeClasses =
-                status === 'accepted'
-                  ? 'bg-green-200 text-green-800'
-                  : status === 'dismissed'
-                    ? 'bg-gray-300 text-gray-700'
-                    : 'bg-yellow-200 text-yellow-800';
-
-              return (
-                <div key={idx} className={`p-4 border-r-4 rounded transition-colors ${containerClasses}`}>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs rounded">
-                        {issue.type}
-                      </span>
-                      <span className="text-sm text-gray-600">
-                        ביטחון: {Math.round(issue.confidence * 100)}%
-                      </span>
-                      <span className={`px-2 py-1 text-xs font-medium rounded ${statusBadgeClasses}`}>
-                        {statusLabel}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700">{issue.explanation}</p>
-                    <div className="flex flex-wrap items-center gap-2 text-sm">
-                      <span className="text-red-600 font-medium line-through">
-                        "{issue.original}"
-                      </span>
-                      <span className="text-gray-400">→</span>
-                      <span className="text-green-600 font-medium">
-                        "{issue.suggestion}"
-                      </span>
-                    </div>
-                    {customAppliedText && status === 'accepted' && (
-                      <p className="text-xs text-purple-700 mt-1">
-                        התיקון שבחרת: "{customAppliedText}"
-                      </p>
-                    )}
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => handleAcceptIssue(issue, idx)}
-                        disabled={status === 'accepted'}
-                        className={`flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded transition-colors ${
-                          status === 'accepted'
-                            ? 'bg-green-200 text-green-700 cursor-not-allowed opacity-80'
-                            : 'bg-green-600 text-white hover:bg-green-700'
-                        }`}
-                      >
-                        <ThumbsUp className="w-4 h-4" />
-                        אשרי והחל
-                      </button>
-                      <button
-                        onClick={() => handleDismissIssue(issue, idx)}
-                        disabled={status === 'dismissed'}
-                        className={`flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded transition-colors ${
-                          status === 'dismissed'
-                            ? 'bg-gray-200 text-gray-600 cursor-not-allowed opacity-80'
-                            : 'bg-gray-300 text-gray-800 hover:bg-gray-400'
-                        }`}
-                      >
-                        <ThumbsDown className="w-4 h-4" />
-                        דחי
-                      </button>
-                      <button
-                        onClick={() => toggleCustomIssueInput(issue, idx)}
-                        className={`flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded transition-colors ${
-                          issueCustomActive[key]
-                            ? 'bg-purple-200 text-purple-800'
-                            : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                        }`}
-                      >
-                        ✎ תיקון שלי
-                      </button>
-                      {status !== 'pending' && (
-                        <button
-                          onClick={() => handleUndoIssueDecision(issue, idx)}
-                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
-                        >
-                          <RotateCcw className="w-4 h-4" />
-                          בטלי החלטה
-                        </button>
-                      )}
-                    </div>
-                    {issueCustomActive[key] && (
-                      <div className="mt-3 space-y-2 w-full">
-                        <textarea
-                          value={issueCustomInputs[key] ?? issue.suggestion}
-                          onChange={(e) => handleCustomInputChange(issue, idx, e.target.value)}
-                          className="w-full border border-purple-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent"
-                          rows={3}
-                          placeholder="כתבי כאן את התיקון שאת מעדיפה..."
-                          dir="rtl"
-                        />
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => handleApplyCustomIssue(issue, idx)}
-                            className="px-3 py-1.5 bg-purple-600 text-white text-xs font-semibold rounded hover:bg-purple-700 transition-colors"
-                          >
-                            אשרי את התיקון שלי
-                          </button>
-                          <button
-                            onClick={() => handleCancelCustomIssue(issue, idx)}
-                            className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-semibold rounded hover:bg-gray-300 transition-colors"
-                          >
-                            בטלי
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {status === 'pending' && (
-                      <p className="text-xs text-blue-600">
-                        אפשר גם לסמן את הביטוי בטקסט המתוקן כדי לקבל הצעות נוספות.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
+        <IssuesPanel
+          issues={analysis.issues}
+          issueStates={issueStates}
+          issueCustomInputs={issueCustomInputs}
+          issueCustomActive={issueCustomActive}
+          issueCustomApplied={issueCustomApplied}
+          onAcceptIssue={handleAcceptIssue}
+          onDismissIssue={handleDismissIssue}
+          onUndoDecision={handleUndoIssueDecision}
+          onToggleCustomInput={toggleCustomIssueInput}
+          onCustomInputChange={handleCustomInputChange}
+          onApplyCustom={handleApplyCustomIssue}
+          onCancelCustom={handleCancelCustomIssue}
+        />
       )}
 
       {/* הצעות שיפור כלליות */}
@@ -2163,7 +1136,6 @@ const handleCancelCustomIssue = (issue: TranslationIssue, index: number) => {
           </ul>
         </Card>
       )}
-
     </div>
   );
 }
