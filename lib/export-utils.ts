@@ -1,10 +1,34 @@
 'use client';
 
 /**
+ * Helper function to clean markdown from text
+ */
+function cleanMarkdown(text: string): string {
+  return text
+    .replace(/<[^>]+>/g, '')
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/'''[\s\S]*?'''/g, '')
+    .replace(/'''+/g, '')
+    .replace(/```+/g, '')
+    .replace(/`+/g, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^---+/gm, '')
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/^\s+$/gm, '')
+    .trim();
+}
+
+/**
  * Export text to TXT file
  */
 export function exportToTXT(text: string, filename: string = 'document') {
-  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const cleanedText = cleanMarkdown(text);
+  // Add BOM for proper Hebrew display in text editors
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + cleanedText], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -21,9 +45,12 @@ export function exportToTXT(text: string, filename: string = 'document') {
 export async function exportToWord(text: string, filename: string = 'document') {
   try {
     const { Document, Packer, Paragraph, TextRun } = await import('docx');
-    
+
+    // Clean markdown before export
+    const cleanedText = cleanMarkdown(text);
+
     // Split text into paragraphs
-    const paragraphs = text.split('\n').map(line => {
+    const paragraphs = cleanedText.split('\n').map(line => {
       const trimmed = line.trim();
       if (trimmed) {
         return new Paragraph({
@@ -73,7 +100,10 @@ export async function exportToWord(text: string, filename: string = 'document') 
 export async function exportToPDF(text: string, filename: string = 'document') {
   try {
     const { jsPDF } = await import('jspdf');
-    
+
+    // Clean markdown before export
+    const cleanedText = cleanMarkdown(text);
+
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -82,7 +112,7 @@ export async function exportToPDF(text: string, filename: string = 'document') {
 
     // Set font for Hebrew support
     doc.setFont('helvetica');
-    
+
     // Split text into lines that fit the page
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -90,9 +120,9 @@ export async function exportToPDF(text: string, filename: string = 'document') {
     const maxWidth = pageWidth - 2 * margin;
     const lineHeight = 7;
     let y = margin;
-    
+
     // Split text into paragraphs
-    const paragraphs = text.split('\n');
+    const paragraphs = cleanedText.split('\n');
     
     for (const paragraph of paragraphs) {
       if (y + lineHeight > pageHeight - margin) {
