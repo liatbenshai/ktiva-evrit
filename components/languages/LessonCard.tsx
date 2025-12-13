@@ -52,28 +52,28 @@ export default function LessonCard({
   const StatusIcon = config.icon;
 
   return (
-    <div className="group block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <div className="mb-2 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-600">
+    <div className="group block rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 lg:p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+      <div className="flex items-start justify-between gap-2 sm:gap-3 lg:gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium text-indigo-600">
               {topic}
             </span>
-            <span className="inline-flex items-center gap-1 text-xs text-slate-500">
-              <Clock className="h-3 w-3" />
+            <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-slate-500">
+              <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               {duration} דק'
             </span>
           </div>
-          <h3 className="mb-1 text-lg font-semibold text-slate-900">{title}</h3>
-          {description && <p className="text-sm text-slate-600">{description}</p>}
+          <h3 className="mb-1 text-base sm:text-lg font-semibold text-slate-900 break-words">{title}</h3>
+          {description && <p className="text-xs sm:text-sm text-slate-600 break-words">{description}</p>}
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${config.color} ${config.bgColor}`}>
-            <StatusIcon className="h-3 w-3" />
+        <div className="flex flex-col items-end gap-1.5 sm:gap-2 flex-shrink-0">
+          <span className={`inline-flex items-center gap-1 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium ${config.color} ${config.bgColor}`}>
+            <StatusIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
             {config.label}
           </span>
           {score !== null && score !== undefined && (
-            <span className="text-sm font-semibold text-slate-700">{score}%</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-700">{score}%</span>
           )}
         </div>
       </div>

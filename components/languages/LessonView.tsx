@@ -73,35 +73,36 @@ export default function LessonView({
   const allExercisesCompleted = completedExercises === lesson.exercises.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+          className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl border border-slate-200 bg-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-600 transition hover:bg-slate-50"
         >
-          <ArrowRight className="h-4 w-4 rotate-180" />
-          חזרה לשיעורים
+          <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 rotate-180" />
+          <span className="hidden sm:inline">חזרה לשיעורים</span>
+          <span className="sm:hidden">חזרה</span>
         </button>
-        <div className="flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-600">
-          <Trophy className="h-4 w-4" />
-          {totalScore}/{maxScore} נקודות
+        <div className="flex items-center gap-1.5 sm:gap-2 rounded-full bg-indigo-50 px-2.5 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium text-indigo-600">
+          <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          {totalScore}/{maxScore} נק'
         </div>
       </div>
 
       {/* Lesson Title */}
-      <div className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50 p-6">
-        <h1 className="mb-2 text-2xl font-bold text-slate-900">{lesson.title}</h1>
-        {lesson.description && <p className="text-slate-600">{lesson.description}</p>}
+      <div className="rounded-2xl sm:rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50 p-4 sm:p-5 lg:p-6">
+        <h1 className="mb-1.5 sm:mb-2 text-xl sm:text-2xl font-bold text-slate-900 break-words">{lesson.title}</h1>
+        {lesson.description && <p className="text-xs sm:text-sm text-slate-600 break-words">{lesson.description}</p>}
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2">
         {[
-          { id: 'vocabulary', label: 'אוצר מילים', icon: BookOpen },
-          { id: 'grammar', label: 'דקדוק', icon: BookOpen },
-          { id: 'exercises', label: 'תרגילים', icon: ListChecks },
-          { id: 'summary', label: 'סיכום', icon: Trophy },
+          { id: 'vocabulary', label: 'אוצר מילים', icon: BookOpen, shortLabel: 'מילים' },
+          { id: 'grammar', label: 'דקדוק', icon: BookOpen, shortLabel: 'דקדוק' },
+          { id: 'exercises', label: 'תרגילים', icon: ListChecks, shortLabel: 'תרגילים' },
+          { id: 'summary', label: 'סיכום', icon: Trophy, shortLabel: 'סיכום' },
         ].map((tab) => {
           const isActive = currentSection === tab.id;
           const TabIcon = tab.icon;
@@ -109,14 +110,15 @@ export default function LessonView({
             <button
               key={tab.id}
               onClick={() => setCurrentSection(tab.id as any)}
-              className={`inline-flex items-center gap-2 whitespace-nowrap rounded-xl border px-4 py-2 text-sm font-medium transition ${
+              className={`inline-flex items-center gap-1.5 sm:gap-2 whitespace-nowrap rounded-lg sm:rounded-xl border px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition flex-shrink-0 ${
                 isActive
                   ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
                   : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
               }`}
             >
-              <TabIcon className="h-4 w-4" />
-              {tab.label}
+              <TabIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.shortLabel}</span>
             </button>
           );
         })}
@@ -124,53 +126,53 @@ export default function LessonView({
 
       {/* Vocabulary Section */}
       {currentSection === 'vocabulary' && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-slate-900">אוצר מילים</h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="space-y-3 sm:space-y-4">
+          <h2 className="text-lg sm:text-xl font-semibold text-slate-900">אוצר מילים</h2>
+          <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
             {lesson.vocabulary.map((vocab) => (
               <div 
                 key={vocab.id} 
-                className={`rounded-2xl border p-4 ${
+                className={`rounded-xl sm:rounded-2xl border p-3 sm:p-4 ${
                   vocab.isSentence 
                     ? 'border-emerald-300 bg-gradient-to-br from-emerald-50 to-teal-50' 
                     : 'border-slate-200 bg-white'
                 }`}
               >
                 {vocab.isSentence && (
-                  <div className="mb-2 inline-block rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
+                  <div className="mb-1.5 sm:mb-2 inline-block rounded-full bg-emerald-100 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium text-emerald-700">
                     משפט שלם
                   </div>
                 )}
-                <div className="flex items-center justify-between mb-2">
-                  <p className={`font-semibold text-slate-900 ${vocab.isSentence ? 'text-lg' : 'text-lg'}`} dir="rtl">{vocab.hebrewTerm}</p>
+                <div className="flex items-center justify-between mb-1.5 sm:mb-2 gap-2">
+                  <p className={`font-semibold text-slate-900 text-base sm:text-lg break-words flex-1`} dir="rtl">{vocab.hebrewTerm}</p>
                   <button
                     type="button"
                     onClick={() => speakText(vocab.translatedTerm, targetLanguage)}
-                    className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition ${
+                    className={`inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full transition flex-shrink-0 ${
                       vocab.isSentence 
                         ? 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200' 
                         : 'bg-indigo-100 text-indigo-600 hover:bg-indigo-200'
                     }`}
                   >
-                    <Volume2 className="h-4 w-4" />
+                    <Volume2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </button>
                 </div>
-                <p className={`text-base ${vocab.isSentence ? 'text-emerald-700' : 'text-indigo-700'}`} dir="ltr">{vocab.translatedTerm}</p>
+                <p className={`text-sm sm:text-base break-words ${vocab.isSentence ? 'text-emerald-700' : 'text-indigo-700'}`} dir="ltr">{vocab.translatedTerm}</p>
                 {vocab.pronunciation && (
-                  <p className="mt-1 text-xs text-slate-500">{vocab.pronunciation}</p>
+                  <p className="mt-1 text-[10px] sm:text-xs text-slate-500">{vocab.pronunciation}</p>
                 )}
                 {vocab.usageExample && (
-                  <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50 p-3 text-sm">
-                    <p dir="ltr">{vocab.usageExample.target}</p>
-                    <p className="mt-1 text-xs text-slate-500" dir="rtl">{vocab.usageExample.hebrew}</p>
+                  <div className="mt-2 sm:mt-3 rounded-lg border border-slate-100 bg-slate-50 p-2 sm:p-3 text-xs sm:text-sm">
+                    <p dir="ltr" className="break-words">{vocab.usageExample.target}</p>
+                    <p className="mt-1 text-[10px] sm:text-xs text-slate-500 break-words" dir="rtl">{vocab.usageExample.hebrew}</p>
                   </div>
                 )}
                 {vocab.notes && (
-                  <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                  <div className="mt-2 sm:mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2 sm:p-3">
                     {vocab.notes.startsWith('תרגומים חלופיים:') ? (
                       <div>
-                        <p className="text-xs font-semibold text-amber-800 mb-1">תרגומים חלופיים:</p>
-                        <div className="flex flex-wrap gap-2">
+                        <p className="text-[10px] sm:text-xs font-semibold text-amber-800 mb-1">תרגומים חלופיים:</p>
+                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
                           {vocab.notes.replace('תרגומים חלופיים: ', '').split(', ').map((alt: string, idx: number) => (
                             <span key={idx} className="inline-block rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-900" dir="ltr">
                               {alt}
@@ -191,19 +193,19 @@ export default function LessonView({
 
       {/* Grammar Section */}
       {currentSection === 'grammar' && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-slate-900">הסבר דקדוקי</h2>
+        <div className="space-y-3 sm:space-y-4">
+          <h2 className="text-lg sm:text-xl font-semibold text-slate-900">הסבר דקדוקי</h2>
           {lesson.grammarNotes ? (
-            <div className="rounded-2xl border border-purple-100 bg-purple-50/60 p-6">
-              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: lesson.grammarNotes }} />
+            <div className="rounded-xl sm:rounded-2xl border border-purple-100 bg-purple-50/60 p-4 sm:p-5 lg:p-6">
+              <div className="prose prose-sm max-w-none text-xs sm:text-sm" dangerouslySetInnerHTML={{ __html: lesson.grammarNotes }} />
             </div>
           ) : (
-            <p className="text-slate-500">אין הסבר דקדוקי לשיעור זה.</p>
+            <p className="text-xs sm:text-sm text-slate-500">אין הסבר דקדוקי לשיעור זה.</p>
           )}
           {lesson.culturalTips && (
-            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-6">
-              <h3 className="mb-2 font-semibold text-indigo-800">טיפים תרבותיים</h3>
-              <p className="text-sm text-indigo-700">{lesson.culturalTips}</p>
+            <div className="rounded-xl sm:rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 sm:p-5 lg:p-6">
+              <h3 className="mb-1.5 sm:mb-2 text-sm sm:text-base font-semibold text-indigo-800">טיפים תרבותיים</h3>
+              <p className="text-xs sm:text-sm text-indigo-700 break-words">{lesson.culturalTips}</p>
             </div>
           )}
         </div>
@@ -211,10 +213,10 @@ export default function LessonView({
 
       {/* Exercises Section */}
       {currentSection === 'exercises' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-slate-900">תרגילים</h2>
-            <span className="text-sm text-slate-500">
+        <div className="space-y-4 sm:space-y-5 lg:space-y-6">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-900">תרגילים</h2>
+            <span className="text-xs sm:text-sm text-slate-500">
               {completedExercises} מתוך {lesson.exercises.length} הושלמו
             </span>
           </div>
@@ -222,13 +224,13 @@ export default function LessonView({
             const exercisePoints = 10; // Default points, could come from exercise.points
             return (
               <div key={exercise.id}>
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-600">
+                <div className="mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2">
+                  <span className="inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-indigo-100 text-[10px] sm:text-xs font-semibold text-indigo-600 flex-shrink-0">
                     {index + 1}
                   </span>
-                  {exercise.title && <h3 className="font-semibold text-slate-900">{exercise.title}</h3>}
+                  {exercise.title && <h3 className="text-sm sm:text-base font-semibold text-slate-900 break-words">{exercise.title}</h3>}
                 </div>
-                <p className="mb-3 text-sm text-slate-600">{exercise.instructions}</p>
+                <p className="mb-2 sm:mb-3 text-xs sm:text-sm text-slate-600 break-words">{exercise.instructions}</p>
                 {exercise.type === 'MATCHING' && exercise.options && (
                   <ExerciseMatching
                     question={exercise.question}
@@ -332,10 +334,11 @@ export default function LessonView({
           {allExercisesCompleted && (
             <button
               onClick={handleFinish}
-              className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-4 text-lg font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+              className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 sm:px-6 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
             >
-              <Trophy className="mr-2 inline h-5 w-5" />
-              סיימתי את השיעור!
+              <Trophy className="mr-1.5 sm:mr-2 inline h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="hidden sm:inline">סיימתי את השיעור!</span>
+              <span className="sm:hidden">סיימתי!</span>
             </button>
           )}
         </div>
@@ -343,16 +346,16 @@ export default function LessonView({
 
       {/* Summary Section */}
       {currentSection === 'summary' && (
-        <div className="rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-8 text-center">
-          <Trophy className="mx-auto mb-4 h-16 w-16 text-emerald-600" />
-          <h2 className="mb-2 text-2xl font-bold text-emerald-900">כל הכבוד!</h2>
-          <p className="mb-4 text-emerald-700">סיימת את השיעור בהצלחה</p>
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-2xl font-bold text-emerald-600 shadow-md">
+        <div className="rounded-2xl sm:rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 sm:p-7 lg:p-8 text-center">
+          <Trophy className="mx-auto mb-3 sm:mb-4 h-12 w-12 sm:h-16 sm:w-16 text-emerald-600" />
+          <h2 className="mb-1.5 sm:mb-2 text-xl sm:text-2xl font-bold text-emerald-900">כל הכבוד!</h2>
+          <p className="mb-3 sm:mb-4 text-sm sm:text-base text-emerald-700">סיימת את השיעור בהצלחה</p>
+          <div className="mb-4 sm:mb-6 inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-white px-4 sm:px-6 py-2 sm:py-3 text-xl sm:text-2xl font-bold text-emerald-600 shadow-md">
             {maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0}%
           </div>
           <button
             onClick={onBack}
-            className="rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+            className="rounded-xl bg-emerald-600 px-5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white transition hover:bg-emerald-700 w-full sm:w-auto"
           >
             חזרה לשיעורים
           </button>

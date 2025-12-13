@@ -259,32 +259,32 @@ export default function StructuredLessons({
   // Level selection
   if (!selectedLevel) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-5 lg:space-y-6">
         {error && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <div className="rounded-xl sm:rounded-2xl border border-amber-200 bg-amber-50 p-3 sm:p-4 text-xs sm:text-sm text-amber-800">
             {error}
           </div>
         )}
         {isLoading && (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          <div className="flex justify-center py-6 sm:py-8">
+            <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-indigo-600" />
           </div>
         )}
-        <div className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50 p-6">
-          <h2 className="mb-2 text-xl font-semibold text-indigo-800">בחרי רמת למידה</h2>
-          <p className="text-sm text-indigo-600">איזו רמה מתאימה לך?</p>
+        <div className="rounded-2xl sm:rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50 p-4 sm:p-5 lg:p-6">
+          <h2 className="mb-1.5 sm:mb-2 text-lg sm:text-xl font-semibold text-indigo-800">בחרי רמת למידה</h2>
+          <p className="text-xs sm:text-sm text-indigo-600">איזו רמה מתאימה לך?</p>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-3">
           {(Object.keys(LEVEL_CONFIG) as LanguageLevel[]).map((level) => {
             const config = LEVEL_CONFIG[level];
             return (
               <button
                 key={level}
                 onClick={() => setSelectedLevel(level)}
-                className={`group rounded-3xl border-2 border-transparent bg-gradient-to-br ${config.gradient} p-6 text-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl`}
+                className={`group rounded-2xl sm:rounded-3xl border-2 border-transparent bg-gradient-to-br ${config.gradient} p-4 sm:p-5 lg:p-6 text-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl`}
               >
-                <h3 className="mb-2 text-2xl font-bold">{config.label}</h3>
-                <p className="text-sm opacity-90">
+                <h3 className="mb-1.5 sm:mb-2 text-xl sm:text-2xl font-bold">{config.label}</h3>
+                <p className="text-xs sm:text-sm opacity-90">
                   {level === 'BEGINNER' && 'מתחיל ללמוד את השפה'}
                   {level === 'INTERMEDIATE' && 'יודע את הבסיס, רוצה להתקדם'}
                   {level === 'ADVANCED' && 'שולט בשפה, רוצה לשפר'}
@@ -309,37 +309,37 @@ export default function StructuredLessons({
     }, {} as Record<string, Lesson[]>);
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-5 lg:space-y-6">
         {success && (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+          <div className="rounded-xl sm:rounded-2xl border border-emerald-200 bg-emerald-50 p-3 sm:p-4 text-xs sm:text-sm text-emerald-800">
             {success}
           </div>
         )}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <button
             onClick={() => setSelectedLevel(null)}
-            className="text-sm text-indigo-600 hover:text-indigo-700"
+            className="text-xs sm:text-sm text-indigo-600 hover:text-indigo-700 whitespace-nowrap"
           >
             ← חזרה לרמות
           </button>
-          <span className="rounded-full bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-600">
+          <span className="rounded-full bg-indigo-50 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-indigo-600">
             {LEVEL_CONFIG[selectedLevel].label}
           </span>
         </div>
 
         {progressStats && (
-          <div className="rounded-2xl border border-indigo-100 bg-white p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-slate-700">התקדמות כללית</span>
-              <span className="text-lg font-bold text-indigo-600">{progressStats.completionRate}%</span>
+          <div className="rounded-xl sm:rounded-2xl border border-indigo-100 bg-white p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+              <span className="text-xs sm:text-sm font-medium text-slate-700">התקדמות כללית</span>
+              <span className="text-base sm:text-lg font-bold text-indigo-600">{progressStats.completionRate}%</span>
             </div>
-            <div className="h-2 w-full rounded-full bg-slate-200">
+            <div className="h-1.5 sm:h-2 w-full rounded-full bg-slate-200">
               <div
-                className="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all"
+                className="h-1.5 sm:h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all"
                 style={{ width: `${progressStats.completionRate}%` }}
               />
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-slate-600">
+            <div className="mt-2 sm:mt-3 grid grid-cols-3 gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-slate-600">
               <div>
                 <span className="font-semibold">{progressStats.completedLessons}</span> הושלמו
               </div>
@@ -354,41 +354,41 @@ export default function StructuredLessons({
         )}
 
         {/* Practice Options */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-6">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 mb-4 sm:mb-5 lg:mb-6">
           <button
             onClick={() => setPracticeMode('flashcards')}
-            className="group rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 p-6 text-left transition hover:border-indigo-300 hover:shadow-lg"
+            className="group rounded-xl sm:rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 p-4 sm:p-5 lg:p-6 text-right transition hover:border-indigo-300 hover:shadow-lg"
           >
-            <div className="mb-3 inline-flex items-center justify-center rounded-xl bg-indigo-100 p-3 text-indigo-600">
-              <CreditCard className="h-6 w-6" />
+            <div className="mb-2 sm:mb-3 inline-flex items-center justify-center rounded-lg sm:rounded-xl bg-indigo-100 p-2 sm:p-3 text-indigo-600">
+              <CreditCard className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <h3 className="mb-2 text-lg font-semibold text-slate-900">כרטיסיות למידה</h3>
-            <p className="text-sm text-slate-600">תרגלי מילים עם כרטיסיות אינטראקטיביות</p>
+            <h3 className="mb-1.5 sm:mb-2 text-base sm:text-lg font-semibold text-slate-900">כרטיסיות למידה</h3>
+            <p className="text-xs sm:text-sm text-slate-600">תרגלי מילים עם כרטיסיות אינטראקטיביות</p>
           </button>
           <button
             onClick={() => {/* TODO: Add quiz component */}}
-            className="group rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 text-left transition hover:border-emerald-300 hover:shadow-lg"
+            className="group rounded-xl sm:rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-4 sm:p-5 lg:p-6 text-right transition hover:border-emerald-300 hover:shadow-lg"
           >
-            <div className="mb-3 inline-flex items-center justify-center rounded-xl bg-emerald-100 p-3 text-emerald-600">
-              <HelpCircle className="h-6 w-6" />
+            <div className="mb-2 sm:mb-3 inline-flex items-center justify-center rounded-lg sm:rounded-xl bg-emerald-100 p-2 sm:p-3 text-emerald-600">
+              <HelpCircle className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <h3 className="mb-2 text-lg font-semibold text-slate-900">חידון</h3>
-            <p className="text-sm text-slate-600">בחני את עצמך עם חידונים</p>
+            <h3 className="mb-1.5 sm:mb-2 text-base sm:text-lg font-semibold text-slate-900">חידון</h3>
+            <p className="text-xs sm:text-sm text-slate-600">בחני את עצמך עם חידונים</p>
           </button>
         </div>
 
         <div>
-          <h2 className="mb-4 text-xl font-semibold text-slate-900">בחרי נושא</h2>
+          <h2 className="mb-3 sm:mb-4 text-lg sm:text-xl font-semibold text-slate-900">בחרי נושא</h2>
           {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            <div className="flex justify-center py-8 sm:py-12">
+              <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-indigo-600" />
             </div>
           ) : topics.length === 0 ? (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center">
-              <p className="text-slate-600">אין נושאים זמינים ברמה זו כרגע.</p>
+            <div className="rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8 text-center">
+              <p className="text-xs sm:text-sm text-slate-600">אין נושאים זמינים ברמה זו כרגע.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {topics.map((topic) => {
               const topicLessons = lessonsByTopic[topic] || [];
               const completedCount = topicLessons.filter((l) => {
@@ -401,18 +401,18 @@ export default function StructuredLessons({
                 <button
                   key={topic}
                   onClick={() => setSelectedTopic(topic)}
-                  className="group rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                  className="group rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 lg:p-5 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-md"
                 >
-                  <div className="mb-2 text-4xl">{TOPIC_ICONS[topic] || '📚'}</div>
-                  <h3 className="mb-2 font-semibold text-slate-900">{topic}</h3>
-                  <p className="mb-2 text-xs text-slate-500">{topicLessons.length} שיעורים</p>
-                  <div className="h-1.5 w-full rounded-full bg-slate-200">
+                  <div className="mb-1.5 sm:mb-2 text-3xl sm:text-4xl">{TOPIC_ICONS[topic] || '📚'}</div>
+                  <h3 className="mb-1 sm:mb-2 text-sm sm:text-base font-semibold text-slate-900 break-words">{topic}</h3>
+                  <p className="mb-1.5 sm:mb-2 text-[10px] sm:text-xs text-slate-500">{topicLessons.length} שיעורים</p>
+                  <div className="h-1 sm:h-1.5 w-full rounded-full bg-slate-200">
                     <div
-                      className="h-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all"
+                      className="h-1 sm:h-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all"
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
-                  <p className="mt-1 text-xs text-slate-400">{progressPercent}% הושלם</p>
+                  <p className="mt-1 text-[10px] sm:text-xs text-slate-400">{progressPercent}% הושלם</p>
                 </button>
               );
             })}
@@ -427,34 +427,34 @@ export default function StructuredLessons({
   const topicLessons = lessons.filter((l) => l.topic === selectedTopic && l.level === selectedLevel);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
+      <div className="flex items-center justify-between gap-2">
         <button
           onClick={() => setSelectedTopic(null)}
-          className="text-sm text-indigo-600 hover:text-indigo-700"
+          className="text-xs sm:text-sm text-indigo-600 hover:text-indigo-700 whitespace-nowrap"
         >
           ← חזרה לנושאים
         </button>
-        <div className="flex items-center gap-2">
-          <span className="rounded-full bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-600">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <span className="rounded-full bg-indigo-50 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-indigo-600">
             {LEVEL_CONFIG[selectedLevel].label}
           </span>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
+          <span className="rounded-full bg-slate-100 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-slate-600 break-words">
             {selectedTopic}
           </span>
         </div>
       </div>
 
       <div>
-        <h2 className="mb-4 text-xl font-semibold text-slate-900">שיעורים בנושא {selectedTopic}</h2>
+        <h2 className="mb-3 sm:mb-4 text-lg sm:text-xl font-semibold text-slate-900 break-words">שיעורים בנושא {selectedTopic}</h2>
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          <div className="flex justify-center py-8 sm:py-12">
+            <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-indigo-600" />
           </div>
         ) : topicLessons.length === 0 ? (
-          <p className="text-center text-slate-500 py-12">אין שיעורים זמינים בנושא זה כרגע.</p>
+          <p className="text-center text-xs sm:text-sm text-slate-500 py-8 sm:py-12">אין שיעורים זמינים בנושא זה כרגע.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {topicLessons.map((lesson) => {
               // Get user progress for this lesson
               const progress = (lesson as any).userProgress?.[0];
