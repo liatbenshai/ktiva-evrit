@@ -15,8 +15,10 @@ import {
   GraduationCap,
 } from 'lucide-react'
 import StructuredLessons from '@/components/languages/StructuredLessons'
+import AdvancedPractice from '@/components/languages/AdvancedPractice'
 import DashboardPageWrapper from '@/components/layout/DashboardPageWrapper';
 import { getPageTheme } from '@/lib/page-themes';
+import { useSession } from 'next-auth/react';
 
 type SupportedLanguageKey = 'english' | 'romanian' | 'italian' | 'french' | 'russian'
 
@@ -104,10 +106,11 @@ function shuffleArray<T>(array: T[]): T[] {
   return arr
 }
 
-type TabType = 'free' | 'structured';
+type TabType = 'free' | 'structured' | 'advanced';
 type ContentType = 'word' | 'sentence' | 'linking_word';
 
 export default function LanguagesPage() {
+  const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState<TabType>('free');
   const [targetLanguage, setTargetLanguage] = useState<SupportedLanguageKey>('english')
   const [hebrewTerm, setHebrewTerm] = useState('')
@@ -500,6 +503,17 @@ export default function LanguagesPage() {
             <GraduationCap className="h-4 w-4" />
             שיעורים מובנים
           </button>
+          <button
+            onClick={() => setActiveTab('advanced')}
+            className={`inline-flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-semibold transition ${
+              activeTab === 'advanced'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Trophy className="h-4 w-4" />
+            תרגול מתקדם
+          </button>
         </div>
       </div>
 
@@ -517,7 +531,9 @@ export default function LanguagesPage() {
               }
             }}
           />
-        ) : (
+        ) : activeTab === 'advanced' ? (
+          <AdvancedPractice targetLanguage={targetLanguage} userId={session?.user?.email || 'default-user'} />
+        ) : activeTab === 'free' ? (
           <section className="rounded-3xl bg-white p-6 shadow-xl sm:p-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-2">

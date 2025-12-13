@@ -90,23 +90,37 @@ export async function GET(req: NextRequest) {
     // Select random terms for quiz
     const selectedTerms = shuffleArray(allTerms).slice(0, Math.min(count, allTerms.length));
 
-    // Create quiz questions
+    // Create quiz questions with better distractors
     const questions = selectedTerms.map((term, index) => {
-      // Get wrong answers (distractors)
-      const wrongAnswers = shuffleArray(
-        allTerms
-          .filter((t) => t.translatedTerm !== term.translatedTerm)
-          .map((t) => t.translatedTerm)
-      ).slice(0, 3);
+      // Get better distractors - similar length and from same language
+      const similarTerms = allTerms
+        .filter((t) => 
+          t.translatedTerm !== term.translatedTerm &&
+          t.translatedTerm.length > 0 &&
+          Math.abs(t.translatedTerm.length - term.translatedTerm.length) <= 5
+        )
+        .map((t) => t.translatedTerm);
+      
+      const wrongAnswers = shuffleArray(similarTerms).slice(0, 3);
+      
+      // If we don't have enough similar terms, fill with any terms
+      if (wrongAnswers.length < 3) {
+        const additional = shuffleArray(
+          allTerms
+            .filter((t) => t.translatedTerm !== term.translatedTerm && !wrongAnswers.includes(t.translatedTerm))
+            .map((t) => t.translatedTerm)
+        ).slice(0, 3 - wrongAnswers.length);
+        wrongAnswers.push(...additional);
+      }
 
-      const options = shuffleArray([term.translatedTerm, ...wrongAnswers]);
+      const options = shuffleArray([term.translatedTerm, ...wrongAnswers.slice(0, 3)]);
 
       return {
         id: `q${index + 1}`,
         question: `מה התרגום של "${term.hebrewTerm}"?`,
         hebrewTerm: term.hebrewTerm,
         correctAnswer: term.translatedTerm,
-        options,
+        options: options.length >= 4 ? options : [...options, 'לא יודע'],
         topic: term.topic,
       };
     });
@@ -141,21 +155,43 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Calculate results
+    // Calculate results with better validation
     let correct = 0;
     const results = answers.map((answer: any) => {
-      const isCorrect = answer.selected === answer.correct;
+      // Normalize answers for comparison (trim, lowercase, remove extra spaces)
+      const selected = (answer.selected || '').trim().toLowerCase();
+      const correct = (answer.correct || '').trim().toLowerCase();
+      
+      // More flexible matching - exact match or contains
+      const isCorrect = selected === correct || 
+                       (selected.length > 0 && correct.includes(selected)) ||
+                       (correct.length > 0 && selected.includes(correct));
+      
       if (isCorrect) correct++;
       return {
         ...answer,
         isCorrect,
+        feedback: isCorrect 
+          ? 'נכון! כל הכבוד!' 
+          : `לא נכון. התשובה הנכונה: ${answer.correct}`,
       };
     });
 
     const score = Math.round((correct / answers.length) * 100);
 
-    // Save quiz results (optional - could track in database)
-    // For now, just return results
+    // Provide feedback based on score
+    let feedback = '';
+    if (score >= 90) {
+      feedback = 'מצוין! יש לך שליטה טובה בחומר.';
+    } else if (score >= 80) {
+      feedback = 'טוב מאוד! יש לך הבנה טובה, אבל כדאי לחזור על הנקודות החלשות.';
+    } else if (score >= 70) {
+      feedback = 'טוב. נסי לחזור על המילים הקשות ולשפר.';
+    } else if (score >= 60) {
+      feedback = 'מספיק. מומלץ לחזור על החומר ולשמור יותר מילים.';
+    } else {
+      feedback = 'צריך שיפור. מומלץ לחזור על השיעורים הבסיסיים ולשמור יותר מילים.';
+    }
 
     return NextResponse.json({
       success: true,
@@ -163,6 +199,7 @@ export async function POST(req: NextRequest) {
       correct,
       total: answers.length,
       results,
+      feedback,
     });
   } catch (error: any) {
     console.error('Error submitting quiz:', error);
