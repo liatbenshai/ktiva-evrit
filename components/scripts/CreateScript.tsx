@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Film, Loader2, RefreshCw, Upload, Download, FileText } from 'lucide-react';
+import { Film, Loader2, RefreshCw, Upload } from 'lucide-react';
 import { extractTextFromImageClient, processImagesFromBase64Legacy } from '@/lib/ocr-client';
-import { exportToTXT, exportToWord, exportToPDF } from '@/lib/export-utils';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
@@ -320,32 +319,6 @@ export default function CreateScript() {
               <div className="flex items-center gap-2">
                 <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">
                   <span className="h-2 w-2 rounded-full bg-emerald-500" /> טיול בזמן אמת
-                </div>
-                <div className="flex items-center gap-1 border border-slate-200 rounded-lg px-2 py-1 bg-white">
-                  <button
-                    onClick={() => handleExport(result, 'txt')}
-                    className="flex items-center gap-1 text-xs text-slate-600 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-slate-50"
-                    title="ייצא ל-TXT"
-                  >
-                    <FileText className="w-3 h-3" />
-                    TXT
-                  </button>
-                  <button
-                    onClick={() => handleExport(result, 'docx')}
-                    className="flex items-center gap-1 text-xs text-slate-600 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-slate-50"
-                    title="ייצא ל-Word"
-                  >
-                    <FileText className="w-3 h-3" />
-                    DOCX
-                  </button>
-                  <button
-                    onClick={() => handleExport(result, 'pdf')}
-                    className="flex items-center gap-1 text-xs text-slate-600 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-slate-50"
-                    title="ייצא ל-PDF"
-                  >
-                    <Download className="w-3 h-3" />
-                    PDF
-                  </button>
                 </div>
               </div>
             </div>
