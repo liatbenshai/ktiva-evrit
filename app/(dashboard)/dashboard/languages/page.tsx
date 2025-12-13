@@ -479,40 +479,43 @@ export default function LanguagesPage() {
     >
 
       {/* Tab Navigation */}
-      <div className="mx-auto w-full max-w-5xl px-4 pt-6">
-        <div className="flex gap-2 border-b border-indigo-100">
+      <div className="mx-auto w-full max-w-5xl px-3 sm:px-4 pt-4 sm:pt-6">
+        <div className="flex gap-1 sm:gap-2 border-b border-indigo-100 overflow-x-auto">
           <button
             onClick={() => setActiveTab('free')}
-            className={`inline-flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-semibold transition ${
+            className={`inline-flex items-center gap-1.5 sm:gap-2 border-b-2 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold transition whitespace-nowrap flex-shrink-0 ${
               activeTab === 'free'
                 ? 'border-indigo-500 text-indigo-600'
                 : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
-            <BookOpen className="h-4 w-4" />
-            תרגום חופשי
+            <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">תרגום חופשי</span>
+            <span className="sm:hidden">חופשי</span>
           </button>
           <button
             onClick={() => setActiveTab('structured')}
-            className={`inline-flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-semibold transition ${
+            className={`inline-flex items-center gap-1.5 sm:gap-2 border-b-2 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold transition whitespace-nowrap flex-shrink-0 ${
               activeTab === 'structured'
                 ? 'border-indigo-500 text-indigo-600'
                 : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
-            <GraduationCap className="h-4 w-4" />
-            שיעורים מובנים
+            <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">שיעורים מובנים</span>
+            <span className="sm:hidden">שיעורים</span>
           </button>
           <button
             onClick={() => setActiveTab('advanced')}
-            className={`inline-flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-semibold transition ${
+            className={`inline-flex items-center gap-1.5 sm:gap-2 border-b-2 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold transition whitespace-nowrap flex-shrink-0 ${
               activeTab === 'advanced'
                 ? 'border-indigo-500 text-indigo-600'
                 : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
-            <Trophy className="h-4 w-4" />
-            תרגול מתקדם
+            <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">תרגול מתקדם</span>
+            <span className="sm:hidden">מתקדם</span>
           </button>
         </div>
       </div>
