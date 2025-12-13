@@ -4,7 +4,6 @@ import Link from 'next/link';
 import {
   BookMarked,
   Brain,
-  Code2,
   FileCheck,
   FileText,
   Languages,
@@ -12,7 +11,6 @@ import {
   Mail,
   MessageSquare,
   RotateCcw,
-  Scale,
   ScrollText,
   Search,
   Sparkles,
@@ -122,20 +120,6 @@ const creationCards = [
     gradient: 'from-blue-500 via-indigo-500 to-purple-600',
   },
   {
-    title: 'חיפוש פסקי דין',
-    description: 'חפשי פסקי דין רלוונטיים לפי נושאים משפטיים, כולל הפניות למקורות.',
-    icon: Scale,
-    href: '/dashboard/legal-cases',
-    gradient: 'from-purple-500 via-purple-600 to-indigo-600',
-  },
-  {
-    title: 'בדיקת קוד',
-    description: 'העלי קובץ קוד והמערכת תנתח אותו, תזהה בעיות ותציע תיקונים מקצועיים.',
-    icon: Code2,
-    href: '/dashboard/code-review',
-    gradient: 'from-cyan-500 via-blue-500 to-indigo-600',
-  },
-  {
     title: 'שיפור תוכן',
     description: 'הזיני טקסט ובחרי מקצוע או מטרה, והמערכת תשפר את התוכן בהתאם.',
     icon: Sparkles,
@@ -180,55 +164,61 @@ export default function DashboardPage() {
   const isAdmin = status === 'authenticated' && session?.user?.email === 'admin@ktiva-evrit.com';
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <header className="sticky top-0 z-30 border-b border-white/40 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-2 text-indigo-600">
-            <Wand2 className="h-5 w-5" />
-            <span className="text-sm font-semibold sm:text-base">כתיבה בעברית</span>
+    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 via-pink-50 to-blue-50">
+      <header className="sticky top-0 z-30 border-b border-indigo-100/50 bg-white/90 backdrop-blur-md shadow-sm">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:py-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg">
+              <Wand2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+            </div>
+            <span className="text-base sm:text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              כתיבה בעברית
+            </span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             {isAdmin && (
               <Link
                 href="/admin/users"
-                className="flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-purple-700"
+                className="flex items-center gap-1.5 sm:gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg hover:scale-105"
                 title="ניהול משתמשים"
               >
-                <Users className="h-4 w-4" />
+                <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">משתמשים</span>
               </Link>
             )}
             <Link
               href="/dashboard/ai-correction"
-              className="rounded-full bg-indigo-600 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-indigo-700"
+              className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg hover:scale-105"
             >
-              התחילי לתקן
+              <span className="hidden sm:inline">התחילי לתקן</span>
+              <span className="sm:hidden">תיקון</span>
             </Link>
             <UserMenu />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-4 pb-16">
-        <section className="mt-8 rounded-3xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 text-white shadow-2xl sm:p-12">
-          <div className="mx-auto flex max-w-3xl flex-col items-center gap-5 text-center">
-            <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
+      <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 pb-8 sm:pb-16">
+        <section className="mt-6 sm:mt-8 rounded-3xl bg-gradient-to-br from-indigo-500 via-purple-500 via-pink-500 to-rose-500 p-6 sm:p-10 lg:p-14 text-white shadow-2xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-20"></div>
+          <div className="mx-auto flex max-w-4xl flex-col items-center gap-4 sm:gap-6 text-center relative z-10">
+            <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold leading-tight drop-shadow-lg">
               עוזר הכתיבה החכם שלך בעברית טבעית
             </h1>
-            <p className="text-sm text-white/85 sm:text-base">
+            <p className="text-sm sm:text-base lg:text-lg text-white/95 max-w-2xl leading-relaxed">
               כתיבה, תיקון ולמידה של מאמרים, מיילים, פוסטים וסיפורים בעברית תקנית. כל תיקון שלך נשמר והמערכת משתפרת בכל שימוש – כך שהתוכן הבא ירגיש כבר שלך.
             </p>
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
               <Link
                 href="/dashboard/ai-correction"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-indigo-600 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-bold text-indigo-600 shadow-xl transition-all hover:-translate-y-1 hover:shadow-2xl hover:scale-105"
               >
                 התחילי תיקון עכשיו
-                <span aria-hidden>→</span>
+                <span aria-hidden className="text-lg">→</span>
               </Link>
               <Link
                 href="/dashboard/articles"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/70 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/10"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-white/80 bg-white/10 backdrop-blur-sm px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-bold text-white transition-all hover:bg-white/20 hover:border-white hover:scale-105"
               >
                 צרי תוכן חדש
               </Link>
@@ -236,67 +226,82 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="mt-14 space-y-5">
-          <div className="flex items-center justify-between text-slate-900">
+        <section className="mt-10 sm:mt-14 space-y-4 sm:space-y-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold sm:text-xl">יצירת תוכן</h2>
-              <p className="text-xs text-slate-500 sm:text-sm">כל כלי מופיע פעם אחת בלבד – בחרי ויצאנו לדרך.</p>
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                יצירת תוכן
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">כל כלי מופיע פעם אחת בלבד – בחרי ויצאנו לדרך.</p>
             </div>
-            <Sparkles className="hidden h-5 w-5 text-indigo-400 sm:block" aria-hidden />
+            <div className="hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100">
+              <Sparkles className="h-6 w-6 text-indigo-500" aria-hidden />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
             {creationCards.map(({ title, description, icon: Icon, href, gradient }) => {
               if (!Icon) return null;
               return (
                 <Link
                   key={href}
                   href={href}
-                  className={`group flex h-full flex-col justify-between rounded-3xl bg-gradient-to-br ${gradient} p-5 shadow-lg transition hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100`}
+                  className={`group relative flex h-full flex-col justify-between rounded-3xl bg-gradient-to-br ${gradient} p-5 sm:p-6 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:ring-offset-2 overflow-hidden`}
                 >
-                  <div className="flex items-center gap-3 text-white">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/20 text-white">
-                      <Icon className="h-5 w-5" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/0 via-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-3 sm:gap-4 text-white mb-3">
+                      <span className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-white/25 backdrop-blur-sm shadow-lg group-hover:bg-white/30 transition-colors">
+                        <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
+                      </span>
+                      <h3 className="text-base sm:text-lg lg:text-xl font-bold drop-shadow-sm">{title}</h3>
+                    </div>
+                    <p className="mt-3 sm:mt-4 flex-1 text-sm sm:text-base leading-relaxed text-white/95 drop-shadow-sm">{description}</p>
+                    <span className="mt-4 sm:mt-5 inline-flex items-center gap-1.5 text-sm sm:text-base font-bold text-white transition-all group-hover:gap-3">
+                      כניסה לכלי
+                      <span aria-hidden className="text-lg group-hover:translate-x-[-2px] transition-transform">→</span>
                     </span>
-                    <h3 className="text-base font-semibold sm:text-lg">{title}</h3>
                   </div>
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-white/90">{description}</p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-white transition group-hover:gap-2">
-                    כניסה לכלי
-                    <span aria-hidden>→</span>
-                  </span>
                 </Link>
               );
             })}
           </div>
         </section>
 
-        <section className="mt-14 space-y-5">
-          <div className="flex items-center justify-between text-slate-900">
+        <section className="mt-10 sm:mt-14 space-y-4 sm:space-y-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold sm:text-xl">מערכת הלמידה</h2>
-              <p className="text-xs text-slate-500 sm:text-sm">כאן המערכת מאמצת את הסגנון האישי שלך.</p>
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                מערכת הלמידה
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">כאן המערכת מאמצת את הסגנון האישי שלך.</p>
+            </div>
+            <div className="hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100">
+              <Brain className="h-6 w-6 text-purple-500" aria-hidden />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
             {learningCards.map(({ title, description, icon: Icon, href, gradient }) => (
               <Link
                 key={href}
                 href={href}
-                className={`group flex h-full flex-col justify-between rounded-3xl bg-gradient-to-br ${gradient} p-5 shadow-lg transition hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100`}
+                className={`group relative flex h-full flex-col justify-between rounded-3xl bg-gradient-to-br ${gradient} p-5 sm:p-6 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:ring-offset-2 overflow-hidden`}
               >
-                <div className="flex items-center gap-3 text-white">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white">
-                    <Icon className="h-4 w-4" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/0 via-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 text-white mb-3">
+                    <span className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-white/25 backdrop-blur-sm shadow-lg group-hover:bg-white/30 transition-colors">
+                      <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                    </span>
+                    <h3 className="text-base sm:text-lg font-bold drop-shadow-sm">{title}</h3>
+                  </div>
+                  <p className="mt-3 sm:mt-4 flex-1 text-sm sm:text-base leading-relaxed text-white/95 drop-shadow-sm">{description}</p>
+                  <span className="mt-4 sm:mt-5 inline-flex items-center gap-1.5 text-sm sm:text-base font-bold text-white transition-all group-hover:gap-3">
+                    המשיכי מכאן
+                    <span aria-hidden className="text-lg group-hover:translate-x-[-2px] transition-transform">→</span>
                   </span>
-                  <h3 className="text-base font-semibold sm:text-lg">{title}</h3>
                 </div>
-                <p className="mt-3 flex-1 text-sm leading-relaxed text-white/90">{description}</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-white transition group-hover:gap-2">
-                  המשיכי מכאן
-                  <span aria-hidden>→</span>
-                </span>
               </Link>
             ))}
           </div>

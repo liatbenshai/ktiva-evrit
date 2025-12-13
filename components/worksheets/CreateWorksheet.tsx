@@ -7,6 +7,7 @@ import { exportToTXT, exportToWord } from '@/lib/export-utils';
 import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
 import { extractTextFromImageClient, processImagesFromBase64Legacy } from '@/lib/ocr-client';
+import ContentFeatures from '@/components/shared/ContentFeatures';
 
 export default function CreateWorksheet() {
   const [instruction, setInstruction] = useState('');
@@ -899,9 +900,16 @@ export default function CreateWorksheet() {
             instructions="סמני קטע בעייתי מתוך דף העבודה שנוצר (אפשר גם להדביק אותו בשדה), הזיני ניסוח מוצלח יותר ולחצי 'שמרי דפוס'."
           />
 
+          <ContentFeatures
+            content={result}
+            contentType="דף-עבודה"
+            enableWebSearch={true}
+            enableURLs={true}
+          />
+
           <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
             <p className="text-sm text-blue-800 sm:text-base">
-              💡 <strong>טיפ:</strong> השתמשי באפשרות “הדפס” כדי לקבל פריסה נוחה להדפסת דף העבודה.
+              💡 <strong>טיפ:</strong> השתמשי באפשרות "הדפס" כדי לקבל פריסה נוחה להדפסת דף העבודה.
             </p>
           </div>
         </div>

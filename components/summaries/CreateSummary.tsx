@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { FileText, Upload, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { FileText, Upload, Loader2, MessageSquare, Download, ChevronDown } from 'lucide-react';
 import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
 import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
 import { processImagesFromBase64Legacy } from '@/lib/ocr-client';
+import { exportToTXT, exportToWord, exportToPDF } from '@/lib/export-utils';
 
 type InputMode = 'text' | 'file';
 
@@ -18,6 +19,28 @@ export default function CreateSummary() {
   const [focusPoints, setFocusPoints] = useState('');
   const [result, setResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [followUpQuestion, setFollowUpQuestion] = useState('');
+  const [isAskingFollowUp, setIsAskingFollowUp] = useState(false);
+  const [summaryHistory, setSummaryHistory] = useState<Array<{ question: string; answer: string }>>([]);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    if (showExportMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showExportMenu]);
 
   const applyPatternToText = (text: string, pattern: SavedPatternInfo) => {
     if (!text) return text;
@@ -116,11 +139,87 @@ export default function CreateSummary() {
       if (!response.ok) throw new Error('Failed');
       const { result: summary } = await response.json();
       setResult(summary);
+      setSummaryHistory([{ question: 'סיכום ראשוני', answer: summary }]);
       patternSaver.resetPatternSaved();
     } catch (error) {
       alert('אירעה שגיאה ביצירת הסיכום');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleFollowUp = async () => {
+    if (!followUpQuestion.trim()) {
+      alert('אנא הכנס שאלת המשך');
+      return;
+    }
+
+    if (!result) {
+      alert('יש ליצור סיכום ראשוני לפני שאילת שאלות המשך');
+      return;
+    }
+
+    setIsAskingFollowUp(true);
+    try {
+      const response = await fetch('/api/claude/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'summary',
+          data: { 
+            text: text, 
+            length, 
+            focusPoints,
+            followUpQuestion: followUpQuestion.trim(),
+            previousSummary: result,
+            history: summaryHistory,
+          },
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed');
+      const { result: answer } = await response.json();
+      
+      // Update history
+      const updatedHistory = [
+        ...summaryHistory,
+        { question: followUpQuestion.trim(), answer },
+      ];
+      setSummaryHistory(updatedHistory);
+      
+      // Append the answer to the result
+      setResult((prev) => `${prev}\n\n**${followUpQuestion.trim()}**\n\n${answer}`);
+      setFollowUpQuestion('');
+      patternSaver.resetPatternSaved();
+    } catch (error) {
+      alert('אירעה שגיאה בשאלת המשך');
+    } finally {
+      setIsAskingFollowUp(false);
+    }
+  };
+
+  const handleExport = async (format: 'txt' | 'docx' | 'pdf') => {
+    if (!result) {
+      alert('אין תוכן לייצוא');
+      return;
+    }
+
+    try {
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `סיכום-${timestamp}`;
+      
+      if (format === 'txt') {
+        exportToTXT(result, filename);
+      } else if (format === 'docx') {
+        await exportToWord(result, filename);
+      } else if (format === 'pdf') {
+        await exportToPDF(result, filename);
+      }
+      
+      setShowExportMenu(false);
+    } catch (error) {
+      console.error('Error exporting:', error);
+      alert(`שגיאה בייצוא: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -254,9 +353,43 @@ export default function CreateSummary() {
       {result && (
         <>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              הסיכום
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                הסיכום
+              </h3>
+              <div className="relative" ref={exportMenuRef}>
+                <button
+                  onClick={() => setShowExportMenu(!showExportMenu)}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>ייצוא</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                {showExportMenu && (
+                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                    <button
+                      onClick={() => handleExport('txt')}
+                      className="w-full text-right px-4 py-2 hover:bg-gray-100 transition-colors rounded-t-lg"
+                    >
+                      ייצוא ל-TXT
+                    </button>
+                    <button
+                      onClick={() => handleExport('docx')}
+                      className="w-full text-right px-4 py-2 hover:bg-gray-100 transition-colors"
+                    >
+                      ייצוא ל-Word
+                    </button>
+                    <button
+                      onClick={() => handleExport('pdf')}
+                      className="w-full text-right px-4 py-2 hover:bg-gray-100 transition-colors rounded-b-lg"
+                    >
+                      ייצוא ל-PDF
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
             <textarea
               value={result}
               onChange={(e) => setResult(e.target.value)}
@@ -266,6 +399,61 @@ export default function CreateSummary() {
               onKeyUp={patternSaver.handleSelection}
               onTouchEnd={patternSaver.handleSelection}
             />
+          </div>
+
+          {/* Follow-up Questions */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-indigo-600" />
+              שאלות המשך
+            </h3>
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={followUpQuestion}
+                  onChange={(e) => setFollowUpQuestion(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleFollowUp();
+                    }
+                  }}
+                  placeholder="שאלי שאלה נוספת על הסיכום..."
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  disabled={isAskingFollowUp}
+                />
+                <button
+                  onClick={handleFollowUp}
+                  disabled={isAskingFollowUp || !followUpQuestion.trim()}
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isAskingFollowUp ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      שואל...
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquare className="w-4 h-4" />
+                      שאל
+                    </>
+                  )}
+                </button>
+              </div>
+              {summaryHistory.length > 1 && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-sm text-gray-600 mb-2">היסטוריית שאלות:</p>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {summaryHistory.slice(1).map((item, index) => (
+                      <div key={index} className="text-sm bg-gray-50 p-2 rounded">
+                        <p className="font-medium text-gray-700">שאלה: {item.question}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <PatternSaverPanel

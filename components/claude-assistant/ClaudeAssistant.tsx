@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, Send, Trash2, Copy, Check, Upload, Download, FileText } from 'lucide-react';
+import { Loader2, Send, Trash2, Copy, Check, Upload, Download, FileText, Sparkles, Globe, Search, Lightbulb, BookOpen, Zap } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { extractTextFromImageClient, processImagesFromBase64 } from '@/lib/ocr-client';
 import { exportToTXT, exportToWord, exportToPDF } from '@/lib/export-utils';
@@ -9,6 +9,7 @@ import { exportToTXT, exportToWord, exportToPDF } from '@/lib/export-utils';
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  sources?: Array<{ title: string; url: string }>;
 }
 
 export default function ClaudeAssistant() {
@@ -18,6 +19,7 @@ export default function ClaudeAssistant() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [showExamples, setShowExamples] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,12 +39,20 @@ export default function ClaudeAssistant() {
     }
   }, [message]);
 
+  // זיהוי URL בטקסט
+  const extractURLs = (text: string): string[] => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.match(urlRegex) || [];
+  };
+
   const handleSend = async () => {
     if (!message.trim() || isLoading) return;
 
     const userMessage = message.trim();
+    const urls = extractURLs(userMessage);
     setMessage('');
     setError(null);
+    setShowExamples(false);
 
     // הוספת הודעת המשתמש להיסטוריה
     const updatedHistory: Message[] = [...history, { role: 'user' as const, content: userMessage }];
@@ -57,6 +67,8 @@ export default function ClaudeAssistant() {
           message: userMessage,
           history: history,
           userId,
+          urls: urls.length > 0 ? urls : undefined,
+          needsWebSearch: !urls.length && (userMessage.includes('?') || userMessage.includes('מה') || userMessage.includes('איך') || userMessage.includes('למה')),
         }),
       });
 
@@ -68,7 +80,11 @@ export default function ClaudeAssistant() {
       const data = await response.json();
       
       // הוספת תגובת העוזר להיסטוריה
-      setHistory([...updatedHistory, { role: 'assistant' as const, content: data.message }]);
+      setHistory([...updatedHistory, { 
+        role: 'assistant' as const, 
+        content: data.message,
+        sources: data.sources,
+      }]);
       
       // הצגת הודעה אם הוחלו דפוסים
       if (data.appliedPatterns && data.appliedPatterns.length > 0) {
@@ -95,6 +111,7 @@ export default function ClaudeAssistant() {
     if (confirm('האם אתה בטוח שברצונך למחוק את כל השיחה?')) {
       setHistory([]);
       setError(null);
+      setShowExamples(true);
     }
   };
 
@@ -111,7 +128,7 @@ export default function ClaudeAssistant() {
   const handleExport = async (text: string, format: 'txt' | 'docx' | 'pdf') => {
     try {
       const timestamp = new Date().toISOString().split('T')[0];
-      const filename = `claude-assistant-${timestamp}`;
+      const filename = `liatAI-${timestamp}`;
       
       if (format === 'txt') {
         exportToTXT(text, filename);
@@ -186,33 +203,20 @@ export default function ClaudeAssistant() {
             const imageResults = await processImagesFromBase64(result.images);
             
             // Replace image placeholders in the text with OCR results
-            // Placeholders are in format: [תמונה 1], [תמונה 2], etc.
             imageResults.forEach((result, idx) => {
               const placeholder = `[תמונה ${idx + 1}]`;
               const placeholderRegex = new RegExp(`\\[תמונה ${idx + 1}\\]`, 'g');
               
               if (text.includes(placeholder)) {
                 if (result.text && result.text.trim()) {
-                  // Replace placeholder with OCR text, preserving structure
                   text = text.replace(placeholderRegex, result.text);
                 } else {
-                  // If OCR failed, replace with error message
-                  const errorMsg = result.error || 'לא נמצא טקסט';
-                  text = text.replace(placeholderRegex, `[שגיאה בעיבוד תמונה: ${errorMsg}]`);
+                  text = text.replace(placeholderRegex, `[שגיאה בעיבוד תמונה: ${result.error || 'לא נמצא טקסט'}]`);
                 }
               }
             });
-            
-            // If there are any remaining placeholders, log a warning
-            const remainingPlaceholders = text.match(/\[תמונה \d+\]/g);
-            if (remainingPlaceholders && remainingPlaceholders.length > 0) {
-              console.warn('Some image placeholders were not replaced:', remainingPlaceholders);
-            }
           } catch (error) {
             console.error('Error processing images from DOCX:', error);
-            const errorMsg = error instanceof Error ? error.message : 'שגיאה לא ידועה';
-            alert(`שגיאה בעיבוד תמונות מהמסמך: ${errorMsg}\nהטקסט מהמסמך נוסף, אך התמונות לא עובדו.`);
-            // Continue with text even if image processing fails
           }
         }
       }
@@ -229,54 +233,158 @@ export default function ClaudeAssistant() {
     } catch (error) {
       console.error('Error reading file:', error);
       const errorMessage = error instanceof Error ? error.message : 'שגיאה בקריאת הקובץ';
-      
-      // Provide more helpful error messages
-      let userMessage = errorMessage;
-      if (errorMessage.includes('רשת')) {
-        userMessage = 'שגיאת חיבור לאינטרנט. בדקי את החיבור ונסי שוב.';
-      } else if (errorMessage.includes('מודל')) {
-        userMessage = 'שגיאה בטעינת מודל OCR. נסי לרענן את הדף.';
-      } else if (errorMessage.includes('לא נמצא טקסט')) {
-        userMessage = 'לא נמצא טקסט בתמונה. ודאי שהתמונה מכילה טקסט ברור ונסי שוב.';
-      }
-      
-      alert(`שגיאה בקריאת הקובץ: ${userMessage}`);
+      alert(`שגיאה בקריאת הקובץ: ${errorMessage}`);
     }
   };
 
+  const exampleQuestions = [
+    {
+      icon: Search,
+      title: 'חיפוש ברשת',
+      examples: [
+        'מה זה בינה מלאכותית?',
+        'איך עובד ChatGPT?',
+        'מה ההבדל בין React ל-Vue?',
+      ],
+    },
+    {
+      icon: Globe,
+      title: 'שאלות על URL',
+      examples: [
+        'https://example.com מה כתוב בדף הזה?',
+        'סכם לי את המאמר הזה: https://example.com/article',
+      ],
+    },
+    {
+      icon: BookOpen,
+      title: 'כתיבה ועריכה',
+      examples: [
+        'כתוב לי מאמר על נושא X',
+        'שפר את הטקסט הזה...',
+        'תרגם את זה לעברית',
+      ],
+    },
+    {
+      icon: Lightbulb,
+      title: 'ייעוץ ועזרה',
+      examples: [
+        'איך אני יכול לשפר את הכתיבה שלי?',
+        'תן לי טיפים לכתיבת מייל מקצועי',
+        'מה הדרך הטובה ביותר ללמוד עברית?',
+      ],
+    },
+  ];
+
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)] bg-white rounded-xl shadow-xl border-2 border-gray-300 overflow-hidden">
-      {/* כותרת */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
-          <div>
-            <h2 className="text-2xl font-bold text-white">liatAI</h2>
-            <p className="text-sm text-white/90 mt-1">
-              שאלי כל שאלה או כתבי מה את צריכה, ואני אענה בעברית תקנית. אפשר לשאול שאלות המשך.
-            </p>
+    <div className="flex flex-col h-[calc(100vh-200px)] bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-3xl shadow-2xl border border-white/50 overflow-hidden">
+      {/* כותרת משופרת */}
+      <div className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-6 border-b border-white/20">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-white">liatAI</h2>
+                <p className="text-sm text-white/90 mt-1">
+                  העוזר החכם שלך - חיפוש ברשת, עיבוד קבצים, כתיבה ועוד
+                </p>
+              </div>
+            </div>
           </div>
           {history.length > 0 && (
-          <button
-            onClick={handleClear}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-white hover:bg-white/20 rounded-lg transition-colors border border-white/30"
-          >
-            <Trash2 className="w-4 h-4" />
-            נקה שיחה
-          </button>
-        )}
+            <button
+              onClick={handleClear}
+              className="flex items-center gap-2 px-4 py-2 text-sm text-white hover:bg-white/20 rounded-xl transition-all border border-white/30 hover:scale-105"
+            >
+              <Trash2 className="w-4 h-4" />
+              נקה שיחה
+            </button>
+          )}
+        </div>
       </div>
 
       {/* אזור ההודעות */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 bg-gray-50">
-        {history.length === 0 && (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center max-w-md">
-              <div className="text-4xl mb-4">✨</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+        {history.length === 0 && showExamples && (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl mb-4 shadow-lg">
+                <Sparkles className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 בואי נתחיל
               </h3>
-              <p className="text-gray-600">
-                שאלי כל שאלה או כתבי מה את צריכה, ואני אענה בעברית תקנית וזורמת.
+              <p className="text-gray-600 max-w-md mx-auto">
+                שאלי כל שאלה, הדביקי URL, העלי קבצים או בקשי עזרה בכתיבה. אני כאן לעזור!
               </p>
+            </div>
+
+            {/* דוגמאות */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {exampleQuestions.map((category, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-white/50 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center">
+                      <category.icon className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <h4 className="font-bold text-gray-900">{category.title}</h4>
+                  </div>
+                  <div className="space-y-2">
+                    {category.examples.map((example, exIdx) => (
+                      <button
+                        key={exIdx}
+                        onClick={() => {
+                          setMessage(example);
+                          setShowExamples(false);
+                          textareaRef.current?.focus();
+                        }}
+                        className="w-full text-right text-sm text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 px-3 py-2 rounded-lg transition-all"
+                      >
+                        {example}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* יכולות */}
+            <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-2xl p-6 border border-indigo-200/50">
+              <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Zap className="w-5 h-5 text-indigo-600" />
+                מה אני יכול לעשות?
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700">
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <span>חיפוש ברשת - מציאת מידע עדכני מ-Google ומקורות נוספים</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <span>עיבוד URLs - קריאת תוכן מדפי אינטרנט ושאלות עליהם</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <span>עיבוד קבצים - PDF, DOCX, תמונות עם OCR</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <span>כתיבה ועריכה - מאמרים, מיילים, תרגומים</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <span>ייעוץ ועזרה - טיפים, הסברים, המלצות</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <span>שיחות המשך - שאלות המשך על תשובות קודמות</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -287,15 +395,35 @@ export default function ClaudeAssistant() {
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
+              className={`max-w-[85%] rounded-3xl px-5 py-4 shadow-lg ${
                 msg.role === 'user'
                   ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
                   : 'bg-white border-2 border-gray-200 text-gray-900'
               }`}
             >
               <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+              
+              {msg.sources && msg.sources.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-xs font-semibold text-gray-600 mb-2">מקורות:</p>
+                  <div className="space-y-1">
+                    {msg.sources.map((source, idx) => (
+                      <a
+                        key={idx}
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-xs text-indigo-600 hover:text-indigo-800 hover:underline truncate"
+                      >
+                        {source.title || source.url}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               {msg.role === 'assistant' && (
-                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                <div className="mt-3 flex items-center gap-3 flex-wrap pt-3 border-t border-gray-200">
                   <button
                     onClick={() => handleCopy(msg.content, index)}
                     className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
@@ -312,7 +440,7 @@ export default function ClaudeAssistant() {
                       </>
                     )}
                   </button>
-                  <div className="flex items-center gap-1 border-l border-gray-300 pl-2">
+                  <div className="flex items-center gap-1 border-r border-gray-300 pr-3">
                     <button
                       onClick={() => handleExport(msg.content, 'txt')}
                       className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 transition-colors"
@@ -346,73 +474,43 @@ export default function ClaudeAssistant() {
 
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3">
-              <div className="flex items-center gap-2 text-gray-500">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>כותב...</span>
+            <div className="bg-white border-2 border-gray-200 rounded-3xl px-5 py-4 shadow-lg">
+              <div className="flex items-center gap-3 text-gray-600">
+                <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+                <span className="font-medium">מחפש מידע ומכין תשובה...</span>
               </div>
             </div>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-700">
-            {error}
+          <div className="bg-red-50 border-2 border-red-200 rounded-2xl px-5 py-4 text-red-700">
+            <p className="font-medium">{error}</p>
           </div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* אזור הקלט */}
-      <div className="border-t border-gray-200 bg-white p-4">
-        {message.trim() && (
-          <div className="mb-2 flex items-center gap-2 justify-end">
-            <div className="flex items-center gap-1 border border-gray-200 rounded-lg px-2 py-1 bg-gray-50">
-              <button
-                onClick={() => handleExport(message, 'txt')}
-                className="flex items-center gap-1 text-xs text-gray-600 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-white"
-                title="ייצא ל-TXT"
-              >
-                <FileText className="w-3 h-3" />
-                TXT
-              </button>
-              <button
-                onClick={() => handleExport(message, 'docx')}
-                className="flex items-center gap-1 text-xs text-gray-600 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-white"
-                title="ייצא ל-Word"
-              >
-                <FileText className="w-3 h-3" />
-                DOCX
-              </button>
-              <button
-                onClick={() => handleExport(message, 'pdf')}
-                className="flex items-center gap-1 text-xs text-gray-600 hover:text-blue-600 transition-colors px-2 py-1 rounded hover:bg-white"
-                title="ייצא ל-PDF"
-              >
-                <Download className="w-3 h-3" />
-                PDF
-              </button>
-            </div>
-          </div>
-        )}
+      {/* אזור הקלט משופר */}
+      <div className="border-t border-gray-200/50 bg-white/80 backdrop-blur-sm p-5">
         <div className="flex gap-3 items-end">
           <textarea
             ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="כתבי מה את צריכה..."
+            placeholder="שאלי שאלה, הדביקי URL, או כתבי מה את צריכה..."
             rows={1}
             dir="rtl"
-            className="flex-1 resize-none rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="flex-1 resize-none rounded-2xl border-2 border-gray-200 px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white shadow-sm"
             disabled={isLoading}
           />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed transition-all"
+            className="flex items-center justify-center gap-2 px-5 py-4 bg-gray-100 text-gray-700 rounded-2xl hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
             title="העלה קובץ"
           >
             <Upload className="w-5 h-5" />
@@ -420,7 +518,7 @@ export default function ClaudeAssistant() {
           <button
             onClick={handleSend}
             disabled={!message.trim() || isLoading}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+            className="flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:from-indigo-700 hover:to-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl hover:scale-105 font-semibold"
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -432,6 +530,9 @@ export default function ClaudeAssistant() {
             )}
           </button>
         </div>
+        <p className="text-xs text-gray-500 mt-3 text-right">
+          לחצי Enter לשליחה, Shift+Enter לשורה חדשה • ניתן להעלות קבצי PDF, DOCX, TXT או תמונות • הדביקי URL לשאלות על דפי אינטרנט
+        </p>
         <input
           ref={fileInputRef}
           type="file"
@@ -439,9 +540,6 @@ export default function ClaudeAssistant() {
           onChange={handleFileUpload}
           className="hidden"
         />
-        <p className="text-xs text-gray-500 mt-2 text-right">
-          לחצי Enter לשליחה, Shift+Enter לשורה חדשה • ניתן להעלות קבצי PDF, DOCX, TXT או תמונות
-        </p>
       </div>
     </div>
   );

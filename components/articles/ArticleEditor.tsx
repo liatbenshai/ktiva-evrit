@@ -14,6 +14,8 @@ import { SynonymButton } from '@/components/SynonymButton';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
+import ContentFeatures from '@/components/shared/ContentFeatures';
+import { exportToTXT, exportToWord, exportToPDF } from '@/lib/export-utils';
 
 interface ArticleEditorProps {
   initialContent: string;
@@ -130,14 +132,21 @@ export default function ArticleEditor({
     alert('המאמר נשמר בהצלחה!');
   };
 
-  const handleDownload = () => {
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${title}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleFollowUp = async (question: string): Promise<string> => {
+    const response = await fetch('/api/claude-assistant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `${question}\n\nתבסס על המאמר הבא:\n${content}`,
+        history: [],
+        userId: 'default-user',
+        needsWebSearch: true,
+      }),
+    });
+
+    if (!response.ok) throw new Error('Failed');
+    const { message: answer } = await response.json();
+    return answer;
   };
 
   return (
@@ -188,15 +197,17 @@ export default function ArticleEditor({
             <Save className="w-4 h-4" />
             שמור
           </button>
-          <button
-            onClick={handleDownload}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-          >
-            <Download className="w-4 h-4" />
-            הורד
-          </button>
         </div>
       </div>
+
+      {/* Content Features */}
+      <ContentFeatures
+        content={content}
+        contentType="מאמר"
+        onFollowUp={handleFollowUp}
+        enableWebSearch={true}
+        enableURLs={true}
+      />
 
       {/* Improvement Buttons */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

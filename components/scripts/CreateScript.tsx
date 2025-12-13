@@ -9,6 +9,7 @@ import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
 import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
+import ContentFeatures from '@/components/shared/ContentFeatures';
 
 export default function CreateScript() {
   const [topic, setTopic] = useState('');
@@ -104,22 +105,21 @@ export default function CreateScript() {
     },
   });
 
-  const handleExport = async (text: string, format: 'txt' | 'docx' | 'pdf') => {
-    try {
-      const timestamp = new Date().toISOString().split('T')[0];
-      const filename = `script-${timestamp}`;
-      
-      if (format === 'txt') {
-        exportToTXT(text, filename);
-      } else if (format === 'docx') {
-        await exportToWord(text, filename);
-      } else if (format === 'pdf') {
-        await exportToPDF(text, filename);
-      }
-    } catch (error) {
-      console.error('Error exporting:', error);
-      alert(`שגיאה בייצוא: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+  const handleFollowUp = async (question: string): Promise<string> => {
+    const response = await fetch('/api/claude-assistant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `${question}\n\nתבסס על התסריט הבא:\n${result}`,
+        history: [],
+        userId: 'default-user',
+        needsWebSearch: true,
+      }),
+    });
+
+    if (!response.ok) throw new Error('Failed');
+    const { message: answer } = await response.json();
+    return answer;
   };
 
   const handleGenerate = async () => {
@@ -445,6 +445,14 @@ export default function CreateScript() {
               </li>
             </ul>
           </section>
+
+          <ContentFeatures
+            content={result}
+            contentType="תסריט"
+            onFollowUp={handleFollowUp}
+            enableWebSearch={true}
+            enableURLs={true}
+          />
         </>
       )}
 

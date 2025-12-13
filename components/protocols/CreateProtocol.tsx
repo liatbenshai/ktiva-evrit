@@ -7,6 +7,7 @@ import ImprovementButtons from '@/components/shared/ImprovementButtons';
 import { SynonymButton } from '@/components/SynonymButton';
 import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
+import ContentFeatures from '@/components/shared/ContentFeatures';
 
 type ProtocolType = 'summary' | 'topical';
 
@@ -404,6 +405,13 @@ ${transcript}`;
               המערכת לומדת מהשיפורים שלך ומשתפרת עם הזמן
             </p>
           </div>
+
+          <ContentFeatures
+            content={result}
+            contentType="פרוטוקול"
+            enableWebSearch={true}
+            enableURLs={true}
+          />
         </>
       )}
     </div>

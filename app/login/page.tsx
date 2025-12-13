@@ -111,23 +111,26 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 px-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 via-pink-50 to-blue-50 px-4 py-8">
+      <div className="max-w-md w-full bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-6 sm:p-8 lg:p-10 border border-white/50">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg mb-4">
+            <span className="text-2xl sm:text-3xl">✍️</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
             {isLogin ? 'התחברות' : 'הרשמה'}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             {isLogin
               ? 'התחבר לחשבון שלך'
               : 'צור חשבון חדש כדי להתחיל'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
           {!isLogin && (
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
                 שם מלא
               </label>
               <input
@@ -135,14 +138,14 @@ function LoginForm() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 focus:bg-white"
                 placeholder="הכנס שם מלא"
               />
             </div>
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
               אימייל
             </label>
             <input
@@ -151,13 +154,13 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 focus:bg-white"
               placeholder="your@email.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
               סיסמה
             </label>
             <input
@@ -167,13 +170,13 @@ function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 focus:bg-white"
               placeholder="מינימום 6 תווים"
             />
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl font-medium">
               {error}
             </div>
           )}
@@ -181,7 +184,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg transition-all hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             {loading ? 'מעבד...' : isLogin ? 'התחבר' : 'הירשם'}
           </button>
@@ -194,7 +197,7 @@ function LoginForm() {
               setIsLogin(!isLogin);
               setError('');
             }}
-            className="text-indigo-600 hover:text-indigo-700 font-medium"
+            className="text-indigo-600 hover:text-indigo-700 font-semibold text-sm sm:text-base transition-colors underline decoration-2 underline-offset-2"
           >
             {isLogin
               ? 'אין לך חשבון? הירשם כאן'
@@ -202,16 +205,16 @@ function LoginForm() {
           </button>
         </div>
 
-        <div className="mt-4 text-center space-y-2">
+        <div className="mt-5 sm:mt-6 text-center space-y-2 pt-5 border-t border-gray-200">
           <Link
             href="/admin/create-admin"
-            className="block text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+            className="block text-indigo-600 hover:text-indigo-700 text-xs sm:text-sm font-semibold transition-colors"
           >
             יצירת משתמש Admin
           </Link>
           <Link
             href="/"
-            className="block text-gray-500 hover:text-gray-700 text-sm"
+            className="block text-gray-500 hover:text-gray-700 text-xs sm:text-sm transition-colors"
           >
             חזרה לדף הבית
           </Link>

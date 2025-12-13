@@ -7,6 +7,7 @@ import { SynonymButton } from '@/components/SynonymButton';
 import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
+import ContentFeatures from '@/components/shared/ContentFeatures';
 
 export default function CreateEmail() {
   const [context, setContext] = useState('');
@@ -166,6 +167,13 @@ export default function CreateEmail() {
             onSave={patternSaver.handleSavePattern}
             isSaving={patternSaver.isSavingPattern}
             patternSaved={patternSaver.patternSaved}
+          />
+
+          <ContentFeatures
+            content={result}
+            contentType="מייל"
+            enableWebSearch={true}
+            enableURLs={true}
           />
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

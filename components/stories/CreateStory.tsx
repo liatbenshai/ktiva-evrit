@@ -7,6 +7,7 @@ import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
 import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
+import ContentFeatures from '@/components/shared/ContentFeatures';
 
 export default function CreateStory() {
   const [genre, setGenre] = useState('');
@@ -282,6 +283,13 @@ export default function CreateStory() {
               </div>
             </div>
           </div>
+
+          <ContentFeatures
+            content={result}
+            contentType="סיפור"
+            enableWebSearch={true}
+            enableURLs={true}
+          />
         </>
       )}
 

@@ -7,6 +7,7 @@ import AIChatBot from '@/components/ai-correction/AIChatBot';
 import { SynonymButton } from '@/components/SynonymButton';
 import { usePatternSaver, SavedPatternInfo } from '@/hooks/usePatternSaver';
 import PatternSaverPanel from '@/components/shared/PatternSaverPanel';
+import ContentFeatures from '@/components/shared/ContentFeatures';
 
 type Platform = 'facebook' | 'instagram' | 'linkedin' | 'twitter';
 
@@ -233,6 +234,13 @@ export default function CreatePost() {
             onSave={patternSaver.handleSavePattern}
             isSaving={patternSaver.isSavingPattern}
             patternSaved={patternSaver.patternSaved}
+          />
+
+          <ContentFeatures
+            content={result}
+            contentType="פוסט"
+            enableWebSearch={true}
+            enableURLs={true}
           />
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
