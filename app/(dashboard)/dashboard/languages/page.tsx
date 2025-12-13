@@ -520,7 +520,7 @@ export default function LanguagesPage() {
         </div>
       </div>
 
-      <main className="mx-auto w-full max-w-5xl px-4 py-12">
+      <main className="mx-auto w-full max-w-5xl px-3 sm:px-4 py-6 sm:py-8 lg:py-12">
         {activeTab === 'structured' ? (
           <StructuredLessons
             targetLanguage={targetLanguage}
@@ -537,50 +537,52 @@ export default function LanguagesPage() {
         ) : activeTab === 'advanced' ? (
           <AdvancedPractice targetLanguage={targetLanguage} userId={session?.user?.email || 'default-user'} />
         ) : activeTab === 'free' ? (
-          <section className="rounded-3xl bg-white p-6 shadow-xl sm:p-8">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-2">
-              <h2 className="flex items-center gap-2 text-xl font-semibold text-indigo-700">
-                <LanguagesIcon className="h-5 w-5" />
+          <section className="rounded-2xl sm:rounded-3xl bg-white p-4 sm:p-6 lg:p-8 shadow-xl">
+          <div className="flex flex-col gap-3 sm:gap-4 lg:gap-5">
+            <div className="space-y-1.5 sm:space-y-2">
+              <h2 className="flex items-center gap-1.5 sm:gap-2 text-lg sm:text-xl font-semibold text-indigo-700">
+                <LanguagesIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                 בחרי שפה ללמידה
               </h2>
-              <p className="text-sm text-slate-600">בחרי אחת מהשפות הנתמכות והזיני מונח בעברית שתרצי ללמוד. המערכת תציע ניסוח טבעי ודוגמאות.</p>
+              <p className="text-xs sm:text-sm text-slate-600">בחרי אחת מהשפות הנתמכות והזיני מונח בעברית שתרצי ללמוד. המערכת תציע ניסוח טבעי ודוגמאות.</p>
             </div>
-            <div className="flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-600">
-              <Globe2 className="h-4 w-4" /> שפת הבסיס: עברית
+            <div className="flex items-center gap-1.5 sm:gap-2 rounded-full bg-indigo-50 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-indigo-600">
+              <Globe2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> 
+              <span className="hidden sm:inline">שפת הבסיס: עברית</span>
+              <span className="sm:hidden">עברית</span>
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {(Object.keys(SUPPORTED_LANGUAGES) as SupportedLanguageKey[]).map((key) => (
               <button
                 key={key}
                 onClick={() => setTargetLanguage(key)}
-                className={`rounded-2xl border px-4 py-4 text-right transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+                className={`rounded-xl sm:rounded-2xl border px-3 sm:px-4 py-3 sm:py-4 text-right transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
                   targetLanguage === key
                     ? 'border-indigo-300 bg-indigo-50 text-indigo-700 shadow-sm'
                     : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-200 hover:text-indigo-600'
                 }`}
               >
-                <div className="text-sm font-semibold">{SUPPORTED_LANGUAGES[key].label}</div>
-                <p className="mt-1 text-xs text-slate-500">{SUPPORTED_LANGUAGES[key].description}</p>
+                <div className="text-xs sm:text-sm font-semibold">{SUPPORTED_LANGUAGES[key].label}</div>
+                <p className="mt-1 text-[10px] sm:text-xs text-slate-500">{SUPPORTED_LANGUAGES[key].description}</p>
               </button>
             ))}
           </div>
 
           {isSpeechSupported && voices.length > 0 && (
-            <div className="mt-6 space-y-3 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
+            <div className="mt-4 sm:mt-6 space-y-2 sm:space-y-3 rounded-xl sm:rounded-2xl border border-indigo-100 bg-indigo-50/60 p-3 sm:p-4">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-indigo-700">בחירת קול להשמעה</p>
-                  <p className="text-xs text-indigo-600/90">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-indigo-700">בחירת קול להשמעה</p>
+                  <p className="text-[10px] sm:text-xs text-indigo-600/90 mt-0.5">
                     בחרי קול שיזכיר לך את הצליל הכי קרוב לשפה {getCurrentLanguageMeta.label}. אם אין קול רשמי, אפשר לבחור קול חלופי (למשל איטלקי או אנגלי).
                   </p>
                 </div>
                 <select
                   value={voiceOverrides[targetLanguage] ?? ''}
                   onChange={(event) => handleVoiceOverrideChange(targetLanguage, event.target.value)}
-                  className="w-full rounded-xl border border-indigo-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200 sm:w-[260px]"
+                  className="w-full sm:w-auto min-w-[200px] rounded-lg sm:rounded-xl border border-indigo-200 bg-white px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-slate-700 shadow-sm focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200 mt-2 sm:mt-0"
                 >
                   {sortedVoices.map((voice) => (
                     <option key={`${voice.name}-${voice.lang}`} value={voice.name}>
@@ -597,7 +599,7 @@ export default function LanguagesPage() {
                 const isFallbackVoice = !currentVoice.lang.toLowerCase().startsWith(targetCode.split('-')[0].toLowerCase())
 
                 return (
-                  <p className="text-xs text-indigo-700">
+                  <p className="text-[10px] sm:text-xs text-indigo-700 break-words">
                     {isFallbackVoice
                       ? `נבחר קול חלופי (${currentVoice.name}). כדי לקבל קול מקורי לשפה ${getCurrentLanguageMeta.label}, ניתן להוסיף חבילת דיבור במערכת.`
                       : `נבחר קול מקורי לשפה ${getCurrentLanguageMeta.label} (${currentVoice.name}).`}
@@ -607,13 +609,13 @@ export default function LanguagesPage() {
             </div>
           )}
 
-          <div className="mt-8 space-y-4">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-700">סוג תוכן</label>
-              <div className="flex gap-2">
+          <div className="mt-6 sm:mt-8 space-y-3 sm:space-y-4">
+            <div className="space-y-1.5 sm:space-y-2">
+              <label className="block text-xs sm:text-sm font-medium text-slate-700">סוג תוכן</label>
+              <div className="flex gap-1.5 sm:gap-2">
                 <button
                   onClick={() => setContentType('word')}
-                  className={`flex-1 rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                  className={`flex-1 rounded-lg sm:rounded-xl border px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition ${
                     contentType === 'word'
                       ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                       : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-200'
@@ -623,7 +625,7 @@ export default function LanguagesPage() {
                 </button>
                 <button
                   onClick={() => setContentType('sentence')}
-                  className={`flex-1 rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                  className={`flex-1 rounded-lg sm:rounded-xl border px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition ${
                     contentType === 'sentence'
                       ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                       : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-200'
@@ -633,7 +635,7 @@ export default function LanguagesPage() {
                 </button>
                 <button
                   onClick={() => setContentType('linking_word')}
-                  className={`flex-1 rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                  className={`flex-1 rounded-lg sm:rounded-xl border px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition ${
                     contentType === 'linking_word'
                       ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                       : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-200'
@@ -644,12 +646,12 @@ export default function LanguagesPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">
+              <label className="block text-xs sm:text-sm font-medium text-slate-700 break-words">
                 {contentType === 'word' && 'מילה או ביטוי בעברית שתרצי ללמוד בשפה ' + getCurrentLanguageMeta.label}
                 {contentType === 'sentence' && 'משפט שלם בעברית שתרצי ללמוד בשפה ' + getCurrentLanguageMeta.label}
                 {contentType === 'linking_word' && 'מילת קישור בעברית שתרצי ללמוד בשפה ' + getCurrentLanguageMeta.label}
               </label>
-              <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="mt-2 flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center">
                 <input
                   type="text"
                   value={hebrewTerm}
@@ -661,18 +663,18 @@ export default function LanguagesPage() {
                       ? 'לדוגמה: אני רוצה ללמוד שפות חדשות'
                       : 'לדוגמה: אבל, אולם, בנוסף'
                   }
-                  className="flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  className="flex-1 rounded-xl sm:rounded-2xl border border-slate-200 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 />
                 <button
                   onClick={handleLearn}
                   disabled={disableActions}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto"
                 >
-                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  {isLoading ? <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                   למד
                 </button>
               </div>
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-slate-500">
                 {contentType === 'word' && 'טיפ: אפשר להזין מילים בודדות או ביטויים קצרים.'}
                 {contentType === 'sentence' && 'טיפ: הזיני משפט שלם בעברית כדי ללמוד איך לבנות משפטים דומים בשפה הזרה.'}
                 {contentType === 'linking_word' && 'טיפ: מילות קישור כמו "אבל", "אולם", "בנוסף", "לכן" עוזרות לחבר רעיונות.'}
@@ -681,83 +683,83 @@ export default function LanguagesPage() {
           </div>
 
           {feedback && (
-            <div className="mt-4 rounded-2xl bg-indigo-50 px-4 py-3 text-sm text-indigo-600">{feedback}</div>
+            <div className="mt-3 sm:mt-4 rounded-xl sm:rounded-2xl bg-indigo-50 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-indigo-600">{feedback}</div>
           )}
 
           {result && (
-          <section className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-md lg:col-span-2">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <h3 className="text-lg font-semibold text-indigo-700">התרגום שלך</h3>
-                  <p className="text-sm text-slate-500">עברית → {getCurrentLanguageMeta.label}</p>
+          <section className="mt-6 sm:mt-8 lg:mt-10 grid grid-cols-1 gap-4 sm:gap-5 lg:gap-6 lg:grid-cols-3">
+            <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-5 lg:p-6 shadow-md lg:col-span-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-2">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base sm:text-lg font-semibold text-indigo-700">התרגום שלך</h3>
+                  <p className="text-xs sm:text-sm text-slate-500">עברית → {getCurrentLanguageMeta.label}</p>
                 </div>
                 <button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-indigo-600 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto"
                 >
-                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookmarkCheck className="h-4 w-4" />}
+                  {isSaving ? <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" /> : <BookmarkCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                   שמרי ללמידה
                 </button>
               </div>
 
-              <div className="mt-6 space-y-4">
-                <div className="rounded-2xl bg-indigo-50 px-4 py-3 text-indigo-700">
-                  <div className="text-xs uppercase text-indigo-400">ביטוי בעברית</div>
-                  <div className="text-lg font-semibold">{result.hebrewTerm}</div>
+              <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
+                <div className="rounded-xl sm:rounded-2xl bg-indigo-50 px-3 sm:px-4 py-2 sm:py-3 text-indigo-700">
+                  <div className="text-[10px] sm:text-xs uppercase text-indigo-400">ביטוי בעברית</div>
+                  <div className="text-base sm:text-lg font-semibold break-words">{result.hebrewTerm}</div>
                 </div>
-                <div className="rounded-2xl bg-white px-4 py-3 shadow-inner">
-                  <div className="text-xs uppercase text-slate-400">תרגום</div>
-                  <div className="text-xl font-bold text-slate-900">{result.translatedTerm}</div>
+                <div className="rounded-xl sm:rounded-2xl bg-white px-3 sm:px-4 py-2 sm:py-3 shadow-inner">
+                  <div className="text-[10px] sm:text-xs uppercase text-slate-400">תרגום</div>
+                  <div className="text-lg sm:text-xl font-bold text-slate-900 break-words" dir="ltr">{result.translatedTerm}</div>
                   {result.pronunciation && (
-                    <p className="mt-1 text-sm text-slate-500">הגייה: {result.pronunciation}</p>
+                    <p className="mt-1 text-xs sm:text-sm text-slate-500">הגייה: {result.pronunciation}</p>
                   )}
                   {isSpeechSupported && (
                     <button
                       onClick={() => speak(result.translatedTerm, result.targetLanguage)}
-                      className="mt-3 inline-flex items-center gap-2 rounded-full border border-indigo-200 px-3 py-1.5 text-xs font-semibold text-indigo-600 transition hover:border-indigo-300 hover:bg-indigo-50"
+                      className="mt-2 sm:mt-3 inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-indigo-200 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold text-indigo-600 transition hover:border-indigo-300 hover:bg-indigo-50"
                     >
-                      {spokenText === result.translatedTerm ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LanguagesIcon className="h-3.5 w-3.5" />}
+                      {spokenText === result.translatedTerm ? <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" /> : <LanguagesIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
                       השמעה
                     </button>
                   )}
                 </div>
                 {result.culturalNotes && (
-                  <div className="rounded-2xl bg-purple-50 px-4 py-3 text-sm text-purple-600">
-                    <strong className="block text-purple-500">הערות שימוש</strong>
-                    {result.culturalNotes}
+                  <div className="rounded-xl sm:rounded-2xl bg-purple-50 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-purple-600">
+                    <strong className="block text-purple-500 text-xs sm:text-sm">הערות שימוש</strong>
+                    <p className="break-words">{result.culturalNotes}</p>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-md">
-              <h4 className="flex items-center gap-2 text-base font-semibold text-indigo-700">
-                <BookOpen className="h-4 w-4" /> דוגמאות שימוש
+            <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-5 lg:p-6 shadow-md">
+              <h4 className="flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base font-semibold text-indigo-700">
+                <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> דוגמאות שימוש
               </h4>
-              <div className="mt-4 space-y-3 text-sm">
+              <div className="mt-3 sm:mt-4 space-y-2 sm:space-y-3 text-xs sm:text-sm">
                 {result.usageExamples.map((example, index) => (
-                  <div key={index} className="rounded-2xl border border-slate-200 px-4 py-3">
-                    <p className="font-semibold text-slate-700" dir="ltr">{example.target}</p>
-                    <p className="mt-1 text-xs text-slate-500">{example.hebrew}</p>
+                  <div key={index} className="rounded-xl sm:rounded-2xl border border-slate-200 px-3 sm:px-4 py-2 sm:py-3">
+                    <p className="font-semibold text-slate-700 break-words" dir="ltr">{example.target}</p>
+                    <p className="mt-1 text-[10px] sm:text-xs text-slate-500 break-words">{example.hebrew}</p>
                     {isSpeechSupported && (
                       <button
                         onClick={() => speak(example.target, result.targetLanguage)}
-                        className="mt-2 inline-flex items-center gap-2 rounded-full border border-indigo-200 px-2.5 py-1 text-[11px] font-medium text-indigo-600 transition hover:border-indigo-300 hover:bg-indigo-50"
+                        className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-indigo-200 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-medium text-indigo-600 transition hover:border-indigo-300 hover:bg-indigo-50"
                       >
-                        <LanguagesIcon className="h-3 w-3" />
+                        <LanguagesIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                         השמע
                       </button>
                     )}
                   </div>
                 ))}
                 {result.extraSuggestions.length > 0 && (
-                  <div className="rounded-2xl bg-indigo-50 px-4 py-3 text-indigo-600">
-                    <strong className="block text-indigo-500">עוד מילים שכדאי להכיר:</strong>
-                    <ul className="mt-1 list-disc pl-5 text-xs">
+                  <div className="rounded-xl sm:rounded-2xl bg-indigo-50 px-3 sm:px-4 py-2 sm:py-3 text-indigo-600">
+                    <strong className="block text-indigo-500 text-xs sm:text-sm">עוד מילים שכדאי להכיר:</strong>
+                    <ul className="mt-1 list-disc pl-4 sm:pl-5 text-[10px] sm:text-xs">
                       {result.extraSuggestions.map((suggestion, index) => (
-                        <li key={index}>{suggestion}</li>
+                        <li key={index} className="break-words">{suggestion}</li>
                       ))}
                     </ul>
                   </div>
@@ -768,21 +770,21 @@ export default function LanguagesPage() {
         )}
 
         {history.length > 0 && (
-          <section className="mt-12 rounded-3xl border border-slate-200 bg-white p-6 shadow-md">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h3 className="flex items-center gap-2 text-lg font-semibold text-indigo-700">
-                  <BookmarkCheck className="h-5 w-5" /> מונחים שנשמרו
+          <section className="mt-6 sm:mt-8 lg:mt-12 rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-5 lg:p-6 shadow-md">
+            <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0 flex-1">
+                <h3 className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-lg font-semibold text-indigo-700">
+                  <BookmarkCheck className="h-4 w-4 sm:h-5 sm:w-5" /> מונחים שנשמרו
                 </h3>
-                <p className="text-xs text-slate-500">המערכת לומדת מהדוגמאות שלך ומשתמשת בהן בכל כלי הכתיבה.</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5">המערכת לומדת מהדוגמאות שלך ומשתמשת בהן בכל כלי הכתיבה.</p>
               </div>
               {availableQuizLanguages.length > 0 && (
-                <div className="flex flex-col gap-2 rounded-2xl border border-indigo-100 bg-indigo-50/80 px-4 py-3 text-xs text-indigo-600 sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-1.5 sm:gap-2 rounded-xl sm:rounded-2xl border border-indigo-100 bg-indigo-50/80 px-3 sm:px-4 py-2 sm:py-3 text-[10px] sm:text-xs text-indigo-600 sm:flex-row sm:items-center mt-2 lg:mt-0">
                   <span className="font-semibold text-indigo-700">בוחן מהיר לפי שפה:</span>
                   <select
                     value={quizTargetLanguage}
                     onChange={(event) => setQuizTargetLanguage(event.target.value as SupportedLanguageKey)}
-                    className="rounded-xl border border-indigo-200 bg-white px-3 py-1 text-xs text-indigo-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    className="rounded-lg sm:rounded-xl border border-indigo-200 bg-white px-2 sm:px-3 py-1 text-[10px] sm:text-xs text-indigo-700 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                   >
                     {availableQuizLanguages.map((langKey) => (
                       <option key={langKey} value={langKey}>
@@ -794,98 +796,100 @@ export default function LanguagesPage() {
               )}
             </div>
 
-            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.6fr)_minmax(0,0.4fr)]">
-              <div className="rounded-2xl border border-slate-200 p-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="mt-4 sm:mt-6 grid grid-cols-1 gap-4 sm:gap-5 lg:gap-6 lg:grid-cols-[minmax(0,0.6fr)_minmax(0,0.4fr)]">
+              <div className="rounded-xl sm:rounded-2xl border border-slate-200 p-3 sm:p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {history.slice(0, 6).map((entry) => (
-                    <div key={entry.id} className="rounded-2xl border border-slate-200 p-4">
-                      <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-slate-400">
-                        <div className="flex items-center gap-2">
-                          <span>{SUPPORTED_LANGUAGES[entry.targetLanguage].label}</span>
+                    <div key={entry.id} className="rounded-xl sm:rounded-2xl border border-slate-200 p-3 sm:p-4">
+                      <div className="flex items-center justify-between text-[10px] sm:text-[11px] uppercase tracking-wide text-slate-400">
+                        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                          <span className="truncate">{SUPPORTED_LANGUAGES[entry.targetLanguage].label}</span>
                           {entry.contentType && (
-                            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] text-indigo-600">
+                            <span className="rounded-full bg-indigo-100 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] text-indigo-600 flex-shrink-0">
                               {entry.contentType === 'sentence' ? 'משפט' : entry.contentType === 'linking_word' ? 'קישור' : 'מילה'}
                             </span>
                           )}
                         </div>
-                        <span>{new Date(entry.updatedAt).toLocaleDateString('he-IL')}</span>
+                        <span className="text-[9px] sm:text-[10px] flex-shrink-0">{new Date(entry.updatedAt).toLocaleDateString('he-IL')}</span>
                       </div>
-                      <div className="mt-2 text-sm text-slate-600" dir="rtl">{entry.hebrewTerm}</div>
-                      <div className="text-lg font-semibold text-slate-900" dir="ltr">{entry.translatedTerm}</div>
+                      <div className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-slate-600 break-words" dir="rtl">{entry.hebrewTerm}</div>
+                      <div className="text-base sm:text-lg font-semibold text-slate-900 break-words" dir="ltr">{entry.translatedTerm}</div>
                       {entry.pronunciation && (
-                        <p className="text-xs text-slate-500">הגייה: {entry.pronunciation}</p>
+                        <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5">הגייה: {entry.pronunciation}</p>
                       )}
                     </div>
                   ))}
                 </div>
                 {history.length > 6 && (
-                  <p className="mt-3 text-xs text-slate-400">מוצגות 6 הדוגמאות האחרונות. תוכלי לראות את כולן במסך "לימוד שפות" בהמשך.</p>
+                  <p className="mt-2 sm:mt-3 text-[10px] sm:text-xs text-slate-400">מוצגות 6 הדוגמאות האחרונות. תוכלי לראות את כולן במסך "לימוד שפות" בהמשך.</p>
                 )}
               </div>
 
-              <div className="flex h-full flex-col justify-between rounded-2xl border border-indigo-100 bg-indigo-50/60 p-5">
+              <div className="flex h-full flex-col justify-between rounded-xl sm:rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 sm:p-5">
                 <div>
-                  <h4 className="flex items-center gap-2 text-base font-semibold text-indigo-800">
-                    <ListChecks className="h-4 w-4" /> בוחן מהיר
+                  <h4 className="flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base font-semibold text-indigo-800">
+                    <ListChecks className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> בוחן מהיר
                   </h4>
-                  <p className="mt-1 text-xs text-indigo-600">בדקי את עצמך עם תרגול קצר של המילים ששמרת.</p>
+                  <p className="mt-1 text-[10px] sm:text-xs text-indigo-600">בדקי את עצמך עם תרגול קצר של המילים ששמרת.</p>
                 </div>
 
                 {quizState && quizState.finished ? (
-                  <div className="mt-4 space-y-4">
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">
-                      <p className="text-sm font-semibold">סיימת! ציון: {quizState.score}/{quizState.questions.length}</p>
-                      <p className="text-xs">{quizProgress}% הצלחה. המשיכי לשמור מילים חדשות כדי לשפר את הבוחנים הבאים.</p>
+                  <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
+                    <div className="rounded-lg sm:rounded-xl border border-emerald-200 bg-emerald-50 px-3 sm:px-4 py-2 sm:py-3 text-emerald-700">
+                      <p className="text-xs sm:text-sm font-semibold">סיימת! ציון: {quizState.score}/{quizState.questions.length}</p>
+                      <p className="text-[10px] sm:text-xs mt-0.5">{quizProgress}% הצלחה. המשיכי לשמור מילים חדשות כדי לשפר את הבוחנים הבאים.</p>
                     </div>
-                    <div className="max-h-40 overflow-y-auto rounded-xl border border-indigo-100 bg-white/80 p-3 text-xs text-indigo-700">
-                      <p className="mb-2 font-semibold">פירוט תשובות:</p>
+                    <div className="max-h-32 sm:max-h-40 overflow-y-auto rounded-lg sm:rounded-xl border border-indigo-100 bg-white/80 p-2 sm:p-3 text-[10px] sm:text-xs text-indigo-700">
+                      <p className="mb-1.5 sm:mb-2 font-semibold">פירוט תשובות:</p>
                       <ul className="space-y-1">
                         {quizState.answers.map((answer, index) => (
-                          <li key={`${answer.correct}-${index}`} className="flex items-center justify-between gap-2">
-                            <span dir="rtl" className="truncate text-slate-600">
+                          <li key={`${answer.correct}-${index}`} className="flex items-center justify-between gap-1.5 sm:gap-2">
+                            <span dir="rtl" className="truncate text-slate-600 text-[9px] sm:text-[10px]">
                               {quizState.questions[index]?.hebrewTerm}
                             </span>
-                            <span className={`text-[11px] font-semibold ${answer.wasCorrect ? 'text-emerald-600' : 'text-rose-500'}`}>
+                            <span className={`text-[9px] sm:text-[11px] font-semibold flex-shrink-0 ${answer.wasCorrect ? 'text-emerald-600' : 'text-rose-500'}`}>
                               {answer.wasCorrect ? 'נכון' : 'טעית'}
                             </span>
                           </li>
                         ))}
                       </ul>
                     </div>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1.5 sm:gap-2">
                       <button
                         onClick={startQuiz}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
+                        className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
                       >
-                        <RefreshCw className="h-4 w-4" /> התחילי בוחן חדש
+                        <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> 
+                        <span className="hidden sm:inline">התחילי בוחן חדש</span>
+                        <span className="sm:hidden">בוחן חדש</span>
                       </button>
                       <button
                         onClick={resetQuiz}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-600 transition hover:border-indigo-300"
+                        className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl border border-indigo-200 bg-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-indigo-600 transition hover:border-indigo-300"
                       >
                         אפס תוצאות
                       </button>
                     </div>
                   </div>
                 ) : activeQuizQuestion ? (
-                  <div className="mt-4 space-y-4">
-                    <div className="flex items-center justify-between text-xs text-indigo-600">
+                  <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
+                    <div className="flex items-center justify-between text-[10px] sm:text-xs text-indigo-600">
                       <span>
                         שאלה {quizState!.currentIndex + 1} מתוך {quizState!.questions.length}
                       </span>
                       <span>{quizProgress}% התקדמות</span>
                     </div>
-                    <div className="rounded-xl border border-indigo-100 bg-white/90 px-4 py-3 text-sm font-semibold text-indigo-900" dir="rtl">
+                    <div className="rounded-lg sm:rounded-xl border border-indigo-100 bg-white/90 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-indigo-900 break-words" dir="rtl">
                       {activeQuizQuestion.hebrewTerm}
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5 sm:space-y-2">
                       {activeQuizQuestion.options.map((option) => {
                         const isSelected = quizState!.selectedOption === option
                         return (
                           <button
                             key={option}
                             onClick={() => selectQuizOption(option)}
-                            className={`w-full rounded-xl border px-4 py-2 text-sm transition ${
+                            className={`w-full rounded-lg sm:rounded-xl border px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm transition break-words ${
                               isSelected
                                 ? 'border-indigo-400 bg-indigo-100 text-indigo-700'
                                 : 'border-indigo-200 bg-white text-indigo-600 hover:border-indigo-300'
@@ -899,19 +903,23 @@ export default function LanguagesPage() {
                     <button
                       onClick={submitQuizAnswer}
                       disabled={!quizState!.selectedOption}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex w-full items-center justify-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      <Trophy className="h-4 w-4" /> בדקי תשובה
+                      <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> 
+                      <span className="hidden sm:inline">בדקי תשובה</span>
+                      <span className="sm:hidden">בדקי</span>
                     </button>
                   </div>
                 ) : (
-                  <div className="mt-4 space-y-4">
-                    <p className="text-xs text-indigo-600">יש לך {history.filter((entry) => entry.targetLanguage === quizTargetLanguage).length} מונחים בשפה הזו. לחיצה על "התחילי בתרגול" תערבב אותם לכמה שאלות קצרות.</p>
+                  <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
+                    <p className="text-[10px] sm:text-xs text-indigo-600 break-words">יש לך {history.filter((entry) => entry.targetLanguage === quizTargetLanguage).length} מונחים בשפה הזו. לחיצה על "התחילי בתרגול" תערבב אותם לכמה שאלות קצרות.</p>
                     <button
                       onClick={startQuiz}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
+                      className="inline-flex w-full items-center justify-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
                     >
-                      <ListChecks className="h-4 w-4" /> התחילי בתרגול
+                      <ListChecks className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> 
+                      <span className="hidden sm:inline">התחילי בתרגול</span>
+                      <span className="sm:hidden">תרגול</span>
                     </button>
                   </div>
                 )}
