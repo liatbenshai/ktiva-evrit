@@ -199,26 +199,26 @@ export default function DashboardPage() {
       </header>
 
       <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 pb-8 sm:pb-16">
-        <section className="mt-6 sm:mt-8 rounded-3xl bg-gradient-to-br from-indigo-500 via-purple-500 via-pink-500 to-rose-500 p-6 sm:p-10 lg:p-14 text-white shadow-2xl relative overflow-hidden">
+        <section className="mt-4 sm:mt-6 lg:mt-8 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-500 via-purple-500 via-pink-500 to-rose-500 p-4 sm:p-6 lg:p-10 xl:p-14 text-white shadow-2xl relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-20"></div>
-          <div className="mx-auto flex max-w-4xl flex-col items-center gap-4 sm:gap-6 text-center relative z-10">
-            <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold leading-tight drop-shadow-lg">
+          <div className="mx-auto flex max-w-4xl flex-col items-center gap-3 sm:gap-4 lg:gap-6 text-center relative z-10">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-5xl font-bold leading-tight drop-shadow-lg px-2">
               עוזר הכתיבה החכם שלך בעברית טבעית
             </h1>
-            <p className="text-sm sm:text-base lg:text-lg text-white/95 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm lg:text-base xl:text-lg text-white/95 max-w-2xl leading-relaxed px-2">
               כתיבה, תיקון ולמידה של מאמרים, מיילים, פוסטים וסיפורים בעברית תקנית. כל תיקון שלך נשמר והמערכת משתפרת בכל שימוש – כך שהתוכן הבא ירגיש כבר שלך.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4 w-full sm:w-auto px-2">
               <Link
                 href="/dashboard/ai-correction"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-bold text-indigo-600 shadow-xl transition-all hover:-translate-y-1 hover:shadow-2xl hover:scale-105"
+                className="inline-flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-white px-5 sm:px-6 lg:px-8 py-2.5 sm:py-3 lg:py-4 text-xs sm:text-sm lg:text-base font-bold text-indigo-600 shadow-xl transition-all hover:-translate-y-1 hover:shadow-2xl hover:scale-105 w-full sm:w-auto"
               >
                 התחילי תיקון עכשיו
-                <span aria-hidden className="text-lg">→</span>
+                <span aria-hidden className="text-base sm:text-lg">→</span>
               </Link>
               <Link
                 href="/dashboard/articles"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-white/80 bg-white/10 backdrop-blur-sm px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-bold text-white transition-all hover:bg-white/20 hover:border-white hover:scale-105"
+                className="inline-flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl border-2 border-white/80 bg-white/10 backdrop-blur-sm px-5 sm:px-6 lg:px-8 py-2.5 sm:py-3 lg:py-4 text-xs sm:text-sm lg:text-base font-bold text-white transition-all hover:bg-white/20 hover:border-white hover:scale-105 w-full sm:w-auto"
               >
                 צרי תוכן חדש
               </Link>
@@ -239,27 +239,27 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5 xl:gap-6">
             {creationCards.map(({ title, description, icon: Icon, href, gradient }) => {
               if (!Icon) return null;
               return (
                 <Link
                   key={href}
                   href={href}
-                  className={`group relative flex h-full flex-col justify-between rounded-3xl bg-gradient-to-br ${gradient} p-5 sm:p-6 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:ring-offset-2 overflow-hidden`}
+                  className={`group relative flex h-full flex-col justify-between rounded-2xl sm:rounded-3xl bg-gradient-to-br ${gradient} p-4 sm:p-5 lg:p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-2xl hover:scale-[1.01] sm:hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:ring-offset-2 overflow-hidden`}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-white/0 via-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="relative z-10">
-                    <div className="flex items-center gap-3 sm:gap-4 text-white mb-3">
-                      <span className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-white/25 backdrop-blur-sm shadow-lg group-hover:bg-white/30 transition-colors">
-                        <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
+                    <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 text-white mb-2 sm:mb-3">
+                      <span className="flex h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-white/25 backdrop-blur-sm shadow-lg group-hover:bg-white/30 transition-colors flex-shrink-0">
+                        <Icon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
                       </span>
-                      <h3 className="text-base sm:text-lg lg:text-xl font-bold drop-shadow-sm">{title}</h3>
+                      <h3 className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold drop-shadow-sm leading-tight">{title}</h3>
                     </div>
-                    <p className="mt-3 sm:mt-4 flex-1 text-sm sm:text-base leading-relaxed text-white/95 drop-shadow-sm">{description}</p>
-                    <span className="mt-4 sm:mt-5 inline-flex items-center gap-1.5 text-sm sm:text-base font-bold text-white transition-all group-hover:gap-3">
+                    <p className="mt-2 sm:mt-3 lg:mt-4 flex-1 text-xs sm:text-sm lg:text-base leading-relaxed text-white/95 drop-shadow-sm">{description}</p>
+                    <span className="mt-3 sm:mt-4 lg:mt-5 inline-flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm lg:text-base font-bold text-white transition-all group-hover:gap-2 sm:group-hover:gap-3">
                       כניסה לכלי
-                      <span aria-hidden className="text-lg group-hover:translate-x-[-2px] transition-transform">→</span>
+                      <span aria-hidden className="text-base sm:text-lg group-hover:translate-x-[-2px] transition-transform">→</span>
                     </span>
                   </div>
                 </Link>
@@ -281,25 +281,25 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 xl:gap-6">
             {learningCards.map(({ title, description, icon: Icon, href, gradient }) => (
               <Link
                 key={href}
                 href={href}
-                className={`group relative flex h-full flex-col justify-between rounded-3xl bg-gradient-to-br ${gradient} p-5 sm:p-6 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:ring-offset-2 overflow-hidden`}
+                className={`group relative flex h-full flex-col justify-between rounded-2xl sm:rounded-3xl bg-gradient-to-br ${gradient} p-4 sm:p-5 lg:p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-2xl hover:scale-[1.01] sm:hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/50 focus-visible:ring-offset-2 overflow-hidden`}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/0 via-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="relative z-10">
-                  <div className="flex items-center gap-3 text-white mb-3">
-                    <span className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-white/25 backdrop-blur-sm shadow-lg group-hover:bg-white/30 transition-colors">
-                      <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                  <div className="flex items-center gap-2 sm:gap-3 text-white mb-2 sm:mb-3">
+                    <span className="flex h-10 w-10 sm:h-11 sm:w-11 lg:h-12 lg:w-12 items-center justify-center rounded-lg sm:rounded-xl bg-white/25 backdrop-blur-sm shadow-lg group-hover:bg-white/30 transition-colors flex-shrink-0">
+                      <Icon className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
                     </span>
-                    <h3 className="text-base sm:text-lg font-bold drop-shadow-sm">{title}</h3>
+                    <h3 className="text-sm sm:text-base lg:text-lg font-bold drop-shadow-sm leading-tight">{title}</h3>
                   </div>
-                  <p className="mt-3 sm:mt-4 flex-1 text-sm sm:text-base leading-relaxed text-white/95 drop-shadow-sm">{description}</p>
-                  <span className="mt-4 sm:mt-5 inline-flex items-center gap-1.5 text-sm sm:text-base font-bold text-white transition-all group-hover:gap-3">
+                  <p className="mt-2 sm:mt-3 lg:mt-4 flex-1 text-xs sm:text-sm lg:text-base leading-relaxed text-white/95 drop-shadow-sm">{description}</p>
+                  <span className="mt-3 sm:mt-4 lg:mt-5 inline-flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm lg:text-base font-bold text-white transition-all group-hover:gap-2 sm:group-hover:gap-3">
                     המשיכי מכאן
-                    <span aria-hidden className="text-lg group-hover:translate-x-[-2px] transition-transform">→</span>
+                    <span aria-hidden className="text-base sm:text-lg group-hover:translate-x-[-2px] transition-transform">→</span>
                   </span>
                 </div>
               </Link>

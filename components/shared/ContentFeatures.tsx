@@ -127,37 +127,37 @@ export default function ContentFeatures({
   if (!content) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Export Button */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">פעולות</h3>
-          <div className="relative" ref={exportMenuRef}>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">פעולות</h3>
+          <div className="relative w-full sm:w-auto" ref={exportMenuRef}>
             <button
               onClick={() => setShowExportMenu(!showExportMenu)}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors w-full sm:w-auto text-sm sm:text-base"
             >
               <Download className="w-4 h-4" />
               <span>ייצוא</span>
               <ChevronDown className="w-4 h-4" />
             </button>
             {showExportMenu && (
-              <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+              <div className="absolute left-0 sm:left-auto right-0 sm:right-0 mt-2 w-full sm:w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
                 <button
                   onClick={() => handleExport('txt')}
-                  className="w-full text-right px-4 py-2 hover:bg-gray-100 transition-colors rounded-t-lg"
+                  className="w-full text-right px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-gray-100 transition-colors rounded-t-lg text-sm sm:text-base"
                 >
                   ייצוא ל-TXT
                 </button>
                 <button
                   onClick={() => handleExport('docx')}
-                  className="w-full text-right px-4 py-2 hover:bg-gray-100 transition-colors"
+                  className="w-full text-right px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-gray-100 transition-colors text-sm sm:text-base"
                 >
                   ייצוא ל-Word
                 </button>
                 <button
                   onClick={() => handleExport('pdf')}
-                  className="w-full text-right px-4 py-2 hover:bg-gray-100 transition-colors rounded-b-lg"
+                  className="w-full text-right px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-gray-100 transition-colors rounded-b-lg text-sm sm:text-base"
                 >
                   ייצוא ל-PDF
                 </button>
@@ -168,13 +168,13 @@ export default function ContentFeatures({
       </div>
 
       {/* Follow-up Questions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-indigo-600" />
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+          <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
           שאלות המשך
         </h3>
-        <div className="space-y-4">
-          <div className="flex gap-2">
+        <div className="space-y-3 sm:space-y-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
             <input
               type="text"
               value={followUpQuestion}
@@ -186,18 +186,19 @@ export default function ContentFeatures({
                 }
               }}
               placeholder="שאלי שאלה נוספת על התוכן..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               disabled={isAskingFollowUp}
             />
             <button
               onClick={handleFollowUp}
               disabled={isAskingFollowUp || !followUpQuestion.trim()}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 sm:px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
             >
               {isAskingFollowUp ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  שואל...
+                  <span className="hidden sm:inline">שואל...</span>
+                  <span className="sm:hidden">שואל</span>
                 </>
               ) : (
                 <>
@@ -208,13 +209,13 @@ export default function ContentFeatures({
             </button>
           </div>
           {followUpHistory.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-600 mb-2">היסטוריית שאלות:</p>
-              <div className="space-y-2 max-h-40 overflow-y-auto">
+            <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
+              <p className="text-xs sm:text-sm text-gray-600 mb-2">היסטוריית שאלות:</p>
+              <div className="space-y-2 max-h-32 sm:max-h-40 overflow-y-auto">
                 {followUpHistory.map((item, index) => (
-                  <div key={index} className="text-sm bg-gray-50 p-3 rounded-lg">
+                  <div key={index} className="text-xs sm:text-sm bg-gray-50 p-2 sm:p-3 rounded-lg">
                     <p className="font-medium text-gray-700 mb-1">שאלה: {item.question}</p>
-                    <p className="text-gray-600 text-xs">{item.answer.substring(0, 150)}...</p>
+                    <p className="text-gray-600 text-xs">{item.answer.substring(0, 100)}...</p>
                   </div>
                 ))}
               </div>
@@ -225,15 +226,15 @@ export default function ContentFeatures({
 
       {/* Web Search Info */}
       {(enableWebSearch || enableURLs) && (
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200 p-4">
-          <div className="flex items-start gap-3">
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200 p-3 sm:p-4">
+          <div className="flex items-start gap-2 sm:gap-3">
             <div className="flex-shrink-0">
-              {enableWebSearch && <Search className="w-5 h-5 text-indigo-600" />}
-              {enableURLs && <Globe className="w-5 h-5 text-indigo-600" />}
+              {enableWebSearch && <Search className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />}
+              {enableURLs && <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />}
             </div>
-            <div className="flex-1">
-              <h4 className="font-semibold text-gray-900 mb-1">גישה למקורות מידע</h4>
-              <div className="text-sm text-gray-600 space-y-1">
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">גישה למקורות מידע</h4>
+              <div className="text-xs sm:text-sm text-gray-600 space-y-1">
                 {enableWebSearch && (
                   <p>• חיפוש ברשת - המערכת יכולה לחפש מידע עדכני מ-Google ומקורות נוספים</p>
                 )}
