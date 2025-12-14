@@ -767,7 +767,7 @@ export default function LanguagesPage() {
               </div>
             </div>
           </section>
-        )}
+        ) : null}
 
         {history.length > 0 && (
           <section className="mt-6 sm:mt-8 lg:mt-12 rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-5 lg:p-6 shadow-md">
