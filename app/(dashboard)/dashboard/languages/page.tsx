@@ -768,6 +768,7 @@ export default function LanguagesPage() {
             </div>
           </section>
           )}
+          </section>
         ) : null}
 
         {history.length > 0 && (
