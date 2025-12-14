@@ -156,18 +156,18 @@ export async function POST(req: NextRequest) {
     }
 
     // Calculate results with better validation
-    let correct = 0;
+    let correctCount = 0;
     const results = answers.map((answer: any) => {
       // Normalize answers for comparison (trim, lowercase, remove extra spaces)
       const selected = (answer.selected || '').trim().toLowerCase();
-      const correct = (answer.correct || '').trim().toLowerCase();
+      const correctAnswer = (answer.correct || '').trim().toLowerCase();
       
       // More flexible matching - exact match or contains
-      const isCorrect = selected === correct || 
-                       (selected.length > 0 && correct.includes(selected)) ||
-                       (correct.length > 0 && selected.includes(correct));
+      const isCorrect = selected === correctAnswer || 
+                       (selected.length > 0 && correctAnswer.includes(selected)) ||
+                       (correctAnswer.length > 0 && selected.includes(correctAnswer));
       
-      if (isCorrect) correct++;
+      if (isCorrect) correctCount++;
       return {
         ...answer,
         isCorrect,
@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
       };
     });
 
-    const score = Math.round((correct / answers.length) * 100);
+    const score = Math.round((correctCount / answers.length) * 100);
 
     // Provide feedback based on score
     let feedback = '';
@@ -196,7 +196,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       score,
-      correct,
+      correct: correctCount,
       total: answers.length,
       results,
       feedback,
