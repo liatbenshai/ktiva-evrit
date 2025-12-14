@@ -34,11 +34,18 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Allow access to login page, create-admin page, debug page and public files
+  // Define public admin pages that don't require authentication
+  const publicAdminPages = [
+    '/admin/create-admin',
+    '/admin/debug-auth',
+    '/admin/check-admin',
+  ];
+
+  // Allow access to login page, public admin pages, and public files
   if (
     pathname === '/login' || 
-    pathname === '/admin/create-admin' ||
-    pathname === '/admin/debug-auth' ||
+    pathname === '/' ||
+    publicAdminPages.includes(pathname) ||
     pathname === '/manifest.json' ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/') ||
@@ -74,7 +81,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protect admin routes - require authentication and admin role
-  if (pathname.startsWith('/admin')) {
+  // But skip public admin pages (already handled above)
+  if (pathname.startsWith('/admin') && !publicAdminPages.includes(pathname)) {
     if (!token) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('callbackUrl', pathname);

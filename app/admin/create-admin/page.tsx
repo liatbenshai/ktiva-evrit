@@ -119,6 +119,12 @@ export default function CreateAdminPage() {
 
           <div className="mt-8 pt-6 border-t border-gray-200 space-y-3">
             <Link
+              href="/admin/check-admin"
+              className="block text-center text-indigo-600 hover:text-indigo-700 font-medium hover:underline"
+            >
+              בדיקת משתמש Admin / פתרון בעיות
+            </Link>
+            <Link
               href="/login"
               className="block text-center text-indigo-600 hover:text-indigo-700 font-medium hover:underline"
             >

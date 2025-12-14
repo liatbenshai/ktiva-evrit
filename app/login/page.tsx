@@ -207,6 +207,12 @@ function LoginForm() {
 
         <div className="mt-5 sm:mt-6 text-center space-y-2 pt-5 border-t border-gray-200">
           <Link
+            href="/admin/check-admin"
+            className="block text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+          >
+            בדיקת משתמש Admin / פתרון בעיות
+          </Link>
+          <Link
             href="/admin/create-admin"
             className="block text-indigo-600 hover:text-indigo-700 text-xs sm:text-sm font-semibold transition-colors"
           >
