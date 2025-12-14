@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Mail, Calendar, User as UserIcon, Shield, Lock, Unlock, Copy, Check, Trash2, AlertTriangle } from 'lucide-react';
+import { Users, Mail, Calendar, User as UserIcon, Shield, Lock, Unlock, Copy, Check, Trash2, AlertTriangle, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 
 interface User {
@@ -121,12 +121,21 @@ export default function UsersPage() {
                 <p className="text-gray-600 mt-1">רשימת כל המשתמשים הרשומים במערכת</p>
               </div>
             </div>
-            <Link
-              href="/dashboard"
-              className="text-indigo-600 hover:text-indigo-700 font-medium hover:underline"
-            >
-              ← חזרה לדשבורד
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/admin/users/create"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+              >
+                <UserPlus className="w-5 h-5" />
+                צור משתמש חדש
+              </Link>
+              <Link
+                href="/dashboard"
+                className="text-indigo-600 hover:text-indigo-700 font-medium hover:underline"
+              >
+                ← חזרה לדשבורד
+              </Link>
+            </div>
           </div>
 
           {loading ? (
