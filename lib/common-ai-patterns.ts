@@ -43,8 +43,8 @@ export const COMMON_AI_PATTERNS: PrebuiltPattern[] = [
     explanation: '"במטרה" הוא ביטוי AI אופייני'
   },
   {
-    badPattern: 'באופן',
-    goodPattern: '',
+    badPattern: 'באופן משמעותי',
+    goodPattern: 'משמעותית',
     patternType: 'ai-style',
     confidence: 0.85,
     category: 'מילים מיותרות',
@@ -258,7 +258,7 @@ export const COMMON_AI_PATTERNS: PrebuiltPattern[] = [
     badPattern: 'יש לי',
     goodPattern: 'אני',
     patternType: 'style',
-    confidence: 0.7,
+    confidence: 0.5, // הופחת - תלוי מאוד בהקשר, לא תמיד נכון
     category: 'סגנון',
     explanation: 'לעתים "יש לי X" יכול להיות "אני X" - תלוי בהקשר'
   },
@@ -281,12 +281,12 @@ export const COMMON_AI_PATTERNS: PrebuiltPattern[] = [
   
   // ביטויים עסקיים AI
   {
-    badPattern: 'לשפר את החוויה',
-    goodPattern: 'לשפר את החוויה',
+    badPattern: 'לשפר את חוויית המשתמש',
+    goodPattern: 'לשפר את השימוש',
     patternType: 'ai-style',
-    confidence: 0.6,
+    confidence: 0.7,
     category: 'ביטויי שיווק AI',
-    explanation: 'ביטוי שיווקי - כדאי לבדוק אם הוא מתאים'
+    explanation: '"חוויית משתמש" הוא ביטוי שיווקי AI - "לשפר את השימוש" טבעי יותר'
   },
   {
     badPattern: 'לספק פתרון',
@@ -401,12 +401,12 @@ export const COMMON_AI_PATTERNS: PrebuiltPattern[] = [
     explanation: '"אם" יותר פשוט וישיר'
   },
   {
-    badPattern: 'ככל ש',
-    goodPattern: 'ככל ש',
+    badPattern: 'ככל הניתן',
+    goodPattern: 'כמה שאפשר',
     patternType: 'formality',
-    confidence: 0.6,
-    category: 'פורמליות',
-    explanation: 'ביטוי תקני - כדאי לבדוק אם מתאים להקשר'
+    confidence: 0.75,
+    category: 'פורמליות יתר',
+    explanation: '"כמה שאפשר" טבעי יותר בשפה יומיומית'
   },
   {
     badPattern: 'בעקבות',
@@ -434,11 +434,11 @@ export const COMMON_AI_PATTERNS: PrebuiltPattern[] = [
   },
   {
     badPattern: 'יתרה מכך',
-    goodPattern: 'יתר על כן',
+    goodPattern: 'יתרה מזאת',
     patternType: 'style',
-    confidence: 0.75,
+    confidence: 0.8,
     category: 'ביטויים',
-    explanation: 'הביטוי הנכון הוא "יתר על כן" או "יתרה מזאת"'
+    explanation: 'הביטוי הנכון בעברית הוא "יתרה מזאת" (לא "יתרה מכך")'
   }
 ];
 
@@ -487,7 +487,7 @@ export function getHighConfidencePatterns(minConfidence = 0.85) {
  * המרה לפורמט שמתאים למסד הנתונים
  */
 export function convertToDBFormat(userId: string = 'default-user') {
-  return COMMON_AI_PATTERNS.map(pattern => ({
+  return COMMON_AI_PATTERNS.filter(p => p.badPattern !== p.goodPattern && p.goodPattern.length > 0).map(pattern => ({
     userId,
     badPattern: pattern.badPattern,
     goodPattern: pattern.goodPattern,

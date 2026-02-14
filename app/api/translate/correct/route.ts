@@ -44,25 +44,42 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // בדיקה אם יש ביטוי חדש שנוצר מהתיקון - הוספה למאגר idioms
+    // שמירת תיקון כ-TranslationPattern ל-DB - כדי שנלמד ממנו בתרגומים הבאים
     try {
-      const words = correctedText.split(/\s+/);
-      const originalWords = translatedText.split(/\s+/);
+      if (translatedText.trim() !== correctedText.trim()) {
+        const existing = await prisma.translationPattern.findFirst({
+          where: {
+            userId,
+            badPattern: translatedText.trim().substring(0, 200),
+            goodPattern: correctedText.trim().substring(0, 200),
+          },
+        });
 
-      // חיפוש שינויים משמעותיים (יותר מ-2 מילים שונות)
-      if (
-        words.length !== originalWords.length ||
-        words.some((w: string, i: number) => w !== originalWords[i])
-      ) {
-        // אם התיקון שונה משמעותית, זה יכול להיות idiom חדש
-        // אך נשמור רק אם המשתמש מבקש במפורש
-        // כאן אפשר להוסיף לוגיקה נוספת
+        if (existing) {
+          await prisma.translationPattern.update({
+            where: { id: existing.id },
+            data: {
+              occurrences: existing.occurrences + 1,
+              confidence: Math.min(1.0, existing.confidence + 0.05),
+            },
+          });
+        } else {
+          await prisma.translationPattern.create({
+            data: {
+              userId,
+              badPattern: translatedText.trim().substring(0, 200),
+              goodPattern: correctedText.trim().substring(0, 200),
+              patternType: 'translation',
+              confidence: 0.8,
+              occurrences: 1,
+              context: `${fromLang}→${toLang}`,
+            },
+          });
+        }
       }
-
-      // ניסיון לזהות idioms מתוך התיקון
-      // אם יש ביטוי מתורגם חדש, אפשר להוסיף אותו למאגר
-    } catch (error) {
-      console.error('Error processing idioms from correction:', error);
+    } catch (dbError) {
+      console.error('Error saving translation correction to DB:', dbError);
+      // ממשיכים - השמירה לא קריטית
     }
 
     // קבלת תובנות מהמערכת

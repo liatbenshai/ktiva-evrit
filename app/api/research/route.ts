@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     
     // Perform searches (in a real implementation, you would use a web search API)
     // For now, we'll simulate this - in production you'd use Google Search API, Bing API, etc.
-    for (const query of searchQueries.slice(0, 1)) { // Limit to avoid too many API calls
+    for (const query of searchQueries.slice(0, 2)) { // Use at least 2 queries for better coverage
       try {
         // Note: In production, replace this with actual web search API calls
         // For example: Google Custom Search API, Bing Search API, SerpAPI, etc.

@@ -205,7 +205,7 @@ export async function POST(req: NextRequest) {
         topic,
         title: lessonData.title,
         description: lessonData.description || '',
-        duration: Math.ceil((lessonData.vocabulary.length + (lessonData.sentences?.length || 0)) * 2), // 2 דקות למילה/משפט
+        duration: Math.ceil((lessonData.vocabulary.length * 1 + (lessonData.sentences?.length || 0) * 1.5) + 5), // 1 דקה למילה, 1.5 למשפט, +5 דקות בסיס
         grammarNotes: lessonData.grammarNotes || null,
         culturalTips: lessonData.culturalTips || null,
         order: 1, // ניתן לשפר - לבדוק מה הסדר האחרון

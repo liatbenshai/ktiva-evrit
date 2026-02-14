@@ -1,8 +1,14 @@
 import Anthropic from '@anthropic-ai/sdk';
 
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.error('WARNING: ANTHROPIC_API_KEY is not set. AI features will not work.');
+}
+
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+const CLAUDE_MODEL = process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514';
 
 // Hebrew system prompt base - used across all AI features
 export const HEBREW_SYSTEM_PROMPT_BASE = `**כלל ברזל:** התאם את רמת השפה להקשר שהמשתמש מבקש.
@@ -52,34 +58,56 @@ export async function generateText({
   temperature = 0.7,
   responseFormat,
 }: GenerateTextOptions) {
-  try {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: maxTokens,
-      temperature,
-      system: systemPrompt,
-      ...(responseFormat ? { response_format: responseFormat } : {}),
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    });
+  const MAX_RETRIES = 2;
 
-    const content = message.content[0];
-    if (content.type === 'text') {
-      return content.text;
-    }
-    if ('json' in content) {
-      return JSON.stringify((content as { json: unknown }).json);
-    }
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const message = await anthropic.messages.create({
+        model: CLAUDE_MODEL,
+        max_tokens: maxTokens,
+        temperature,
+        system: systemPrompt,
+        ...(responseFormat ? { response_format: responseFormat } : {}),
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+      });
 
-    throw new Error('Unexpected response type');
-  } catch (error) {
-    console.error('Error generating text:', error);
-    throw error;
+      // בדיקה שהתשובה לא ריקה
+      if (!message.content || message.content.length === 0) {
+        throw new Error('Empty response from Claude API');
+      }
+
+      const content = message.content[0];
+      if (content.type === 'text') {
+        return content.text;
+      }
+      if ('json' in content) {
+        return JSON.stringify((content as { json: unknown }).json);
+      }
+
+      throw new Error('Unexpected response type');
+    } catch (error: any) {
+      const isRateLimit = error?.status === 429 || error?.statusCode === 429;
+      const isOverloaded = error?.status === 529 || error?.statusCode === 529;
+      const isRetryable = isRateLimit || isOverloaded;
+
+      if (isRetryable && attempt < MAX_RETRIES) {
+        const delay = Math.pow(2, attempt + 1) * 1000; // exponential backoff: 2s, 4s
+        console.warn(`Claude API rate limited/overloaded (attempt ${attempt + 1}/${MAX_RETRIES + 1}), retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+
+      console.error('Error generating text:', error);
+      throw error;
+    }
   }
+
+  throw new Error('Max retries exceeded for Claude API');
 }
 
 export async function improveText(text: string, instructions?: string) {

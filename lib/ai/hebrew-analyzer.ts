@@ -275,7 +275,8 @@ export function analyzeHebrewText(text: string): AnalysisResult {
   while ((normalizedWordMatch = normalizedWordRegex.exec(normalizedText.normalized)) !== null) {
     const word = normalizedWordMatch[0];
 
-    if (!ANGLICISM_INDICATORS.some(indicator => word.includes(indicator))) {
+    // תיקון: בדיקה מדויקת - המילה חייבת להיות שווה לאינדיקטור, לא רק להכיל אותו
+    if (!ANGLICISM_INDICATORS.some(indicator => word === indicator || (indicator.includes(' ') && normalizedText.normalized.substring(normalizedWordMatch!.index).startsWith(indicator)))) {
       continue;
     }
 
@@ -378,6 +379,7 @@ function generateSuggestions(issues: TranslationIssue[]): string[] {
 
 /**
  * מציאת דפוסים בין טקסט מקורי למתוקן
+ * משתמש באלגוריתם diff פשוט שמזהה גם ביטויים של מספר מילים
  */
 export function extractPatterns(original: string, corrected: string): Array<{
   from: string;
@@ -391,36 +393,65 @@ export function extractPatterns(original: string, corrected: string): Array<{
     type: string;
     confidence: number;
   }> = [];
+  const seen = new Set<string>();
 
-  // פיצול למילים
-  const originalWords = original.split(/\s+/);
-  const correctedWords = corrected.split(/\s+/);
+  const originalWords = original.split(/\s+/).filter(w => w.length > 0);
+  const correctedWords = corrected.split(/\s+/).filter(w => w.length > 0);
 
   // זיהוי שינויים מילה-במילה
   const maxLength = Math.min(originalWords.length, correctedWords.length);
   for (let i = 0; i < maxLength; i++) {
     if (originalWords[i] !== correctedWords[i]) {
-      patterns.push({
-        from: originalWords[i],
-        to: correctedWords[i],
-        type: 'word-replacement',
-        confidence: 0.8
-      });
+      const key = `${originalWords[i]}→${correctedWords[i]}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        patterns.push({
+          from: originalWords[i],
+          to: correctedWords[i],
+          type: 'word-replacement',
+          confidence: 0.8
+        });
+      }
     }
   }
 
-  // זיהוי דפוסי ביטויים (2-3 מילים)
-  for (let i = 0; i < originalWords.length - 1; i++) {
-    const twoWordPhrase = `${originalWords[i]} ${originalWords[i + 1]}`;
-    const correctedPhrase = `${correctedWords[i]} ${correctedWords[i + 1]}`;
-    
-    if (twoWordPhrase !== correctedPhrase && correctedWords[i] && correctedWords[i + 1]) {
-      patterns.push({
-        from: twoWordPhrase,
-        to: correctedPhrase,
-        type: 'phrase-replacement',
-        confidence: 0.9
-      });
+  // זיהוי דפוסי ביטויים (2 מילים)
+  for (let i = 0; i < maxLength - 1; i++) {
+    if (correctedWords[i] === undefined || correctedWords[i + 1] === undefined) continue;
+    const twoWordOriginal = `${originalWords[i]} ${originalWords[i + 1]}`;
+    const twoWordCorrected = `${correctedWords[i]} ${correctedWords[i + 1]}`;
+
+    if (twoWordOriginal !== twoWordCorrected) {
+      const key = `${twoWordOriginal}→${twoWordCorrected}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        patterns.push({
+          from: twoWordOriginal,
+          to: twoWordCorrected,
+          type: 'phrase-replacement',
+          confidence: 0.85
+        });
+      }
+    }
+  }
+
+  // זיהוי דפוסי ביטויים (3 מילים)
+  for (let i = 0; i < maxLength - 2; i++) {
+    if (correctedWords[i] === undefined || correctedWords[i + 1] === undefined || correctedWords[i + 2] === undefined) continue;
+    const threeWordOriginal = `${originalWords[i]} ${originalWords[i + 1]} ${originalWords[i + 2]}`;
+    const threeWordCorrected = `${correctedWords[i]} ${correctedWords[i + 1]} ${correctedWords[i + 2]}`;
+
+    if (threeWordOriginal !== threeWordCorrected) {
+      const key = `${threeWordOriginal}→${threeWordCorrected}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        patterns.push({
+          from: threeWordOriginal,
+          to: threeWordCorrected,
+          type: 'phrase-replacement',
+          confidence: 0.9
+        });
+      }
     }
   }
 
@@ -437,13 +468,13 @@ export function applyLearnedPatterns(
   let correctedText = text;
   const appliedPatterns: Array<{ from: string; to: string }> = [];
 
-  // מיון לפי confidence ו-length (ארוכים יותר קודם)
+  // מיון: ארוכים קודם (כדי שלא יוחלפו חלקי ביטויים), אז לפי confidence
   const sortedPatterns = learnedPatterns
-    .filter(p => p.confidence >= 0.7) // רק דפוסים בטוחים
+    .filter(p => p.confidence >= 0.7 && p.from !== p.to) // רק דפוסים בטוחים, ולא דפוסים שזהים לעצמם
     .sort((a, b) => {
-      const confDiff = b.confidence - a.confidence;
-      if (Math.abs(confDiff) > 0.1) return confDiff;
-      return b.from.length - a.from.length;
+      const lenDiff = b.from.length - a.from.length;
+      if (lenDiff !== 0) return lenDiff; // ארוכים קודם - קריטי
+      return b.confidence - a.confidence;
     });
 
   for (const pattern of sortedPatterns) {

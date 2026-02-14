@@ -127,9 +127,27 @@ export default function ArticleEditor({
     }
   };
 
-  const handleSave = () => {
-    // TODO: Implement save to database with user edits for learning
-    alert('המאמר נשמר בהצלחה!');
+  const handleSave = async () => {
+    try {
+      const response = await fetch('/api/content/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content,
+          title,
+          keywords,
+          contentType: 'article',
+          userId: 'default-user',
+        }),
+      });
+      if (response.ok) {
+        alert('המאמר נשמר בהצלחה!');
+      } else {
+        alert('שגיאה בשמירת המאמר');
+      }
+    } catch {
+      alert('שגיאה בשמירת המאמר');
+    }
   };
 
   const handleFollowUp = async (question: string): Promise<string> => {

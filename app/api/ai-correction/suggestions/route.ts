@@ -176,7 +176,7 @@ ${context ? `**הקשר:** ${context}` : ''}
         prompt,
         systemPrompt,
         maxTokens: 2048,
-        temperature: 0.7,
+        temperature: 0.5, // הופחת מ-0.7 - תוצאות רלוונטיות יותר
       });
       
       console.log('Received response, length:', response?.length || 0);

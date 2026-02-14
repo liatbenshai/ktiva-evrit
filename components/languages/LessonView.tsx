@@ -197,7 +197,7 @@ export default function LessonView({
           <h2 className="text-lg sm:text-xl font-semibold text-slate-900">הסבר דקדוקי</h2>
           {lesson.grammarNotes ? (
             <div className="rounded-xl sm:rounded-2xl border border-purple-100 bg-purple-50/60 p-4 sm:p-5 lg:p-6">
-              <div className="prose prose-sm max-w-none text-xs sm:text-sm" dangerouslySetInnerHTML={{ __html: lesson.grammarNotes }} />
+              <div className="prose prose-sm max-w-none text-xs sm:text-sm" dangerouslySetInnerHTML={{ __html: lesson.grammarNotes.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').replace(/on\w+\s*=\s*["'][^"']*["']/gi, '').replace(/javascript:/gi, '') }} />
             </div>
           ) : (
             <p className="text-xs sm:text-sm text-slate-500">אין הסבר דקדוקי לשיעור זה.</p>

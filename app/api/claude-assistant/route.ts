@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import * as cheerio from 'cheerio';
 import { applyLearnedPatterns } from '@/lib/ai/hebrew-analyzer';
 
 const anthropic = new Anthropic({
@@ -36,12 +37,14 @@ async function fetchURLContent(url: string): Promise<string> {
     }
 
     const html = await response.text();
-    
-    // Simple HTML to text extraction (in production, use a proper HTML parser)
-    const text = html
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
+
+    // Use cheerio for proper HTML parsing
+    const $ = cheerio.load(html);
+    // Remove non-content elements
+    $('script, style, nav, header, footer, iframe, noscript').remove();
+    // Extract main content (prefer article/main, fallback to body)
+    const mainContent = $('article').text() || $('main').text() || $('body').text();
+    const text = mainContent
       .replace(/\s+/g, ' ')
       .trim()
       .substring(0, 10000); // Limit to 10k characters
@@ -195,6 +198,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // בניית חלק של דפוסים נלמדים ל-system prompt
+    const patternsSection = learnedPatterns.length > 0
+      ? `\n\n**דפוסים שנלמדו מהמשתמש (השתמש בהם בתשובות שלך):**\n${learnedPatterns.slice(0, 20).map(p => `- ❌ "${p.badPattern}" → ✅ "${p.goodPattern}"`).join('\n')}`
+      : '';
+
     // יצירת system prompt משופר
     const systemPrompt = `אתה עוזר כתיבה בעברית בשם "ליאת". אתה עוזר חכם עם גישה למקורות מידע רחבים.
 
@@ -222,7 +230,7 @@ export async function POST(req: NextRequest) {
 3. הבן ראשי תיבות: ת"א, ב"ש, צה"ל
 4. אל תמציא עובדות - השתמש רק במידע שסופק או שנמצא
 5. אם יש מקורות, ציין אותם בתשובה
-6. אם יש מידע נוסף מהרשת או מ-URLs, השתמש בו`;
+6. אם יש מידע נוסף מהרשת או מ-URLs, השתמש בו${patternsSection}`;
 
     // בניית הודעה משופרת עם הקשר נוסף
     let enhancedMessage = message;
@@ -230,9 +238,10 @@ export async function POST(req: NextRequest) {
       enhancedMessage = `${message}\n\n${additionalContext}`;
     }
 
-    // בניית רשימת הודעות לשיחה
+    // בניית רשימת הודעות לשיחה - הגבלה ל-20 הודעות אחרונות למניעת overflow
+    const recentHistory = (history as Message[]).slice(-20);
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [
-      ...history.map((msg: Message) => ({
+      ...recentHistory.map((msg: Message) => ({
         role: msg.role,
         content: msg.content,
       })),
@@ -252,11 +261,15 @@ export async function POST(req: NextRequest) {
     });
 
     let assistantMessage = '';
-    const content = response.content[0];
-    if (content.type === 'text') {
-      assistantMessage = content.text;
+    if (response.content && response.content.length > 0) {
+      const firstContent = response.content[0];
+      if (firstContent.type === 'text') {
+        assistantMessage = firstContent.text;
+      } else {
+        assistantMessage = 'אירעה שגיאה בעיבוד התגובה';
+      }
     } else {
-      assistantMessage = 'אירעה שגיאה בעיבוד התגובה';
+      assistantMessage = 'לא התקבלה תגובה מה-AI. נסה שוב.';
     }
 
     // החלת דפוסים שנלמדו על התגובה

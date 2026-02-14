@@ -20,12 +20,39 @@ export default function ExerciseFillBlank({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
 
+  // Levenshtein distance for fuzzy matching
+  const levenshteinDistance = (a: string, b: string): number => {
+    const matrix: number[][] = [];
+    for (let i = 0; i <= a.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= a.length; i++) {
+      for (let j = 1; j <= b.length; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j - 1] + cost
+        );
+      }
+    }
+    return matrix[a.length][b.length];
+  };
+
   const handleSubmit = () => {
     if (!userAnswer.trim()) return;
 
-    const normalizedUser = userAnswer.trim().toLowerCase();
-    const normalizedCorrect = correctAnswer.trim().toLowerCase();
-    const correct = normalizedUser === normalizedCorrect;
+    const normalizedUser = userAnswer.trim().toLowerCase().replace(/[\u0591-\u05C7]/g, ''); // Remove nikkud
+    const normalizedCorrect = correctAnswer.trim().toLowerCase().replace(/[\u0591-\u05C7]/g, '');
+
+    // Exact match
+    let correct = normalizedUser === normalizedCorrect;
+
+    // Fuzzy match: allow 1 character difference for words up to 6 chars, 2 for longer
+    if (!correct && normalizedCorrect.length > 0) {
+      const maxDistance = normalizedCorrect.length <= 6 ? 1 : 2;
+      const distance = levenshteinDistance(normalizedUser, normalizedCorrect);
+      correct = distance <= maxDistance;
+    }
 
     setIsCorrect(correct);
     setIsSubmitted(true);

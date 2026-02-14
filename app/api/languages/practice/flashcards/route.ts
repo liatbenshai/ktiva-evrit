@@ -99,13 +99,25 @@ export async function GET(req: NextRequest) {
       })),
     ];
 
-    // Shuffle flashcards
-    const shuffled = flashcards.sort(() => Math.random() - 0.5);
+    // Basic spaced repetition: prioritize older/less-practiced items
+    // Sort by: saved entries first (user explicitly saved them), then by difficulty
+    const prioritized = flashcards.sort((a, b) => {
+      // Saved entries have higher priority (user explicitly wants to learn these)
+      if (a.source === 'saved' && b.source !== 'saved') return -1;
+      if (a.source !== 'saved' && b.source === 'saved') return 1;
+      // Then by difficulty: harder words first
+      const difficultyOrder: Record<string, number> = { HARD: 0, MEDIUM: 1, EASY: 2 };
+      const aDiff = difficultyOrder[a.level === 'ADVANCED' ? 'HARD' : a.level === 'INTERMEDIATE' ? 'MEDIUM' : 'EASY'] ?? 1;
+      const bDiff = difficultyOrder[b.level === 'ADVANCED' ? 'HARD' : b.level === 'INTERMEDIATE' ? 'MEDIUM' : 'EASY'] ?? 1;
+      if (aDiff !== bDiff) return aDiff - bDiff;
+      // Finally add some randomness within same priority
+      return Math.random() - 0.5;
+    });
 
     return NextResponse.json({
       success: true,
-      flashcards: shuffled.slice(0, limit),
-      total: shuffled.length,
+      flashcards: prioritized.slice(0, limit),
+      total: flashcards.length,
     });
   } catch (error: any) {
     console.error('Error fetching flashcards:', error);

@@ -162,10 +162,8 @@ export async function POST(req: NextRequest) {
       const selected = (answer.selected || '').trim().toLowerCase();
       const correctAnswer = (answer.correct || '').trim().toLowerCase();
       
-      // More flexible matching - exact match or contains
-      const isCorrect = selected === correctAnswer || 
-                       (selected.length > 0 && correctAnswer.includes(selected)) ||
-                       (correctAnswer.length > 0 && selected.includes(correctAnswer));
+      // תיקון: השוואה מדויקת בלבד - includes גרם לfalse positives (למשל "hell" ⊆ "hello")
+      const isCorrect = selected === correctAnswer;
       
       if (isCorrect) correctCount++;
       return {

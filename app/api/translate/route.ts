@@ -222,6 +222,7 @@ export async function POST(req: NextRequest) {
       wordAlternatives?: { [key: string]: string[] };
     };
 
+    let jsonParseFailed = false;
     try {
       // ניקוי של markdown code blocks אם יש
       let cleanedResponse = translationResponse.trim();
@@ -230,8 +231,19 @@ export async function POST(req: NextRequest) {
       } else if (cleanedResponse.startsWith('```')) {
         cleanedResponse = cleanedResponse.replace(/^```\n?/, '').replace(/\n?```$/, '');
       }
-      
+
       translationData = JSON.parse(cleanedResponse);
+
+      // ולידציה שה-main קיים ולא ריק
+      if (!translationData.main || typeof translationData.main !== 'string' || !translationData.main.trim()) {
+        console.warn('Translation response JSON missing "main" field, falling back to raw text');
+        translationData = {
+          main: translationResponse.trim(),
+          alternatives: [],
+          wordAlternatives: {},
+        };
+        jsonParseFailed = true;
+      }
     } catch (error) {
       // אם לא הצלחנו לפרש כ-JSON, נשתמש בתשובה כטקסט רגיל
       console.warn('Failed to parse translation as JSON, using as plain text:', error);
@@ -240,18 +252,26 @@ export async function POST(req: NextRequest) {
         alternatives: [],
         wordAlternatives: {},
       };
+      jsonParseFailed = true;
     }
 
     // שמירת התרגום המקורי למעקב (אם המשתמש יתקן אותו)
-    const translationRecord = {
-      originalText: text,
-      translatedText: translationData.main,
-      fromLang,
-      toLang,
-      context: context || '',
-      userId,
-      timestamp: new Date(),
-    };
+    // נשמור כ-AICorrection או GeneratedContent לפי הצורך
+    let translationId = `translation_${Date.now()}`;
+    try {
+      const saved = await prisma.aICorrection.create({
+        data: {
+          userId,
+          originalText: text,
+          correctedText: translationData.main,
+          patterns: JSON.stringify({ fromLang, toLang, context: context || '' }),
+        },
+      });
+      translationId = saved.id;
+    } catch (saveError) {
+      console.warn('Failed to save translation record:', saveError);
+      // ממשיכים - השמירה לא קריטית
+    }
 
     return NextResponse.json({
       success: true,
@@ -261,8 +281,9 @@ export async function POST(req: NextRequest) {
       original: text,
       fromLang,
       toLang,
-      translationId: `translation_${Date.now()}`, // מזהה זמני למעקב אחר תיקונים
+      translationId,
       trackCorrections,
+      ...(jsonParseFailed ? { warning: 'התרגום הוחזר כטקסט רגיל - לא כ-JSON מובנה' } : {}),
     });
   } catch (error) {
     console.error('Translation error:', error);

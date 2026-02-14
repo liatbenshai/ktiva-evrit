@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
     const allSearchResults: SearchResult[] = [];
     
     // Perform searches
-    for (const query of searchQueries.slice(0, 2)) { // Limit to avoid too many API calls
+    for (const query of searchQueries.slice(0, 3)) { // Use 3 queries for better legal coverage
       try {
         console.log(`Searching for: ${query}`);
         const searchResults = await performWebSearch(query, maxResults);

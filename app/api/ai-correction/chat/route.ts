@@ -9,11 +9,12 @@ import { prisma } from '@/lib/prisma';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { 
-      question, 
-      text, 
+    const {
+      question,
+      text,
       userId = 'default-user',
-      context = '' 
+      context = '',
+      conversationHistory = [],
     } = body;
 
     if (!question || !question.trim()) {
@@ -81,7 +82,16 @@ ${patternsList}
 - טון מקצועי אך ידידותי
 - תמיד צרף את רשימת הדפוסים שנלמדו כשאתה עונה`;
 
-    const userPrompt = `${question}${textContext}${contextInfo}
+    // שילוב הקשר שיחה (עד 10 הודעות אחרונות)
+    const recentHistory = Array.isArray(conversationHistory)
+      ? conversationHistory.slice(-10)
+      : [];
+
+    const historyContext = recentHistory.length > 0
+      ? `\n\n**היסטוריית שיחה:**\n${recentHistory.map((m: { role: string; content: string }) => `${m.role === 'user' ? 'משתמש' : 'עוזר'}: ${m.content}`).join('\n')}`
+      : '';
+
+    const userPrompt = `${question}${textContext}${contextInfo}${historyContext}
 
 אם השאלה קשורה לטקסט מסוים, בדוק אותו וציין מה צריך לתקן. אם יש דפוס רלוונטי מהרשימה למעלה, הצע להשתמש בו.`;
 
@@ -92,12 +102,24 @@ ${patternsList}
       temperature: 0.7,
     });
 
+    // תיקון: בדיקה מדויקת יותר של patterns רלוונטיים - השוואה כמילה שלמה
+    const relevantPatterns = learnedPatterns.filter(p => {
+      if (!text && !question) return false;
+      const searchIn = `${text || ''} ${question}`;
+      // בדיקת מילה שלמה עם regex, לא includes שתואם חלקי מחרוזת
+      try {
+        const escaped = p.badPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(?:^|\\s)${escaped}(?:\\s|$|[.,!?;:])`, 'i');
+        return regex.test(searchIn);
+      } catch {
+        return searchIn.includes(p.badPattern);
+      }
+    }).slice(0, 3);
+
     return NextResponse.json({
       success: true,
       answer: response,
-      relevantPatterns: learnedPatterns.filter(p => 
-        text && (text.includes(p.badPattern) || question.includes(p.badPattern))
-      ).slice(0, 3), // 3 דפוסים רלוונטיים ביותר
+      relevantPatterns,
     });
 
   } catch (error: any) {

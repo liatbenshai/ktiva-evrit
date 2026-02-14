@@ -1,7 +1,12 @@
 /**
  * Advanced Learning System for Hebrew Text Improvement
  * מערכת למידה מתקדמת לשיפור כתיבה עברית
+ *
+ * Note: This system uses in-memory caching with DB persistence via TranslationPattern model.
+ * Patterns are loaded from DB on first access per user and saved on each new correction.
  */
+
+import { prisma } from '@/lib/prisma'
 
 export interface TextCorrection {
   id: string
@@ -40,6 +45,92 @@ export class HebrewLearningSystem {
   private corrections: TextCorrection[] = []
   private patterns: LearningPattern[] = []
   private userProfiles: Map<string, UserLearningProfile> = new Map()
+  private loadedUsers: Set<string> = new Set() // Track which users have been loaded from DB
+
+  /**
+   * Load user patterns from DB into memory (if not already loaded)
+   */
+  private async loadUserFromDB(userId: string): Promise<void> {
+    if (this.loadedUsers.has(userId)) return
+
+    try {
+      const dbPatterns = await prisma.translationPattern.findMany({
+        where: { userId },
+        orderBy: { confidence: 'desc' },
+        take: 200,
+      })
+
+      for (const dbPattern of dbPatterns) {
+        const existing = this.patterns.find(
+          p => p.pattern === dbPattern.badPattern && p.category === dbPattern.patternType
+        )
+        if (!existing) {
+          this.patterns.push({
+            pattern: dbPattern.badPattern,
+            correction: dbPattern.goodPattern,
+            frequency: dbPattern.occurrences,
+            accuracy: dbPattern.confidence,
+            context: dbPattern.context ? [dbPattern.context] : [],
+            category: dbPattern.patternType,
+          })
+        }
+      }
+
+      // Ensure user profile exists
+      if (!this.userProfiles.has(userId)) {
+        this.userProfiles.set(userId, {
+          userId,
+          corrections: [],
+          patterns: this.patterns.filter(p => true), // All patterns available to all users for now
+          preferences: {
+            formalityLevel: 'semi-formal',
+            writingStyle: 'business',
+            categoryPreferences: {},
+          },
+          lastUpdated: new Date(),
+        })
+      }
+
+      this.loadedUsers.add(userId)
+    } catch (error) {
+      console.warn('Failed to load user patterns from DB:', error)
+      // Continue with in-memory data
+    }
+  }
+
+  /**
+   * Save a pattern to DB
+   */
+  private async savePatternToDB(pattern: LearningPattern, userId: string): Promise<void> {
+    try {
+      await prisma.translationPattern.upsert({
+        where: {
+          userId_badPattern_goodPattern: {
+            userId,
+            badPattern: pattern.pattern,
+            goodPattern: pattern.correction,
+          },
+        },
+        update: {
+          occurrences: pattern.frequency,
+          confidence: pattern.accuracy,
+          context: pattern.context[0] || null,
+          patternType: pattern.category,
+        },
+        create: {
+          userId,
+          badPattern: pattern.pattern,
+          goodPattern: pattern.correction,
+          occurrences: pattern.frequency,
+          confidence: pattern.accuracy,
+          context: pattern.context[0] || null,
+          patternType: pattern.category,
+        },
+      })
+    } catch (error) {
+      console.warn('Failed to save pattern to DB:', error)
+    }
+  }
 
   /**
    * Record a text correction for learning
@@ -59,7 +150,8 @@ export class HebrewLearningSystem {
   /**
    * Get improved synonyms based on learning
    */
-  getLearnedSynonyms(word: string, userId: string, context: string, category: string): string[] {
+  async getLearnedSynonyms(word: string, userId: string, context: string, category: string): Promise<string[]> {
+    await this.loadUserFromDB(userId)
     const userProfile = this.userProfiles.get(userId)
     if (!userProfile) return []
 
@@ -123,7 +215,7 @@ export class HebrewLearningSystem {
   /**
    * Get writing suggestions based on user's writing history
    */
-  getWritingSuggestions(userId: string, category: string): {
+  async getWritingSuggestions(userId: string, category: string): Promise<{
     commonMistakes: Array<{
       mistake: string
       correction: string
@@ -131,7 +223,8 @@ export class HebrewLearningSystem {
     }>
     styleTips: string[]
     categoryInsights: string[]
-  } {
+  }> {
+    await this.loadUserFromDB(userId)
     const userProfile = this.userProfiles.get(userId)
     if (!userProfile) return { commonMistakes: [], styleTips: [], categoryInsights: [] }
 
@@ -199,37 +292,43 @@ export class HebrewLearningSystem {
   }
 
   /**
-   * Extract learning patterns from correction
+   * Extract learning patterns from correction and persist to DB
    */
   private extractPatterns(correctionData: TextCorrection): void {
     const words = correctionData.originalText.split(' ')
     const correctedWords = correctionData.correctedText.split(' ')
 
-    for (let i = 0; i < words.length; i++) {
+    for (let i = 0; i < words.length && i < correctedWords.length; i++) {
       if (words[i] !== correctedWords[i]) {
         const pattern = words[i]
         const correctWord = correctedWords[i]
+        if (!pattern || !correctWord) continue
 
         // Find existing pattern or create new one
-        let existingPattern = this.patterns.find(p => 
+        let existingPattern = this.patterns.find(p =>
           p.pattern === pattern && p.category === correctionData.category
         )
-        
+
         if (existingPattern) {
           existingPattern.frequency++
           existingPattern.accuracy = this.calculateAccuracy(existingPattern, correctWord)
           if (!existingPattern.context.includes(correctionData.context)) {
             existingPattern.context.push(correctionData.context)
           }
+          // Persist to DB (fire and forget)
+          this.savePatternToDB(existingPattern, correctionData.userId)
         } else {
-          this.patterns.push({
+          const newPattern: LearningPattern = {
             pattern,
             correction: correctWord,
             frequency: 1,
             accuracy: 1.0,
             context: [correctionData.context],
             category: correctionData.category
-          })
+          }
+          this.patterns.push(newPattern)
+          // Persist to DB (fire and forget)
+          this.savePatternToDB(newPattern, correctionData.userId)
         }
       }
     }
@@ -237,11 +336,13 @@ export class HebrewLearningSystem {
 
   /**
    * Calculate accuracy of a pattern
+   * Uses weighted running average instead of single-shot calculation
    */
   private calculateAccuracy(pattern: LearningPattern, newCorrection: string): number {
-    const totalCorrections = pattern.frequency
-    const correctCorrections = pattern.correction === newCorrection ? 1 : 0
-    return correctCorrections / totalCorrections
+    const isMatch = pattern.correction === newCorrection ? 1 : 0
+    // Weighted running average: give more weight to recent corrections
+    const weight = 0.3 // weight for new data point
+    return pattern.accuracy * (1 - weight) + isMatch * weight
   }
 
   /**
@@ -361,13 +462,14 @@ export class HebrewLearningSystem {
   /**
    * Get user learning statistics
    */
-  getUserStats(userId: string): {
+  async getUserStats(userId: string): Promise<{
     totalCorrections: number
     patternsLearned: number
     accuracy: number
     improvementTrend: 'improving' | 'stable' | 'declining'
     categoryStats: Record<string, { corrections: number, accuracy: number }>
-  } {
+  }> {
+    await this.loadUserFromDB(userId)
     const profile = this.userProfiles.get(userId)
     if (!profile) {
       return {
