@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Loader2, Wand2, Upload } from 'lucide-react';
+import { Loader2, Wand2, Upload, Lightbulb } from 'lucide-react';
 import ArticleEditor from './ArticleEditor';
 import { extractTextFromImageClient, processImagesFromBase64Legacy } from '@/lib/ocr-client';
 
@@ -31,7 +31,7 @@ export default function CreateArticle() {
 
     try {
       let text = '';
-      
+
       if (isImage) {
         alert('מעבד תמונה... זה עלול לקחת כמה שניות.');
         text = await extractTextFromImageClient(file);
@@ -50,7 +50,7 @@ export default function CreateArticle() {
 
         const result = await response.json();
         text = result.text;
-        
+
         // If the document contains images, process them with OCR
         if (result.hasImages && result.images && result.images.length > 0) {
           alert(`נמצאו ${result.images.length} תמונות במסמך. מעבד תמונות... זה עלול לקחת זמן.`);
@@ -81,7 +81,7 @@ export default function CreateArticle() {
     }
 
     const wordCountNum = parseInt(wordCount);
-    
+
     // Warning for very long articles
     if (wordCountNum > 2000) {
       const confirmed = confirm(
@@ -112,12 +112,12 @@ export default function CreateArticle() {
       if (!response.ok) throw new Error('Failed to generate');
 
       const { result, appliedPatterns } = await response.json();
-      
+
       // הצגת הודעה אם הוחלו דפוסים
       if (appliedPatterns && appliedPatterns.length > 0) {
         console.log(`✅ הוחלו ${appliedPatterns.length} דפוסים שנלמדו על המאמר`);
       }
-      
+
       setGeneratedContent(result);
     } catch (error) {
       console.error('Error:', error);
@@ -139,126 +139,131 @@ export default function CreateArticle() {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-      <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-        יצירת מאמר חדש
-      </h2>
+    <div className="overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/30 to-indigo-50/30 shadow-lg">
+      <div className="p-6 sm:p-8">
+        <h2 className="mb-6 bg-gradient-to-r from-sky-600 to-indigo-600 bg-clip-text text-2xl font-bold text-transparent">
+          יצירת מאמר חדש
+        </h2>
 
-      <div className="space-y-6">
-        {/* Title */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            כותרת המאמר <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="לדוגמה: איך לכתוב מאמר SEO מנצח"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            dir="rtl"
-          />
-        </div>
-
-        {/* Keywords */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            מילות מפתח <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={keywords}
-            onChange={(e) => setKeywords(e.target.value)}
-            placeholder="הפרד בפסיקים: SEO, קידום אתרים, כתיבת תוכן"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            dir="rtl"
-          />
-          <p className="mt-1 text-sm text-gray-500">
-            הזן מילות מפתח מרכזיות ומילות מפתח זנב ארוך
-          </p>
-        </div>
-
-        {/* Word Count */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            מספר מילים משוער
-          </label>
-          <select
-            value={wordCount}
-            onChange={(e) => setWordCount(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            dir="rtl"
-          >
-            <option value="300">300 מילים (קצר)</option>
-            <option value="500">500 מילים</option>
-            <option value="800">800 מילים (אמצעי)</option>
-            <option value="1000">1000 מילים</option>
-            <option value="1500">1500 מילים (ארוך)</option>
-            <option value="2000">2000+ מילים (מקיף)</option>
-          </select>
-        </div>
-
-        {/* Additional Instructions */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            הנחיות נוספות (אופציונלי)
-          </label>
-          <textarea
-            value={additionalInstructions}
-            onChange={(e) => setAdditionalInstructions(e.target.value)}
-            placeholder="לדוגמה: התמקד בטיפים מעשיים, כתוב בטון ידידותי, כלול דוגמאות"
-            rows={3}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            dir="rtl"
-          />
-          <div className="mt-2 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-2 rounded-lg border border-blue-300 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:border-blue-400 hover:bg-blue-50"
-            >
-              <Upload className="h-4 w-4" />
-              העלה קובץ (PDF / DOCX / TXT / תמונות)
-            </button>
-            <span className="text-xs text-gray-500">הטקסט ייכנס להנחיות הנוספות</span>
+        <div className="space-y-5">
+          {/* Title */}
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-gray-800">
+              כותרת המאמר <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="לדוגמה: איך לכתוב מאמר SEO מנצח"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm transition-all focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 sm:text-base"
+              dir="rtl"
+            />
           </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.tif"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-        </div>
 
-        {/* Generate Button */}
-        <button
-          onClick={handleGenerate}
-          disabled={isGenerating || !title.trim() || !keywords.trim()}
-          className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-lg font-medium"
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              יוצר מאמר...
-            </>
-          ) : (
-            <>
-              <Wand2 className="w-5 h-5" />
-              צור מאמר
-            </>
-          )}
-        </button>
+          {/* Keywords */}
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-gray-800">
+              מילות מפתח <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={keywords}
+              onChange={(e) => setKeywords(e.target.value)}
+              placeholder="הפרד בפסיקים: SEO, קידום אתרים, כתיבת תוכן"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm transition-all focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 sm:text-base"
+              dir="rtl"
+            />
+            <p className="mt-1.5 text-xs text-gray-500">
+              הזן מילות מפתח מרכזיות ומילות מפתח זנב ארוך
+            </p>
+          </div>
 
-        {/* SEO Tips */}
-        <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="font-semibold text-blue-900 mb-2">💡 טיפים ל-SEO</h3>
-          <ul className="space-y-1 text-sm text-blue-800">
-            <li>• השתמש במילות מפתח ארוכות (3-4 מילים) לתוצאות טובות יותר</li>
-            <li>• מאמרים ארוכים יותר (1000+ מילים) נוטים לדרג טוב יותר</li>
-            <li>• כלול מילות מפתח בכותרת ובכותרות משנה</li>
-            <li>• המערכת תשלב את מילות המפתח באופן טבעי בטקסט</li>
-          </ul>
+          {/* Word Count */}
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-gray-800">
+              מספר מילים משוער
+            </label>
+            <select
+              value={wordCount}
+              onChange={(e) => setWordCount(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm transition-all focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 sm:text-base"
+              dir="rtl"
+            >
+              <option value="300">300 מילים (קצר)</option>
+              <option value="500">500 מילים</option>
+              <option value="800">800 מילים (אמצעי)</option>
+              <option value="1000">1000 מילים</option>
+              <option value="1500">1500 מילים (ארוך)</option>
+              <option value="2000">2000+ מילים (מקיף)</option>
+            </select>
+          </div>
+
+          {/* Additional Instructions */}
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-gray-800">
+              הנחיות נוספות (אופציונלי)
+            </label>
+            <textarea
+              value={additionalInstructions}
+              onChange={(e) => setAdditionalInstructions(e.target.value)}
+              placeholder="לדוגמה: התמקד בטיפים מעשיים, כתוב בטון ידידותי, כלול דוגמאות"
+              rows={3}
+              className="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm transition-all focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 sm:text-base"
+              dir="rtl"
+            />
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-sky-50/50 px-3 py-1.5 text-sm font-medium text-sky-700 transition-all hover:border-sky-300 hover:bg-sky-100/60"
+              >
+                <Upload className="h-4 w-4" />
+                העלה קובץ (PDF / DOCX / TXT / תמונות)
+              </button>
+              <span className="text-xs text-gray-500">הטקסט ייכנס להנחיות הנוספות</span>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.tif"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+          </div>
+
+          {/* Generate Button */}
+          <button
+            onClick={handleGenerate}
+            disabled={isGenerating || !title.trim() || !keywords.trim()}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-6 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-lg"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                יוצר מאמר...
+              </>
+            ) : (
+              <>
+                <Wand2 className="h-5 w-5" />
+                צור מאמר
+              </>
+            )}
+          </button>
+
+          {/* SEO Tips */}
+          <div className="rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-indigo-50 p-5">
+            <h3 className="mb-3 flex items-center gap-2 font-semibold text-sky-900">
+              <Lightbulb className="h-5 w-5 text-sky-600" />
+              טיפים ל-SEO
+            </h3>
+            <ul className="space-y-1.5 text-sm text-sky-800">
+              <li>• השתמש במילות מפתח ארוכות (3-4 מילים) לתוצאות טובות יותר</li>
+              <li>• מאמרים ארוכים יותר (1000+ מילים) נוטים לדרג טוב יותר</li>
+              <li>• כלול מילות מפתח בכותרת ובכותרות משנה</li>
+              <li>• המערכת תשלב את מילות המפתח באופן טבעי בטקסט</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

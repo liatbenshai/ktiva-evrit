@@ -21,27 +21,27 @@ export default function ArticlesPage() {
       theme={theme}
     >
         <div className="mb-5 sm:mb-8">
-          <div className="flex w-full flex-col gap-2 sm:inline-flex sm:flex-row sm:items-center sm:gap-3">
+          <div className="inline-flex w-full items-center gap-0 rounded-2xl border border-sky-100 bg-white/70 p-1.5 shadow-sm backdrop-blur sm:w-auto">
             <button
               onClick={() => setMode('create')}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors sm:flex-initial sm:px-5 sm:py-2.5 sm:text-base ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 sm:flex-initial sm:px-6 sm:py-2.5 sm:text-base ${
                 mode === 'create'
-                  ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                  ? 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md'
+                  : 'text-gray-600 hover:bg-white/80'
               }`}
             >
-              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
               <span>יצירה חדשה</span>
             </button>
             <button
               onClick={() => setMode('improve')}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors sm:flex-initial sm:px-5 sm:py-2.5 sm:text-base ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 sm:flex-initial sm:px-6 sm:py-2.5 sm:text-base ${
                 mode === 'improve'
-                  ? 'border-cyan-500 bg-cyan-500 text-white shadow-sm'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                  ? 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md'
+                  : 'text-gray-600 hover:bg-white/80'
               }`}
             >
-              <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+              <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
               <span>שיפור קיים</span>
             </button>
           </div>
