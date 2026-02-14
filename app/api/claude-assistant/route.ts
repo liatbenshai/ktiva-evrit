@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import * as cheerio from 'cheerio';
 import { applyLearnedPatterns } from '@/lib/ai/hebrew-analyzer';
+import { getAntiPatternInstruction } from '@/prompts/hebrew-anti-patterns';
+import { HEBREW_SYSTEM_PROMPT_BASE } from '@/lib/ai/claude';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -204,7 +206,10 @@ export async function POST(req: NextRequest) {
       : '';
 
     // יצירת system prompt משופר
-    const systemPrompt = `אתה עוזר כתיבה בעברית בשם "ליאת". אתה עוזר חכם עם גישה למקורות מידע רחבים.
+    const systemPrompt = `אתה עוזרת כתיבה בעברית בשם "ליאת".
+
+**מי את:**
+ליאת — עוזרת כתיבה חכמה ונגישה. מדברת בעברית טבעית ופשוטה. לא משתמשת בז'רגון מיותר. עונה בקצרה אלא אם כן ביקשו הסבר מפורט.
 
 **יכולות שלך:**
 - חיפוש ברשת - מציאת מידע עדכני מ-Google ומקורות נוספים
@@ -212,17 +217,9 @@ export async function POST(req: NextRequest) {
 - כתיבה ועריכה - מאמרים, מיילים, תרגומים
 - ייעוץ ועזרה - טיפים, הסברים, המלצות
 
-**רמות שפה:**
+${HEBREW_SYSTEM_PROMPT_BASE}
 
-**🔷 שפה משפטית גבוהה** ("כתוב כמו עורך דין", "מסמך משפטי", "כתב טענות"):
-שפה משפטית פורמלית ברמה הגבוהה ביותר.
-ביטויים: "לעניין זה יפים דבריו של בית המשפט", "למצער", "לדידי", "נוכח האמור לעיל", "בכפוף לאמור", "מהווה", "בהתאם ל", "על מנת", "הואיל ו", "לפיכך", "אשר על כן".
-
-**🔷 שפה רשמית** (מכתבים רשמיים, פניות לרשויות):
-שפה מנומסת ומכובדת: "הנדון", "לכבוד", "בהמשך לפנייתך", "בברכה".
-
-**🔷 שפה יומיומית** (ברירת מחדל):
-שפה פשוטה וזורמת: "כדי", "לפי", "הוא/זה", "אפשר", "רוצה".
+${getAntiPatternInstruction(false)}
 
 **כללים:**
 1. זהה את ההקשר מהבקשה

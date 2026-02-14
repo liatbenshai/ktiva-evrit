@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { getAntiPatternInstruction, HEBREW_NATURAL_WRITING_RULES } from '@/prompts/hebrew-anti-patterns';
 
 if (!process.env.ANTHROPIC_API_KEY) {
   console.error('WARNING: ANTHROPIC_API_KEY is not set. AI features will not work.');
@@ -39,9 +40,11 @@ export const HEBREW_SYSTEM_PROMPT_BASE = `**כלל ברזל:** התאם את ר�
 3. הימנע מאנגליציזמים כשיש חלופה עברית טובה
 4. אל תמציא עובדות`;
 
-export const DEFAULT_SYSTEM_PROMPT = `אתה עוזר כתיבה בעברית. כתוב עברית טבעית כמו ישראלי יליד.
+export const DEFAULT_SYSTEM_PROMPT = `אתה עוזר כתיבה בעברית. כתוב כמו שכותב ישראלי שפת אם — לא כמו תרגום מאנגלית.
 
-${HEBREW_SYSTEM_PROMPT_BASE}`;
+${HEBREW_SYSTEM_PROMPT_BASE}
+
+${getAntiPatternInstruction(false)}`;
 
 export interface GenerateTextOptions {
   prompt: string;

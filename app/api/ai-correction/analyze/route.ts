@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { analyzeHebrewText, applyLearnedPatterns } from '@/lib/ai/hebrew-analyzer';
 import { generateText } from '@/lib/ai/claude';
+import { getAntiPatternInstruction } from '@/prompts/hebrew-anti-patterns';
 
 /**
  * POST - ניתוח טקסט והחלת תיקונים אוטומטיים
@@ -195,7 +196,16 @@ ${issuesList}
   ]
 }`;
 
-      const alternativesSystemPrompt = `אתה מומחה בעברית תקנית וטבעית. אתה מספק תיקון ראשי מומלץ וגרסאות משופרות של טקסטים שנוצרו על ידי AI. **חשוב מאוד:** כל גרסה חייבת להיות שונה לחלוטין מהאחרות - לא לחזור על אותו טקסט. שמור על הסגנון הבא: ${contentStyleConfig.systemTone}. החזר תמיד JSON תקין בלבד, ללא markdown, ללא backticks, ללא טקסט נוסף.`;
+      const alternativesSystemPrompt = `אתה מומחה בעברית תקנית וטבעית. אתה מספק תיקון ראשי מומלץ וגרסאות משופרות של טקסטים.
+
+**חשוב מאוד:**
+- כל גרסה חייבת להיות שונה לחלוטין מהאחרות
+- כל גרסה חייבת להישמע טבעית — כמו שישראלי שפת אם היה כותב, לא כמו AI
+- שמור על הסגנון: ${contentStyleConfig.systemTone}
+
+${getAntiPatternInstruction(false)}
+
+החזר תמיד JSON תקין בלבד, ללא markdown, ללא backticks, ללא טקסט נוסף.`;
 
       const alternativesResponse = await generateText({
         prompt: alternativesPrompt,
